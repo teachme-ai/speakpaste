@@ -5,7 +5,16 @@
 	import MicIcon from '@lucide/svelte/icons/mic';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 	import ClockIcon from '@lucide/svelte/icons/clock';
-	import ShieldIcon from '@lucide/svelte/icons/shield';
+	import ShieldCheckIcon from '@lucide/svelte/icons/shield-check';
+	import FileTextIcon from '@lucide/svelte/icons/file-text';
+	import AudioWaveformIcon from '@lucide/svelte/icons/audio-waveform';
+	import HandIcon from '@lucide/svelte/icons/hand';
+	import BoxIcon from '@lucide/svelte/icons/box';
+	import ClipboardIcon from '@lucide/svelte/icons/clipboard';
+	import ListIcon from '@lucide/svelte/icons/list';
+	import InfoIcon from '@lucide/svelte/icons/info';
+	import TrashIcon from '@lucide/svelte/icons/trash-2';
+	import MoreHorizontalIcon from '@lucide/svelte/icons/more-horizontal';
 	import { commandCallbacks } from '$lib/commands';
 	import { rpc } from '$lib/query';
 	import { recordings } from '$lib/state/recordings.svelte';
@@ -20,233 +29,278 @@
 
 	const recorderState = $derived(getRecorderStateQuery.data ?? 'IDLE');
 
-	// Derive UI state label from recorder state
 	const isTranscribing = $derived(
 		recordings.sorted[0]?.transcriptionStatus === 'TRANSCRIBING',
 	);
 
-	const stateLabel = $derived(
-		recorderState === 'RECORDING'
-			? 'Listening'
-			: isTranscribing
-				? 'Transcribing locally'
-				: 'Ready',
-	);
-
-	// Last pasted = most recent DONE recording
 	const lastPasted = $derived(
-		recordings.sorted.find((r) => r.transcriptionStatus === 'DONE'),
+		recordings.sorted.find((r) => r.transcriptionStatus === 'DONE' && r.transcript.trim()),
 	);
 
-	// Recent = last 3 DONE recordings
 	const recentItems = $derived(
 		recordings.sorted
 			.filter((r) => r.transcriptionStatus === 'DONE' && r.transcript.trim())
 			.slice(0, 3),
 	);
 
-	// Auto-paste toggle — maps to output.transcription.cursor
 	const autoPaste = $derived(settings.get('output.transcription.cursor'));
 
-	// Current model name from path
 	const modelPath = $derived(deviceConfig.get('transcription.whispercpp.modelPath'));
-	const modelLabel = $derived(() => {
-		const match = WHISPER_MODELS.find((m) => modelPath.endsWith(m.file.filename));
-		return match?.id ?? 'tiny.en';
-	});
+	const modelLabel = $derived(
+		WHISPER_MODELS.find((m) => modelPath.endsWith(m.file.filename))?.id ?? 'tiny.en'
+	);
 
 	function timeAgo(dateStr: string) {
 		try {
 			return formatDistanceToNow(new Date(dateStr), { addSuffix: true });
 		} catch {
-			return '';
+			return 'just now';
 		}
 	}
 
-	// Button ring color by state
-	const ringClass = $derived(
-		recorderState === 'RECORDING'
-			? 'ring-4 ring-blue-400/60 bg-blue-50 dark:bg-blue-950/30'
-			: isTranscribing
-				? 'ring-4 ring-amber-400/60 bg-amber-50 dark:bg-amber-950/30'
-				: 'ring-4 ring-transparent bg-white dark:bg-neutral-800 hover:ring-blue-200 dark:hover:ring-blue-800',
-	);
+	const pills = $derived([
+		{ label: 'Ready',               active: recorderState === 'IDLE' && !isTranscribing },
+		{ label: 'Listening',           active: recorderState === 'RECORDING' },
+		{ label: 'Transcribing locally',active: isTranscribing },
+		{ label: 'Pasted',              active: false },
+	]);
 </script>
 
 <svelte:head><title>SpeakPaste</title></svelte:head>
 
-<!-- Top-right settings gear -->
-<div class="absolute top-4 right-4 z-10">
-	<Popover.Root>
-		<Popover.Trigger>
-			{#snippet child({ props })}
-				<button
-					{...props}
-					class="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-					aria-label="Settings"
-				>
-					<SettingsIcon class="size-5" />
-				</button>
-			{/snippet}
-		</Popover.Trigger>
-		<Popover.Content class="w-72 p-4" align="end" sideOffset={8}>
-			<div class="flex flex-col gap-4">
-				<!-- Trigger mode -->
-				<div class="flex items-center justify-between">
-					<span class="text-sm">Trigger mode</span>
-					<span class="text-sm text-muted-foreground border rounded px-2 py-0.5">Hold to speak</span>
-				</div>
+<div class="relative flex flex-col min-h-screen bg-[#f5f0eb] overflow-y-auto">
 
-				<!-- Model -->
-				<div class="flex items-center justify-between">
-					<span class="text-sm">Model</span>
-					<select
-						class="text-sm border rounded px-2 py-0.5 bg-background"
-						value={modelLabel()}
-						onchange={(e) => {
-							const selected = WHISPER_MODELS.find((m) => m.id === e.currentTarget.value);
-							if (selected) {
-								const dir = modelPath.substring(0, modelPath.lastIndexOf('/') + 1);
-								deviceConfig.set('transcription.whispercpp.modelPath', dir + selected.file.filename);
-							}
-						}}
-					>
-						{#each WHISPER_MODELS as model}
-							<option value={model.id}>{model.id}</option>
-						{/each}
-					</select>
-				</div>
+	<!-- Header: title + settings gear -->
+	<div class="flex items-start justify-between px-6 pt-6 pb-2">
+		<div class="flex-1 flex flex-col items-center">
+			<h1 class="text-2xl font-bold tracking-tight text-gray-900">SpeakPaste</h1>
+			<p class="text-sm text-gray-500 mt-0.5">Local voice typing for any Mac app.</p>
+		</div>
+		<!-- Settings gear — positioned top-right -->
+		<div class="absolute top-5 right-5">
+			<Popover.Root>
+				<Popover.Trigger>
+					{#snippet child({ props })}
+						<button
+							{...props}
+							class="size-9 rounded-full bg-white shadow-sm border border-gray-200 flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors"
+							aria-label="Settings"
+						>
+							<SettingsIcon class="size-4" />
+						</button>
+					{/snippet}
+				</Popover.Trigger>
+				<Popover.Content class="w-80 p-0 rounded-2xl shadow-xl border border-gray-100 bg-white overflow-hidden" align="end" sideOffset={8}>
+					<div class="flex flex-col">
+						<!-- Trigger mode -->
+						<div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+							<div class="flex items-center gap-2.5">
+								<HandIcon class="size-4 text-blue-500" />
+								<span class="text-sm font-medium text-gray-800">Trigger mode</span>
+							</div>
+							<div class="flex items-center gap-1 border border-gray-200 rounded-lg px-2.5 py-1 text-sm text-gray-700 bg-gray-50">
+								Hold to speak
+								<svg class="size-3 ml-1 text-gray-400" viewBox="0 0 12 12" fill="none"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+							</div>
+						</div>
 
-				<!-- Auto-paste -->
-				<div class="flex items-center justify-between">
-					<span class="text-sm">Auto-paste</span>
-					<Switch
-						checked={autoPaste}
-						onCheckedChange={(v) => settings.set('output.transcription.cursor', v)}
-					/>
-				</div>
+						<!-- Model -->
+						<div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+							<div class="flex items-center gap-2.5">
+								<BoxIcon class="size-4 text-blue-500" />
+								<span class="text-sm font-medium text-gray-800">Model</span>
+							</div>
+							<select
+								class="border border-gray-200 rounded-lg px-2.5 py-1 text-sm text-gray-700 bg-gray-50 appearance-none pr-6 cursor-pointer"
+								value={modelLabel}
+								onchange={(e) => {
+									const selected = WHISPER_MODELS.find((m) => m.id === e.currentTarget.value);
+									if (selected) {
+										const dir = modelPath ? modelPath.substring(0, modelPath.lastIndexOf('/') + 1) : '';
+										deviceConfig.set('transcription.whispercpp.modelPath', dir + selected.file.filename);
+									}
+								}}
+							>
+								{#each WHISPER_MODELS as model}
+									<option value={model.id}>{model.id}</option>
+								{/each}
+							</select>
+						</div>
 
-				<!-- History limit -->
-				<div class="flex items-center justify-between">
-					<span class="text-sm">History limit</span>
-					<input
-						type="number"
-						min="1"
-						max="500"
-						class="text-sm border rounded px-2 py-0.5 w-16 bg-background text-right"
-						value={settings.get('retention.maxCount')}
-						onchange={(e) => {
-							const v = parseInt(e.currentTarget.value);
-							if (v > 0) settings.set('retention.maxCount', v);
-						}}
-					/>
-				</div>
+						<!-- Auto-paste -->
+						<div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+							<div class="flex items-center gap-2.5">
+								<ClipboardIcon class="size-4 text-blue-500" />
+								<span class="text-sm font-medium text-gray-800">Auto-paste</span>
+							</div>
+							<Switch
+								checked={autoPaste}
+								onCheckedChange={(v) => settings.set('output.transcription.cursor', v)}
+							/>
+						</div>
 
-				<hr class="border-border" />
+						<!-- History limit -->
+						<div class="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+							<div class="flex items-center gap-2.5">
+								<ListIcon class="size-4 text-blue-500" />
+								<span class="text-sm font-medium text-gray-800">History limit</span>
+							</div>
+							<input
+								type="number"
+								min="1"
+								max="500"
+								class="w-16 border border-gray-200 rounded-lg px-2 py-1 text-sm text-gray-700 bg-gray-50 text-right"
+								value={settings.get('retention.maxCount')}
+								onchange={(e) => {
+									const v = parseInt(e.currentTarget.value);
+									if (v > 0) settings.set('retention.maxCount', v);
+								}}
+							/>
+						</div>
 
-				<!-- Clear history -->
-				<button
-					class="text-sm text-left text-muted-foreground hover:text-destructive transition-colors"
-					onclick={() => {
-						recordings.sorted.forEach((r) => recordings.delete(r.id));
-					}}
-				>
-					Clear history...
-				</button>
-			</div>
-		</Popover.Content>
-	</Popover.Root>
-</div>
-
-<!-- Main content -->
-<div class="flex flex-1 flex-col items-center justify-start gap-6 w-full max-w-2xl mx-auto px-6 pt-10 pb-6">
-
-	<!-- Title -->
-	<div class="flex flex-col items-center gap-1 text-center">
-		<h1 class="text-4xl font-bold tracking-tight text-foreground">SpeakPaste</h1>
-		<p class="text-muted-foreground text-base">Local voice typing for any Mac app.</p>
+						<!-- Clear history -->
+						<button
+							class="flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-red-500 hover:bg-red-50 transition-colors"
+							onclick={() => {
+								const ids = recordings.sorted.map((r) => r.id);
+								ids.forEach((id) => recordings.delete(id));
+							}}
+						>
+							<TrashIcon class="size-4" />
+							Clear history
+						</button>
+					</div>
+				</Popover.Content>
+			</Popover.Root>
+		</div>
 	</div>
 
 	<!-- State pills -->
-	<div class="flex items-center gap-2 flex-wrap justify-center">
-		{#each [
-			{ label: 'Ready', active: recorderState === 'IDLE' && !isTranscribing },
-			{ label: 'Listening', active: recorderState === 'RECORDING' },
-			{ label: 'Transcribing locally', active: isTranscribing },
-			{ label: 'Pasted', active: false },
-		] as pill}
-			<span class="flex items-center gap-1.5 px-3 py-1 rounded-full border text-sm transition-all {
+	<div class="flex items-center justify-center gap-2 px-6 py-2 flex-wrap">
+		{#each pills as pill}
+			<span class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all border {
 				pill.active
-					? 'border-blue-400 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-medium'
-					: 'border-border text-muted-foreground'
+					? 'bg-white border-blue-300 text-blue-600 shadow-sm'
+					: 'bg-transparent border-gray-300/60 text-gray-400'
 			}">
 				{#if pill.active}
-					<span class="size-2 rounded-full bg-blue-500 animate-pulse"></span>
+					<span class="size-2 rounded-full bg-blue-500"></span>
+				{:else if pill.label === 'Listening'}
+					<AudioWaveformIcon class="size-3.5 text-gray-400" />
+				{:else if pill.label === 'Transcribing locally'}
+					<AudioWaveformIcon class="size-3.5 text-gray-400" />
+				{:else if pill.label === 'Pasted'}
+					<svg class="size-3.5 text-gray-400" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
 				{/if}
 				{pill.label}
 			</span>
 		{/each}
 	</div>
 
-	<!-- Microphone button -->
-	<button
-		onclick={() => commandCallbacks.toggleManualRecording()}
-		class="size-32 rounded-full shadow-md transition-all duration-200 flex items-center justify-center {ringClass}"
-		aria-label={recorderState === 'RECORDING' ? 'Stop recording' : 'Start recording'}
-	>
-		<MicIcon class="size-10 {recorderState === 'RECORDING' ? 'text-blue-500' : 'text-blue-400'}" />
-	</button>
-
-	<!-- Hint text -->
-	<div class="flex flex-col items-center gap-0.5 text-center">
-		<p class="text-sm text-foreground/80">Hold Fn / Globe to speak</p>
-		<p class="text-sm text-muted-foreground">Release to transcribe and paste</p>
-	</div>
-
-	<!-- Engine status -->
-	<div class="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-muted/40 text-sm text-muted-foreground">
-		<span class="size-2 rounded-full bg-green-500"></span>
-		<span>Local · whisper.cpp · {modelLabel()}</span>
-		<ShieldIcon class="size-3.5 text-muted-foreground/60" />
-	</div>
-
-	<!-- Auto-paste toggle -->
-	<div class="flex items-center justify-between w-full max-w-sm px-4 py-2.5 rounded-xl border border-border bg-background shadow-xs">
-		<span class="text-sm font-medium">Auto-paste</span>
-		<Switch
-			checked={autoPaste}
-			onCheckedChange={(v) => settings.set('output.transcription.cursor', v)}
-		/>
-	</div>
-
-	<!-- Last pasted card -->
-	{#if lastPasted?.transcript}
-		<div class="w-full max-w-sm rounded-xl border border-border bg-background shadow-xs p-4 flex flex-col gap-1">
-			<span class="text-xs font-semibold text-foreground/70 uppercase tracking-wide">Last pasted</span>
-			<div class="flex items-start justify-between gap-2">
-				<p class="text-sm text-foreground leading-relaxed line-clamp-2">{lastPasted.transcript}</p>
-				<span class="text-xs text-muted-foreground whitespace-nowrap shrink-0 mt-0.5">
-					{timeAgo(lastPasted.recordedAt)}
-				</span>
-			</div>
-		</div>
-	{/if}
-
-	<!-- Recent history -->
-	{#if recentItems.length > 0}
-		<div class="w-full max-w-sm rounded-xl border border-border bg-background shadow-xs p-4 flex flex-col gap-2">
-			<span class="text-xs font-semibold text-foreground/70 uppercase tracking-wide">Recent</span>
-			<div class="flex flex-col divide-y divide-border">
-				{#each recentItems as item}
-					<div class="flex items-center gap-2 py-2">
-						<ClockIcon class="size-3.5 text-muted-foreground shrink-0" />
-						<p class="text-sm text-foreground flex-1 truncate">{item.transcript}</p>
-						<span class="text-xs text-muted-foreground whitespace-nowrap shrink-0">
-							{timeAgo(item.recordedAt)}
-						</span>
+	<!-- Mic button with glow rings -->
+	<div class="flex flex-col items-center justify-center py-4 gap-5">
+		<div class="relative flex items-center justify-center">
+			<!-- Outer glow rings -->
+			<div class="absolute size-52 rounded-full bg-blue-100/40 {recorderState === 'RECORDING' ? 'animate-ping' : ''}"></div>
+			<div class="absolute size-44 rounded-full bg-blue-100/60"></div>
+			<div class="absolute size-36 rounded-full bg-blue-200/50"></div>
+			<!-- Waveform lines (decorative) -->
+			{#if recorderState === 'RECORDING'}
+				<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+					<div class="flex items-center gap-0.5 opacity-30">
+						{#each [3,5,8,12,8,14,10,6,10,14,8,12,8,5,3] as h}
+							<div class="w-0.5 rounded-full bg-blue-400 animate-pulse" style="height: {h * 2}px"></div>
+						{/each}
 					</div>
-				{/each}
-			</div>
+				</div>
+			{/if}
+			<!-- Main button -->
+			<button
+				onclick={() => commandCallbacks.toggleManualRecording()}
+				class="relative z-10 size-28 rounded-full bg-white shadow-lg border border-blue-100 flex items-center justify-center transition-all duration-200 hover:shadow-xl active:scale-95"
+				aria-label={recorderState === 'RECORDING' ? 'Stop recording' : 'Start recording'}
+			>
+				<MicIcon class="size-12 text-blue-500" strokeWidth={1.5} />
+			</button>
 		</div>
-	{/if}
+
+		<!-- Hint text -->
+		<div class="flex flex-col items-center gap-0.5 text-center">
+			<p class="text-sm font-medium text-gray-700">
+				Hold <span class="text-blue-500 font-semibold">Fn</span> / <span class="text-blue-500 font-semibold">Globe</span> to speak
+			</p>
+			<p class="text-sm text-gray-500">Release to transcribe and paste</p>
+		</div>
+
+		<!-- Engine status badge -->
+		<div class="flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-gray-200 shadow-sm text-sm text-gray-600">
+			<ShieldCheckIcon class="size-4 text-green-500" />
+			<span>Local</span>
+			<span class="text-gray-300">·</span>
+			<span>whisper.cpp</span>
+			<span class="text-gray-300">·</span>
+			<span>{modelLabel}</span>
+			<span class="size-2 rounded-full bg-green-500 ml-0.5"></span>
+		</div>
+
+		<!-- Auto-paste row -->
+		<div class="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white border border-gray-200 shadow-sm w-full max-w-sm mx-6">
+			<span class="text-sm font-semibold text-gray-800 flex-1">Auto-paste</span>
+			<Switch
+				checked={autoPaste}
+				onCheckedChange={(v) => settings.set('output.transcription.cursor', v)}
+			/>
+			<span class="text-sm text-gray-400">Paste after transcription</span>
+			<InfoIcon class="size-4 text-gray-300 shrink-0" />
+		</div>
+	</div>
+
+	<!-- Cards section -->
+	<div class="flex flex-col gap-3 px-5 pb-6">
+
+		<!-- Last pasted card -->
+		{#if lastPasted?.transcript}
+			<div class="rounded-2xl bg-white border border-gray-200 shadow-sm p-4">
+				<div class="flex items-center justify-between mb-3">
+					<div class="flex items-center gap-2">
+						<FileTextIcon class="size-4 text-gray-500" />
+						<span class="text-sm font-semibold text-gray-700">Last pasted</span>
+					</div>
+					<div class="flex items-center gap-1.5 text-xs text-gray-400">
+						<ClockIcon class="size-3.5" />
+						<span>{timeAgo(lastPasted.recordedAt)}</span>
+					</div>
+				</div>
+				<div class="relative px-4">
+					<span class="absolute left-0 top-0 text-2xl text-gray-200 leading-none font-serif">"</span>
+					<p class="text-sm text-gray-700 leading-relaxed line-clamp-3">{lastPasted.transcript}</p>
+					<span class="absolute right-0 bottom-0 text-2xl text-gray-200 leading-none font-serif">"</span>
+				</div>
+			</div>
+		{/if}
+
+		<!-- Recent history -->
+		{#if recentItems.length > 0}
+			<div class="rounded-2xl bg-white border border-gray-200 shadow-sm overflow-hidden">
+				<div class="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
+					<ClockIcon class="size-4 text-gray-500" />
+					<span class="text-sm font-semibold text-gray-700">Recent</span>
+				</div>
+				<div class="divide-y divide-gray-100">
+					{#each recentItems as item}
+						<div class="flex items-center gap-3 px-4 py-3">
+							<div class="size-7 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+								<AudioWaveformIcon class="size-3.5 text-blue-400" />
+							</div>
+							<p class="text-sm text-gray-700 flex-1 truncate">{item.transcript}</p>
+							<span class="text-xs text-gray-400 whitespace-nowrap shrink-0">{timeAgo(item.recordedAt)}</span>
+							<button class="text-gray-300 hover:text-gray-500 transition-colors shrink-0">
+								<MoreHorizontalIcon class="size-4" />
+							</button>
+						</div>
+					{/each}
+				</div>
+			</div>
+		{/if}
+	</div>
 </div>

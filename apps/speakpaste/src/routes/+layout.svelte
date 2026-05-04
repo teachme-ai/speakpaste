@@ -44,7 +44,7 @@
 		},
 	}}
 />
-<ModeWatcher defaultMode="dark" track={false} />
+<ModeWatcher defaultMode="light" track={false} />
 <SvelteQueryDevtools client={queryClient} buttonPosition="bottom-right" />
 
 <style>
