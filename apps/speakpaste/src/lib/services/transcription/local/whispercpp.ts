@@ -11,53 +11,45 @@ import { isModelFileSizeValid, type WhisperModelConfig } from './types';
  * Pre-built Whisper models available for download from Hugging Face.
  * These are ggml-format models compatible with whisper.cpp.
  */
+/**
+ * SpeakPaste MVP model presets — English-only, Metal-accelerated.
+ * Shown in UI as Fast / Balanced / Better.
+ */
 export const WHISPER_MODELS = [
 	{
-		id: 'tiny',
-		name: 'Tiny',
-		description: 'Fastest, basic accuracy',
+		id: 'tiny.en',
+		name: 'Fast',
+		description: 'Fast · tiny.en · Local',
 		size: '78 MB',
-		sizeBytes: 77_691_713,
+		sizeBytes: 77_704_715,
 		engine: 'whispercpp',
 		file: {
-			url: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin',
-			filename: 'ggml-tiny.bin',
+			url: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin',
+			filename: 'ggml-tiny.en.bin',
 		},
 	},
 	{
-		id: 'small',
-		name: 'Small',
-		description: 'Fast, good accuracy',
+		id: 'base.en',
+		name: 'Balanced',
+		description: 'Balanced · base.en · Local',
+		size: '148 MB',
+		sizeBytes: 147_951_465,
+		engine: 'whispercpp',
+		file: {
+			url: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin',
+			filename: 'ggml-base.en.bin',
+		},
+	},
+	{
+		id: 'small.en',
+		name: 'Better',
+		description: 'Better · small.en · Local',
 		size: '488 MB',
 		sizeBytes: 487_601_967,
 		engine: 'whispercpp',
 		file: {
-			url: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin',
-			filename: 'ggml-small.bin',
-		},
-	},
-	{
-		id: 'medium',
-		name: 'Medium',
-		description: 'Balanced speed & accuracy',
-		size: '1.5 GB',
-		sizeBytes: 1_533_763_059,
-		engine: 'whispercpp',
-		file: {
-			url: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin',
-			filename: 'ggml-medium.bin',
-		},
-	},
-	{
-		id: 'large-v3-turbo',
-		name: 'Large v3 Turbo',
-		description: 'Best accuracy, slower',
-		size: '1.6 GB',
-		sizeBytes: 1_624_555_275,
-		engine: 'whispercpp',
-		file: {
-			url: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin',
-			filename: 'ggml-large-v3-turbo.bin',
+			url: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.en.bin',
+			filename: 'ggml-small.en.bin',
 		},
 	},
 ] as const satisfies readonly WhisperModelConfig[];
@@ -159,15 +151,24 @@ export const WhisperCppTranscriptionServiceLive = {
 				const error = result;
 
 				switch (error.name) {
-					case 'ModelLoadError':
+					case 'ModelLoadError': {
+						const isIncomplete =
+							error.message.includes('not all tensors loaded') ||
+							error.message.includes('failed to load model');
 						return WhisperingErr({
-							title: '🤖 Model Loading Error',
-							description: error.message,
+							title: isIncomplete
+								? '⚠️ Model File Incomplete'
+								: '🤖 Model Loading Error',
+							description: isIncomplete
+								? 'Model file appears incomplete. Re-download the model.'
+								: error.message,
 							action: {
-								type: 'more-details',
-								error: new Error(error.message),
+								type: 'link',
+								label: 'Re-download model',
+								href: '/settings/transcription',
 							},
 						});
+					}
 
 					case 'GpuError':
 						return WhisperingErr({
