@@ -1,0 +1,76 @@
+{
+	"build": {
+		"beforeBuildCommand": "bun run build",
+		"beforeDevCommand": "bun run dev:web",
+		"frontendDist": "../build",
+		"devUrl": "http://localhost:1420"
+	},
+	"bundle": {
+		"active": true,
+		"category": "Productivity",
+		"publisher": "Braden Wong",
+		"copyright": "Copyright © 2025 Braden Wong",
+		"homepage": "https://whispering.epicenter.so",
+		"targets": "all",
+		"icon": [
+			"icons/32x32.png",
+			"icons/128x128.png",
+			"icons/128x128@2x.png",
+			"icons/icon.icns",
+			"icons/icon.ico"
+		],
+		"longDescription": "Seamlessly integrate speech-to-text transcriptions anywhere on your desktop. Powered by OpenAI's Whisper API.",
+		"shortDescription": "Press shortcut → speak → get text. Free and open source ❤️",
+		"createUpdaterArtifacts": true,
+		"macOS": {
+			"entitlements": "entitlements.plist",
+			"hardenedRuntime": true,
+			"minimumSystemVersion": "10.15",
+			"signingIdentity": "Developer ID Application: Braden Wong (3C7J97QA5Z)"
+		},
+		"linux": {
+			"appimage": {
+				"bundleMediaFramework": true
+			}
+		},
+		"windows": {
+			"webviewInstallMode": {
+				"type": "embedBootstrapper"
+			},
+			"wix": {
+				"fipsCompliant": true,
+				"language": "en-US"
+			},
+			"nsis": {
+				"compression": "bzip2",
+				"installMode": "currentUser"
+			}
+		}
+	},
+	"productName": "SpeakPaste",
+	"version": "0.1.0",
+	"identifier": "com.speakpaste.app",
+	"plugins": {},
+	"app": {
+		"macOSPrivateApi": true,
+		"windows": [
+			{
+				"resizable": true,
+				"title": "SpeakPaste",
+				"width": 1080,
+				"height": 800,
+				"minHeight": 84,
+				"minWidth": 72
+			}
+		],
+		"security": {
+			"csp": null,
+			"assetProtocol": {
+				"enable": true,
+				"scope": [
+					"**"
+				]
+			}
+		}
+	}
+}

@@ -1,0 +1,122 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.4.10/schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"css": {
+		"parser": {
+			"cssModules": true,
+			"tailwindDirectives": true
+		}
+	},
+	"html": {
+		"experimentalFullSupportEnabled": true,
+		"formatter": { "enabled": true, "indentScriptAndStyle": true }
+	},
+	"files": {
+		"ignoreUnknown": true,
+		"includes": [
+			"**",
+			"!.conductor",
+			"!apps/whispering/src-tauri",
+			"!**/.svelte-kit",
+			"!**/.astro",
+			"!**/.turbo",
+			"!**/.plasmo",
+			"!**/node_modules",
+			"!**/build",
+			"!**/dist",
+			"!package-lock.json",
+			"!pnpm-lock.yaml",
+			"!yarn.lock",
+			"!.DS_Store",
+			"!docs/articles",
+			"!**/*.md"
+		]
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab"
+	},
+	"assist": {
+		"actions": {
+			"source": {
+				"organizeImports": {
+					"level": "on",
+					"options": {
+						"identifierOrder": "natural"
+					}
+				}
+			}
+		}
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true,
+			"nursery": {
+				"useSortedClasses": "warn"
+			}
+		}
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "single"
+		}
+	},
+	"overrides": [
+		{
+			// Biome's HTML-ish language support can lint <script> blocks but can't see template usage
+			"includes": ["**/*.svelte", "**/*.astro"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						// Biome can't see template usage, so namespace imports appear unused
+						"noUnusedImports": "off",
+						// Biome can't see template usage, so template handlers look unused
+						"noUnusedVariables": "off"
+					},
+					"style": {
+						// Svelte runes are flagged as "const"-able
+						"useConst": "off",
+						// Biome flags imports as "type-only"-able when it can't see template usage
+						"useImportType": "off",
+						// Non-null assertions are sometimes needed for Svelte reactive bindings
+						"noNonNullAssertion": "off"
+					},
+					"complexity": {
+						// Svelte 5 bind:value getter/setter syntax uses commas that Biome misreads
+						"noCommaOperator": "off"
+					},
+					"suspicious": {
+						// `() => void | Promise<T>` is valid for callback props
+						"noConfusingVoidType": "off",
+						// Template expressions in Svelte can be false positives
+						"noTemplateCurlyInString": "off",
+						// Svelte template iterators don't always need explicit returns
+						"useIterableCallbackReturn": "off",
+						// Svelte components sometimes use `any` for template bindings
+						"noExplicitAny": "off"
+					},
+					"a11y": {
+						// SVG icons in components don't always need <title>
+						"noSvgWithoutTitle": "off",
+						// Svelte components often omit button type in templates
+						"useButtonType": "off",
+						// autofocus is intentional UX in dialogs and forms
+						"noAutofocus": "off",
+						// Audio recording playback doesn't have captions
+						"useMediaCaption": "off"
+					}
+				}
+			}
+		},
+		{
+			// Vendored PostHog analytics snippet — minified code, not worth linting
+			"includes": ["**/posthog.astro"],
+			"linter": { "enabled": false }
+		}
+	]
+}
