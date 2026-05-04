@@ -1,493 +1,252 @@
 <script lang="ts">
-	import { Button } from '@epicenter/ui/button';
-	import { confirmationDialog } from '@epicenter/ui/confirmation-dialog';
-	import {
-		ACCEPT_AUDIO,
-		ACCEPT_VIDEO,
-		FileDropZone,
-		MEGABYTE,
-	} from '@epicenter/ui/file-drop-zone';
-	import * as Kbd from '@epicenter/ui/kbd';
-	import { Link } from '@epicenter/ui/link';
-	import * as SectionHeader from '@epicenter/ui/section-header';
-	import * as ToggleGroup from '@epicenter/ui/toggle-group';
+	import { Switch } from '@epicenter/ui/switch';
+	import * as Popover from '@epicenter/ui/popover';
 	import { createQuery } from '@tanstack/svelte-query';
-	import type { UnlistenFn } from '@tauri-apps/api/event';
-	import { nanoid } from 'nanoid/non-secure';
-	import { onDestroy, onMount } from 'svelte';
-	import { extractErrorMessage } from 'wellcrafted/error';
-	import { partitionResults, tryAsync } from 'wellcrafted/result';
+	import MicIcon from '@lucide/svelte/icons/mic';
+	import SettingsIcon from '@lucide/svelte/icons/settings';
+	import ClockIcon from '@lucide/svelte/icons/clock';
+	import ShieldIcon from '@lucide/svelte/icons/shield';
 	import { commandCallbacks } from '$lib/commands';
-	import { WhisperingErr } from '$lib/result';
-	import TranscriptDialog from '$lib/components/copyable/TranscriptDialog.svelte';
-	import {
-		CompressionSelector,
-		TranscriptionSelector,
-		TransformationSelector,
-	} from '$lib/components/settings';
-	import ManualDeviceSelector from '$lib/components/settings/selectors/ManualDeviceSelector.svelte';
-	import VadDeviceSelector from '$lib/components/settings/selectors/VadDeviceSelector.svelte';
-	import {
-		RECORDER_STATE_TO_ICON,
-		RECORDING_MODE_OPTIONS,
-		type RecordingMode,
-		VAD_STATE_TO_ICON,
-	} from '$lib/constants/audio';
-	import { getShortcutDisplayLabel } from '$lib/constants/keyboard';
 	import { rpc } from '$lib/query';
-	import { services } from '$lib/services';
-	import { desktopServices } from '$lib/services/desktop';
-	import { deviceConfig } from '$lib/state/device-config.svelte';
 	import { recordings } from '$lib/state/recordings.svelte';
 	import { settings } from '$lib/state/settings.svelte';
-	import { vadRecorder } from '$lib/state/vad-recorder.svelte';
-	import { viewTransition } from '$lib/utils/viewTransitions';
+	import { deviceConfig } from '$lib/state/device-config.svelte';
+	import { formatDistanceToNow } from 'date-fns';
+	import { WHISPER_MODELS } from '$lib/services/transcription/local/whispercpp';
 
 	const getRecorderStateQuery = createQuery(
 		() => rpc.recorder.getRecorderState.options,
 	);
-	const latestRecording = $derived(recordings.sorted[0]);
 
-	const audioPlaybackUrlQuery = createQuery(() => ({
-		...rpc.audio.getPlaybackUrl(() => latestRecording?.id ?? '').options,
-		enabled: !!latestRecording?.id,
-	}));
+	const recorderState = $derived(getRecorderStateQuery.data ?? 'IDLE');
 
-	const blobUrl = $derived(audioPlaybackUrlQuery.data);
-
-	const availableModes = $derived(
-		RECORDING_MODE_OPTIONS.filter((mode) => {
-			if (!mode.desktopOnly) return true;
-			// Desktop only, only show if Tauri is available
-			return window.__TAURI_INTERNALS__;
-		}),
+	// Derive UI state label from recorder state
+	const isTranscribing = $derived(
+		recordings.sorted[0]?.transcriptionStatus === 'TRANSCRIBING',
 	);
 
-	const AUDIO_EXTENSIONS = [
-		'mp3',
-		'wav',
-		'm4a',
-		'aac',
-		'ogg',
-		'flac',
-		'wma',
-		'opus',
-	] as const;
+	const stateLabel = $derived(
+		recorderState === 'RECORDING'
+			? 'Listening'
+			: isTranscribing
+				? 'Transcribing locally'
+				: 'Ready',
+	);
 
-	const VIDEO_EXTENSIONS = [
-		'mp4',
-		'avi',
-		'mov',
-		'wmv',
-		'flv',
-		'mkv',
-		'webm',
-		'm4v',
-	] as const;
+	// Last pasted = most recent DONE recording
+	const lastPasted = $derived(
+		recordings.sorted.find((r) => r.transcriptionStatus === 'DONE'),
+	);
 
-	// Store unlisten function for drag drop events
-	let unlistenDragDrop: UnlistenFn | undefined;
+	// Recent = last 3 DONE recordings
+	const recentItems = $derived(
+		recordings.sorted
+			.filter((r) => r.transcriptionStatus === 'DONE' && r.transcript.trim())
+			.slice(0, 3),
+	);
 
-	// Set up desktop drag and drop listener
-	onMount(async () => {
-		if (!window.__TAURI_INTERNALS__) return;
-		const { error } = await tryAsync({
-			try: async () => {
-				const { getCurrentWebview } = await import('@tauri-apps/api/webview');
-				const { extname } = await import('@tauri-apps/api/path');
+	// Auto-paste toggle — maps to output.transcription.cursor
+	const autoPaste = $derived(settings.get('output.transcription.cursor'));
 
-				const isAudio = async (path: string) =>
-					AUDIO_EXTENSIONS.includes(
-						(await extname(path)) as (typeof AUDIO_EXTENSIONS)[number],
-					);
-				const isVideo = async (path: string) =>
-					VIDEO_EXTENSIONS.includes(
-						(await extname(path)) as (typeof VIDEO_EXTENSIONS)[number],
-					);
-
-				unlistenDragDrop = await getCurrentWebview().onDragDropEvent(
-					async (event) => {
-						if (settings.get('recording.mode') !== 'upload') return;
-						if (
-							event.payload.type !== 'drop' ||
-							event.payload.paths.length === 0
-						)
-							return;
-
-						// Filter for audio/video files based on extension
-						const pathResults = await Promise.all(
-							event.payload.paths.map(async (path) => ({
-								path,
-								isValid: (await isAudio(path)) || (await isVideo(path)),
-							})),
-						);
-						const validPaths = pathResults
-							.filter(({ isValid }) => isValid)
-							.map(({ path }) => path);
-
-						if (validPaths.length === 0) {
-							rpc.notify.warning({
-								title: '⚠️ No valid files',
-								description: 'Please drop audio or video files',
-							});
-							return;
-						}
-
-						await switchRecordingMode('upload');
-
-						// Convert file paths to File objects using the fs service
-						const { data: files, error } =
-							await desktopServices.fs.pathsToFiles(validPaths);
-
-						if (error) {
-							rpc.notify.error({
-								title: '❌ Failed to read files',
-								description: error.message,
-							});
-							return;
-						}
-
-						if (files.length > 0) {
-							await rpc.actions.uploadRecordings({ files });
-						}
-					},
-				);
-			},
-			catch: (error) =>
-				WhisperingErr({
-					title: '❌ Failed to set up drag drop listener',
-					description: extractErrorMessage(error),
-				}),
-		});
-		if (error) rpc.notify.error(error);
+	// Current model name from path
+	const modelPath = $derived(deviceConfig.get('transcription.whispercpp.modelPath'));
+	const modelLabel = $derived(() => {
+		const match = WHISPER_MODELS.find((m) => modelPath.endsWith(m.file.filename));
+		return match?.id ?? 'tiny.en';
 	});
 
-	onDestroy(() => {
-		unlistenDragDrop?.();
-		// Clean up audio URL when component unmounts to prevent memory leaks
-		if (latestRecording?.id) {
-			services.blobs.audio.revokeUrl(latestRecording.id);
-		}
-	});
-
-	async function stopAllRecordingModesExcept(modeToKeep: RecordingMode) {
-		const { data: recorderState } = await rpc.recorder.getRecorderState.fetch();
-
-		const recordingModes = [
-			{
-				mode: 'manual' as const,
-				isActive: () => recorderState === 'RECORDING',
-				stop: () => rpc.actions.stopManualRecording(),
-			},
-			{
-				mode: 'vad' as const,
-				isActive: () => vadRecorder.state !== 'IDLE',
-				stop: () => rpc.actions.stopVadRecording(),
-			},
-		] satisfies {
-			mode: RecordingMode;
-			isActive: () => boolean;
-			stop: () => Promise<unknown>;
-		}[];
-
-		const modesToStop = recordingModes.filter(
-			(recordingMode) =>
-				recordingMode.mode !== modeToKeep && recordingMode.isActive(),
-		);
-
-		const stopPromises = modesToStop.map(
-			async (recordingMode) => await recordingMode.stop(),
-		);
-
-		const results = await Promise.all(stopPromises);
-		return partitionResults(results);
-	}
-
-	async function switchRecordingMode(newMode: RecordingMode) {
-		const toastId = nanoid();
-		const { errs } = await stopAllRecordingModesExcept(newMode);
-
-		if (errs.length > 0) {
-			console.error('Failed to stop active recordings:', errs);
-			rpc.notify.warning({
-				id: toastId,
-				title: '⚠️ Recording may still be active',
-				description:
-					'Previous recording could not be stopped automatically. Please stop it manually.',
-			});
-		}
-
-		if (settings.get('recording.mode') !== newMode) {
-			settings.set('recording.mode', newMode);
-			rpc.notify.success({
-				id: toastId,
-				title: '✅ Recording mode switched',
-				description: `Switched to ${newMode} recording mode`,
-			});
+	function timeAgo(dateStr: string) {
+		try {
+			return formatDistanceToNow(new Date(dateStr), { addSuffix: true });
+		} catch {
+			return '';
 		}
 	}
+
+	// Button ring color by state
+	const ringClass = $derived(
+		recorderState === 'RECORDING'
+			? 'ring-4 ring-blue-400/60 bg-blue-50 dark:bg-blue-950/30'
+			: isTranscribing
+				? 'ring-4 ring-amber-400/60 bg-amber-50 dark:bg-amber-950/30'
+				: 'ring-4 ring-transparent bg-white dark:bg-neutral-800 hover:ring-blue-200 dark:hover:ring-blue-800',
+	);
 </script>
 
-<svelte:head> <title>SpeakPaste</title> </svelte:head>
+<svelte:head><title>SpeakPaste</title></svelte:head>
 
-<div
-	class="flex flex-1 flex-col items-center justify-center gap-4 w-full max-w-md mx-auto px-4"
->
-	<SectionHeader.Root class="xs:flex hidden flex-col items-center gap-4">
-		<SectionHeader.Title
-			level={1}
-			class="scroll-m-20 text-4xl tracking-tight lg:text-5xl"
-		>
-			SpeakPaste
-		</SectionHeader.Title>
-		<SectionHeader.Description class="text-center">
-			Local voice typing for any Mac app.
-		</SectionHeader.Description>
-	</SectionHeader.Root>
-
-	<ToggleGroup.Root
-		type="single"
-		bind:value={() => settings.get('recording.mode'),
-			(mode) => {
-				if (!mode) return;
-				void switchRecordingMode(mode as RecordingMode);
-			}}
-		class="w-full"
-	>
-		{#each availableModes as option}
-			<ToggleGroup.Item
-				value={option.value}
-				aria-label={`Switch to ${option.label.toLowerCase()} mode`}
-			>
-				{option.icon}
-				<span class="hidden sm:inline">{option.label}</span>
-			</ToggleGroup.Item>
-		{/each}
-	</ToggleGroup.Root>
-
-	{#if settings.get('recording.mode') === 'manual'}
-		<!-- Container with relative positioning for the button and absolute selectors -->
-		<div class="relative">
-			<Button
-				tooltip={getRecorderStateQuery.data === 'IDLE'
-					? 'Start recording'
-					: 'Stop recording'}
-				onclick={() => commandCallbacks.toggleManualRecording()}
-				variant="ghost"
-				class="shrink-0 size-32 sm:size-36 lg:size-40 xl:size-44 transform items-center justify-center overflow-hidden duration-300 ease-in-out"
-			>
-				<span
-					style="filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.5)); view-transition-name: {viewTransition
-						.global.microphone};"
-					class="text-[100px] sm:text-[110px] lg:text-[120px] xl:text-[130px] leading-none"
+<!-- Top-right settings gear -->
+<div class="absolute top-4 right-4 z-10">
+	<Popover.Root>
+		<Popover.Trigger>
+			{#snippet child({ props })}
+				<button
+					{...props}
+					class="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+					aria-label="Settings"
 				>
-					{RECORDER_STATE_TO_ICON[getRecorderStateQuery.data ?? 'IDLE']}
-				</span>
-			</Button>
-			{#if getRecorderStateQuery.data === 'RECORDING'}
-				<div class="absolute -right-12 bottom-4 flex items-center">
-					<Button
-						tooltip="Cancel recording"
-						onclick={() => commandCallbacks.cancelManualRecording()}
-						variant="ghost"
-						size="icon"
-						style="view-transition-name: {viewTransition.global.cancel};"
+					<SettingsIcon class="size-5" />
+				</button>
+			{/snippet}
+		</Popover.Trigger>
+		<Popover.Content class="w-72 p-4" align="end" sideOffset={8}>
+			<div class="flex flex-col gap-4">
+				<!-- Trigger mode -->
+				<div class="flex items-center justify-between">
+					<span class="text-sm">Trigger mode</span>
+					<span class="text-sm text-muted-foreground border rounded px-2 py-0.5">Hold to speak</span>
+				</div>
+
+				<!-- Model -->
+				<div class="flex items-center justify-between">
+					<span class="text-sm">Model</span>
+					<select
+						class="text-sm border rounded px-2 py-0.5 bg-background"
+						value={modelLabel()}
+						onchange={(e) => {
+							const selected = WHISPER_MODELS.find((m) => m.id === e.currentTarget.value);
+							if (selected) {
+								const dir = modelPath.substring(0, modelPath.lastIndexOf('/') + 1);
+								deviceConfig.set('transcription.whispercpp.modelPath', dir + selected.file.filename);
+							}
+						}}
 					>
-						🚫
-					</Button>
+						{#each WHISPER_MODELS as model}
+							<option value={model.id}>{model.id}</option>
+						{/each}
+					</select>
 				</div>
-			{:else}
-				<div class="absolute -right-32 bottom-4 flex items-center gap-0.5">
-					<ManualDeviceSelector />
-					<CompressionSelector />
-					<TranscriptionSelector />
-					<TransformationSelector />
+
+				<!-- Auto-paste -->
+				<div class="flex items-center justify-between">
+					<span class="text-sm">Auto-paste</span>
+					<Switch
+						checked={autoPaste}
+						onCheckedChange={(v) => settings.set('output.transcription.cursor', v)}
+					/>
 				</div>
-			{/if}
-		</div>
-	{:else if settings.get('recording.mode') === 'vad'}
-		<!-- Container with relative positioning for the button and absolute selectors -->
-		<div class="relative">
-			<Button
-				tooltip={vadRecorder.state === 'IDLE'
-					? 'Start voice activated session'
-					: 'Stop voice activated session'}
-				onclick={() => commandCallbacks.toggleVadRecording()}
-				variant="ghost"
-				class="shrink-0 size-32 sm:size-36 lg:size-40 xl:size-44 transform items-center justify-center overflow-hidden duration-300 ease-in-out"
-			>
-				<span
-					style="filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.5)); view-transition-name: {viewTransition
-						.global.microphone};"
-					class="text-[100px] sm:text-[110px] lg:text-[120px] xl:text-[130px] leading-none"
+
+				<!-- History limit -->
+				<div class="flex items-center justify-between">
+					<span class="text-sm">History limit</span>
+					<input
+						type="number"
+						min="1"
+						max="500"
+						class="text-sm border rounded px-2 py-0.5 w-16 bg-background text-right"
+						value={settings.get('retention.maxCount')}
+						onchange={(e) => {
+							const v = parseInt(e.currentTarget.value);
+							if (v > 0) settings.set('retention.maxCount', v);
+						}}
+					/>
+				</div>
+
+				<hr class="border-border" />
+
+				<!-- Clear history -->
+				<button
+					class="text-sm text-left text-muted-foreground hover:text-destructive transition-colors"
+					onclick={() => {
+						recordings.sorted.forEach((r) => recordings.delete(r.id));
+					}}
 				>
-					{VAD_STATE_TO_ICON[vadRecorder.state]}
+					Clear history...
+				</button>
+			</div>
+		</Popover.Content>
+	</Popover.Root>
+</div>
+
+<!-- Main content -->
+<div class="flex flex-1 flex-col items-center justify-start gap-6 w-full max-w-2xl mx-auto px-6 pt-10 pb-6">
+
+	<!-- Title -->
+	<div class="flex flex-col items-center gap-1 text-center">
+		<h1 class="text-4xl font-bold tracking-tight text-foreground">SpeakPaste</h1>
+		<p class="text-muted-foreground text-base">Local voice typing for any Mac app.</p>
+	</div>
+
+	<!-- State pills -->
+	<div class="flex items-center gap-2 flex-wrap justify-center">
+		{#each [
+			{ label: 'Ready', active: recorderState === 'IDLE' && !isTranscribing },
+			{ label: 'Listening', active: recorderState === 'RECORDING' },
+			{ label: 'Transcribing locally', active: isTranscribing },
+			{ label: 'Pasted', active: false },
+		] as pill}
+			<span class="flex items-center gap-1.5 px-3 py-1 rounded-full border text-sm transition-all {
+				pill.active
+					? 'border-blue-400 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-medium'
+					: 'border-border text-muted-foreground'
+			}">
+				{#if pill.active}
+					<span class="size-2 rounded-full bg-blue-500 animate-pulse"></span>
+				{/if}
+				{pill.label}
+			</span>
+		{/each}
+	</div>
+
+	<!-- Microphone button -->
+	<button
+		onclick={() => commandCallbacks.toggleManualRecording()}
+		class="size-32 rounded-full shadow-md transition-all duration-200 flex items-center justify-center {ringClass}"
+		aria-label={recorderState === 'RECORDING' ? 'Stop recording' : 'Start recording'}
+	>
+		<MicIcon class="size-10 {recorderState === 'RECORDING' ? 'text-blue-500' : 'text-blue-400'}" />
+	</button>
+
+	<!-- Hint text -->
+	<div class="flex flex-col items-center gap-0.5 text-center">
+		<p class="text-sm text-foreground/80">Hold Fn / Globe to speak</p>
+		<p class="text-sm text-muted-foreground">Release to transcribe and paste</p>
+	</div>
+
+	<!-- Engine status -->
+	<div class="flex items-center gap-2 px-3 py-1.5 rounded-full border border-border bg-muted/40 text-sm text-muted-foreground">
+		<span class="size-2 rounded-full bg-green-500"></span>
+		<span>Local · whisper.cpp · {modelLabel()}</span>
+		<ShieldIcon class="size-3.5 text-muted-foreground/60" />
+	</div>
+
+	<!-- Auto-paste toggle -->
+	<div class="flex items-center justify-between w-full max-w-sm px-4 py-2.5 rounded-xl border border-border bg-background shadow-xs">
+		<span class="text-sm font-medium">Auto-paste</span>
+		<Switch
+			checked={autoPaste}
+			onCheckedChange={(v) => settings.set('output.transcription.cursor', v)}
+		/>
+	</div>
+
+	<!-- Last pasted card -->
+	{#if lastPasted?.transcript}
+		<div class="w-full max-w-sm rounded-xl border border-border bg-background shadow-xs p-4 flex flex-col gap-1">
+			<span class="text-xs font-semibold text-foreground/70 uppercase tracking-wide">Last pasted</span>
+			<div class="flex items-start justify-between gap-2">
+				<p class="text-sm text-foreground leading-relaxed line-clamp-2">{lastPasted.transcript}</p>
+				<span class="text-xs text-muted-foreground whitespace-nowrap shrink-0 mt-0.5">
+					{timeAgo(lastPasted.recordedAt)}
 				</span>
-			</Button>
-			{#if vadRecorder.state === 'IDLE'}
-				<div class="absolute -right-32 bottom-4 flex items-center gap-0.5">
-					<VadDeviceSelector />
-					<CompressionSelector />
-					<TranscriptionSelector />
-					<TransformationSelector />
-				</div>
-			{/if}
-		</div>
-	{:else if settings.get('recording.mode') === 'upload'}
-		<div class="flex flex-col items-center gap-4 w-full">
-			<FileDropZone
-				accept="{ACCEPT_AUDIO}, {ACCEPT_VIDEO}"
-				maxFiles={10}
-				maxFileSize={25 * MEGABYTE}
-				onUpload={async (files) => {
-					if (files.length > 0) {
-					await rpc.actions.uploadRecordings({ files });
-					}
-				}}
-				onFileRejected={({ file, reason }) => {
-					rpc.notify.error({
-						title: '❌ File rejected',
-						description: `${file.name}: ${reason}`,
-					});
-				}}
-				class="h-32 sm:h-36 lg:h-40 xl:h-44 w-full"
-			/>
-			<div class="flex items-center gap-1.5">
-				<CompressionSelector />
-				<TranscriptionSelector />
-				<TransformationSelector />
 			</div>
 		</div>
 	{/if}
 
-	{#if latestRecording}
-		<div class="xxs:flex hidden w-full flex-col gap-2">
-			<TranscriptDialog
-				recordingId={latestRecording.id}
-				transcript={latestRecording.transcriptionStatus === 'TRANSCRIBING'
-					? '...'
-					: latestRecording.transcript}
-				rows={1}
-				disabled={!latestRecording.transcript.trim()}
-				loading={latestRecording.transcriptionStatus === 'TRANSCRIBING'}
-				onDelete={() => {
-					confirmationDialog.open({
-						title: 'Delete recording',
-						description: 'Are you sure you want to delete this recording?',
-						confirm: { text: 'Delete', variant: 'destructive' },
-						onConfirm: () => {
-							services.blobs.audio.revokeUrl(latestRecording.id);
-							recordings.delete(latestRecording.id);
-							rpc.notify.success({
-								title: 'Deleted recording!',
-								description: 'Your recording has been deleted.',
-							});
-						},
-					});
-				}}
-			/>
-
-			{#if blobUrl}
-				<audio
-					style="view-transition-name: {viewTransition.recording(
-						latestRecording.id,
-					).audio}"
-					src={blobUrl}
-					controls
-					class="h-8 w-full"
-				></audio>
-			{/if}
+	<!-- Recent history -->
+	{#if recentItems.length > 0}
+		<div class="w-full max-w-sm rounded-xl border border-border bg-background shadow-xs p-4 flex flex-col gap-2">
+			<span class="text-xs font-semibold text-foreground/70 uppercase tracking-wide">Recent</span>
+			<div class="flex flex-col divide-y divide-border">
+				{#each recentItems as item}
+					<div class="flex items-center gap-2 py-2">
+						<ClockIcon class="size-3.5 text-muted-foreground shrink-0" />
+						<p class="text-sm text-foreground flex-1 truncate">{item.transcript}</p>
+						<span class="text-xs text-muted-foreground whitespace-nowrap shrink-0">
+							{timeAgo(item.recordedAt)}
+						</span>
+					</div>
+				{/each}
+			</div>
 		</div>
 	{/if}
-
-	<div class="xs:flex hidden flex-col items-center gap-3">
-		{#if settings.get('recording.mode') === 'manual'}
-			<p class="text-foreground/75 text-center text-sm">
-				Click the microphone or press
-				{' '}
-				<Link
-					tooltip="Go to local shortcut in settings"
-					href="/settings/shortcuts/local"
-				>
-					<Kbd.Root
-						>{getShortcutDisplayLabel(
-							settings.get('shortcut.toggleManualRecording'),
-						)}</Kbd.Root
-					>
-				</Link>
-				{' '}
-				to start recording here.
-			</p>
-			{#if window.__TAURI_INTERNALS__}
-				<p class="text-foreground/75 text-sm">
-					Press
-					{' '}
-					<Link
-						tooltip="Go to global shortcut in settings"
-						href="/settings/shortcuts/global"
-					>
-						<Kbd.Root
-							>{getShortcutDisplayLabel(
-						deviceConfig.get('shortcuts.global.toggleManualRecording'),
-							)}</Kbd.Root
-						>
-					</Link>
-					{' '}
-					to start recording anywhere.
-				</p>
-			{/if}
-		{:else if settings.get('recording.mode') === 'vad'}
-			<p class="text-foreground/75 text-center text-sm">
-				Click the microphone or press
-				{' '}
-				<Link
-					tooltip="Go to local shortcut in settings"
-					href="/settings/shortcuts/local"
-				>
-					<Kbd.Root
-						>{getShortcutDisplayLabel(
-							settings.get('shortcut.toggleVadRecording'),
-						)}</Kbd.Root
-					>
-				</Link>
-				{' '}
-				to start a voice activated session.
-			</p>
-		{:else if settings.get('recording.mode') === 'upload'}
-			<p class="text-foreground/75 text-center text-sm">
-				Drag files here or click to browse.
-			</p>
-			{#if window.__TAURI_INTERNALS__}
-				<p class="text-foreground/75 text-sm">
-					Press
-					{' '}
-					<Link
-						tooltip="Go to global shortcut in settings"
-						href="/settings/shortcuts/global"
-					>
-						<Kbd.Root
-							>{getShortcutDisplayLabel(
-						deviceConfig.get('shortcuts.global.toggleManualRecording'),
-							)}</Kbd.Root
-						>
-					</Link>
-					{' '}
-					to start recording instead.
-				</p>
-			{/if}
-		{/if}
-		<p class="text-muted-foreground text-center text-sm font-light">
-			{#if !window.__TAURI_INTERNALS__}
-				Tired of switching tabs?
-				<Link
-					tooltip="Get SpeakPaste for desktop"
-					href="https://github.com/irfan1476/speakpaste"
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					Get the native desktop app
-				</Link>
-			{/if}
-		</p>
-	</div>
 </div>
