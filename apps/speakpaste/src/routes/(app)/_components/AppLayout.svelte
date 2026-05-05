@@ -40,7 +40,7 @@
 		// Clear any stale shortcut that isn't F7
 		const staleKey = 'speakpaste.device.shortcuts.global.toggleManualRecording';
 		const stored = localStorage.getItem(staleKey);
-		if (stored && !stored.includes('F7')) {
+		if (stored && !stored.includes('Option+R')) {
 			console.info('[Shortcuts] clearing stale shortcut:', stored);
 			localStorage.removeItem(staleKey);
 		}
