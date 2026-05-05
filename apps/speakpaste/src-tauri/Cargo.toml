@@ -1,7 +1,7 @@
 [package]
-name = "whispering"
+name = "speakpaste"
 version = "0.1.0"
-description = "A Tauri App"
+description = "Mac-only local-first voice typing powered by whisper.cpp"
 authors = ["you"]
 repository = "https://github.com/irfan1476/speakpaste"
 edition = "2021"
@@ -13,10 +13,7 @@ cargo-target-macos-version = "10.15"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
-# The `_lib` suffix may seem redundant but it is necessary
-# to make the lib name unique and wouldn't conflict with the bin name.
-# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
-name = "whispering_lib"
+name = "speakpaste_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]

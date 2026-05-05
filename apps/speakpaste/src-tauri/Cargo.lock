@@ -5224,6 +5224,51 @@ dependencies = [
 ]
 
 [[package]]
+name = "speakpaste"
+version = "0.1.0"
+dependencies = [
+ "accessibility-sys",
+ "core-foundation-sys",
+ "cpal",
+ "dotenvy_macro",
+ "enigo",
+ "fix-path-env",
+ "hound",
+ "lazy_static",
+ "log",
+ "nix 0.29.0",
+ "rayon",
+ "regex",
+ "rubato",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-aptabase",
+ "tauri-plugin-autostart",
+ "tauri-plugin-clipboard-manager",
+ "tauri-plugin-dialog",
+ "tauri-plugin-fs",
+ "tauri-plugin-global-shortcut",
+ "tauri-plugin-http",
+ "tauri-plugin-log",
+ "tauri-plugin-macos-permissions",
+ "tauri-plugin-notification",
+ "tauri-plugin-opener",
+ "tauri-plugin-os",
+ "tauri-plugin-process",
+ "tauri-plugin-shell",
+ "tauri-plugin-single-instance",
+ "tauri-plugin-updater",
+ "tempfile",
+ "thiserror 2.0.17",
+ "tokio",
+ "tracing",
+ "transcribe-rs",
+ "windows-sys 0.59.0",
+]
+
+[[package]]
 name = "stable_deref_trait"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7011,51 +7056,6 @@ dependencies = [
  "cfg-if",
  "cmake",
  "fs_extra",
-]
-
-[[package]]
-name = "whispering"
-version = "0.1.0"
-dependencies = [
- "accessibility-sys",
- "core-foundation-sys",
- "cpal",
- "dotenvy_macro",
- "enigo",
- "fix-path-env",
- "hound",
- "lazy_static",
- "log",
- "nix 0.29.0",
- "rayon",
- "regex",
- "rubato",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-aptabase",
- "tauri-plugin-autostart",
- "tauri-plugin-clipboard-manager",
- "tauri-plugin-dialog",
- "tauri-plugin-fs",
- "tauri-plugin-global-shortcut",
- "tauri-plugin-http",
- "tauri-plugin-log",
- "tauri-plugin-macos-permissions",
- "tauri-plugin-notification",
- "tauri-plugin-opener",
- "tauri-plugin-os",
- "tauri-plugin-process",
- "tauri-plugin-shell",
- "tauri-plugin-single-instance",
- "tauri-plugin-updater",
- "tempfile",
- "thiserror 2.0.17",
- "tokio",
- "tracing",
- "transcribe-rs",
- "windows-sys 0.59.0",
 ]
 
 [[package]]
