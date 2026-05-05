@@ -23,7 +23,10 @@ export function createTextServiceDesktop(): TextService {
 
 		writeToCursor: async (text) =>
 			tryAsync({
-				try: () => invoke<void>('write_text', { text }),
+				try: async () => {
+					const status = await invoke<string>('write_text', { text });
+					console.info(`[Paste] status: ${status}`);
+				},
 				catch: (error) => TextError.WriteToCursor({ cause: error }),
 			}),
 

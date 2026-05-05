@@ -37,11 +37,11 @@
 		window.commands = commandCallbacks;
 		window.goto = goto;
 
-		// Migrate stale Command+Shift+; shortcut (was invalid — semicolon not a valid accelerator key)
+		// Clear any stale shortcut that isn't F7
 		const staleKey = 'speakpaste.device.shortcuts.global.toggleManualRecording';
 		const stored = localStorage.getItem(staleKey);
-		if (stored && stored.includes(';')) {
-			console.info('[Shortcuts] removing stale Command+Shift+; shortcut');
+		if (stored && !stored.includes('F7')) {
+			console.info('[Shortcuts] clearing stale shortcut:', stored);
 			localStorage.removeItem(staleKey);
 		}
 

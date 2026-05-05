@@ -199,67 +199,95 @@ pub async fn run() {
 use enigo::{Direction, Enigo, Key, Keyboard, Settings};
 use tauri_plugin_clipboard_manager::ClipboardExt;
 
-/// Writes text at the cursor position using the clipboard sandwich technique
+/// Writes text at the cursor position using the clipboard sandwich technique.
 ///
-/// This method preserves the user's existing clipboard content by:
-/// 1. Saving the current clipboard content
-/// 2. Writing the new text to clipboard
-/// 3. Simulating a paste operation (Cmd+V on macOS, Ctrl+V elsewhere)
-/// 4. Restoring the original clipboard content
+/// Safe restore logic:
+/// 1. Save original clipboard
+/// 2. Write transcript to clipboard
+/// 3. Simulate Cmd+V paste
+/// 4. Wait for paste to complete
+/// 5. Read clipboard again
+/// 6. ONLY restore original if clipboard still contains the transcript we wrote
+///    If the user copied something new in the meantime, skip restore to avoid hijacking.
 ///
-/// This approach is faster than typing character-by-character and preserves
-/// the user's clipboard, making it ideal for inserting transcribed text.
+/// Returns a status string:
+///   "pasted_and_restored"  — paste succeeded, original clipboard restored
+///   "pasted_clipboard_changed" — paste succeeded, user copied something new, restore skipped
+///   "pasted_no_original"   — paste succeeded, no original to restore
+///   "paste_failed"         — paste simulation failed, transcript left on clipboard
 #[tauri::command]
-async fn write_text(app: tauri::AppHandle, text: String) -> Result<(), String> {
-    // 1. Save current clipboard content
-    let original_clipboard = app.clipboard().read_text().ok();
+async fn write_text(app: tauri::AppHandle, text: String) -> Result<String, String> {
+    info!("[Paste] starting clipboard sandwich for {} chars", text.len());
 
-    // 2. Write new text to clipboard
+    // 1. Save current clipboard content before we touch it
+    let original_clipboard = app.clipboard().read_text().ok();
+    info!("[Paste] original clipboard saved ({} chars)",
+        original_clipboard.as_deref().map(|s| s.len()).unwrap_or(0));
+
+    // 2. Write transcript to clipboard
     app.clipboard()
         .write_text(&text)
         .map_err(|e| format!("Failed to write to clipboard: {}", e))?;
 
-    // Small delay to ensure clipboard is updated
+    // Wait for clipboard write to propagate
     tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
 
-    // 3. Simulate paste operation using virtual key codes (layout-independent)
-    let mut enigo = Enigo::new(&Settings::default()).map_err(|e| e.to_string())?;
+    // 3. Simulate paste (Cmd+V on macOS)
+    let paste_result = {
+        let mut enigo = Enigo::new(&Settings::default()).map_err(|e| e.to_string())?;
 
-    // Use virtual key codes for V to work with any keyboard layout
-    #[cfg(target_os = "macos")]
-    let (modifier, v_key) = (Key::Meta, Key::Other(9)); // Virtual key code for V on macOS
-    #[cfg(target_os = "windows")]
-    let (modifier, v_key) = (Key::Control, Key::Other(0x56)); // VK_V on Windows
-    #[cfg(target_os = "linux")]
-    let (modifier, v_key) = (Key::Control, Key::Unicode('v')); // Fallback for Linux
+        #[cfg(target_os = "macos")]
+        let (modifier, v_key) = (Key::Meta, Key::Other(9));
+        #[cfg(target_os = "windows")]
+        let (modifier, v_key) = (Key::Control, Key::Other(0x56));
+        #[cfg(target_os = "linux")]
+        let (modifier, v_key) = (Key::Control, Key::Unicode('v'));
 
-    // Press modifier + V
-    enigo
-        .key(modifier, Direction::Press)
-        .map_err(|e| format!("Failed to press modifier key: {}", e))?;
-    enigo
-        .key(v_key, Direction::Press)
-        .map_err(|e| format!("Failed to press V key: {}", e))?;
+        let r1 = enigo.key(modifier, Direction::Press);
+        let r2 = enigo.key(v_key, Direction::Press);
+        let r3 = enigo.key(v_key, Direction::Release);
+        let r4 = enigo.key(modifier, Direction::Release);
 
-    // Release V + modifier (in reverse order for proper cleanup)
-    enigo
-        .key(v_key, Direction::Release)
-        .map_err(|e| format!("Failed to release V key: {}", e))?;
-    enigo
-        .key(modifier, Direction::Release)
-        .map_err(|e| format!("Failed to release modifier key: {}", e))?;
+        r1.and(r2).and(r3).and(r4)
+    };
 
-    // Small delay to ensure paste completes
-    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
-
-    // 4. Restore original clipboard content
-    if let Some(content) = original_clipboard {
-        app.clipboard()
-            .write_text(&content)
-            .map_err(|e| format!("Failed to restore clipboard: {}", e))?;
+    if let Err(e) = paste_result {
+        // Paste simulation failed — leave transcript on clipboard, do not restore
+        warn!("[Paste] paste simulation failed: {} — transcript left on clipboard", e);
+        return Ok("paste_failed".to_string());
     }
 
-    Ok(())
+    // 4. Wait for paste to complete before checking clipboard
+    tokio::time::sleep(tokio::time::Duration::from_millis(150)).await;
+
+    info!("[Paste] paste simulation complete");
+
+    // 5. Safe restore: only restore if clipboard still contains what we wrote
+    match original_clipboard {
+        None => {
+            // No original to restore — leave transcript on clipboard
+            info!("[Paste] no original clipboard to restore");
+            Ok("pasted_no_original".to_string())
+        }
+        Some(original) => {
+            // Read current clipboard to check if user copied something new
+            let current = app.clipboard().read_text().ok();
+            let current_text = current.as_deref().unwrap_or("");
+
+            if current_text == text {
+                // Clipboard still has our transcript — safe to restore
+                app.clipboard()
+                    .write_text(&original)
+                    .map_err(|e| format!("Failed to restore clipboard: {}", e))?;
+                info!("[Paste] original clipboard restored");
+                Ok("pasted_and_restored".to_string())
+            } else {
+                // Clipboard changed — user copied something new, do not overwrite
+                info!("[Paste] clipboard changed after paste — skipping restore to preserve user's copy");
+                Ok("pasted_clipboard_changed".to_string())
+            }
+        }
+    }
 }
 
 /// Simulates pressing the Enter/Return key
