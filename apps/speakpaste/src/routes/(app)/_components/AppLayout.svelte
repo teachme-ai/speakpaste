@@ -41,7 +41,7 @@
 		// Covers: Space, Spacebar, Command+Shift+Space, Command+Option+R, F7, Command+Shift+; (all previous bad defaults)
 		const staleKey = 'speakpaste.device.shortcuts.global.toggleManualRecording';
 		const stored = localStorage.getItem(staleKey);
-		const BAD_DEFAULTS = ['Space', ';', 'Option+R', 'F7', 'Return'];
+		const BAD_DEFAULTS = ['Space', ';', 'Option+R', 'F7', 'Return', 'F5'];
 		const isStale = stored && BAD_DEFAULTS.some((bad) => stored.includes(bad));
 		if (isStale) {
 			console.info('[Shortcuts] migrating stale shortcut to Command+Shift+Return:', stored);

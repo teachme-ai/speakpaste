@@ -28,7 +28,7 @@ const DEFAULT_LOCAL_SHORTCUTS: Record<string, string | null> = {
 /** Default values for global OS shortcuts. Keyed by command id string. */
 const DEFAULT_GLOBAL_SHORTCUTS: Record<string, string | null> = {
 	pushToTalk: `${CommandOrAlt}+Shift+D`,
-	toggleManualRecording: `${CommandOrControl}+Shift+F5`,
+	toggleManualRecording: `${CommandOrControl}+Shift+F8`,
 	startManualRecording: null,
 	stopManualRecording: null,
 	cancelManualRecording: `${CommandOrControl}+Shift+'`,
@@ -130,7 +130,7 @@ export async function syncGlobalShortcutsWithSettings() {
 				console.warn(`[Shortcuts] registration failed: ${item.command.id} = ${item.accelerator}`, result.error);
 				// Fallback for toggleManualRecording
 				if (item.command.id === 'toggleManualRecording') {
-					const fallback = `${CommandOrControl}+Shift+F6` as Accelerator;
+					const fallback = `${CommandOrControl}+Shift+F9` as Accelerator;
 					console.info(`[Shortcuts] trying fallback: ${item.command.id} = ${fallback}`);
 					const fallbackResult = await desktopRpc.globalShortcuts.registerCommand({
 						command: item.command,
