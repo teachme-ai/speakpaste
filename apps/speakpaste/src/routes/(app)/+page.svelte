@@ -15,7 +15,7 @@
 	import InfoIcon from '@lucide/svelte/icons/info';
 	import TrashIcon from '@lucide/svelte/icons/trash-2';
 	import MoreHorizontalIcon from '@lucide/svelte/icons/more-horizontal';
-	import { onMount } from 'svelte';
+	import { onMount, untrack } from 'svelte';
 	import { rpc } from '$lib/query';
 	import { recordings } from '$lib/state/recordings.svelte';
 	import { settings } from '$lib/state/settings.svelte';
@@ -40,13 +40,16 @@
 	let pastedTimer: ReturnType<typeof setTimeout> | undefined;
 	let lastDoneId = $state('');
 
+	// Pasted pill: fires when a new recording appears in fsRecordings
+	const latestId = $derived(fsRecordings[0]?.id ?? '');
 	$effect(() => {
-		const latest = fsRecordings[0];
-		if (latest && latest.id !== lastDoneId) {
-			lastDoneId = latest.id;
-			justPasted = true;
-			clearTimeout(pastedTimer);
-			pastedTimer = setTimeout(() => { justPasted = false; }, 1500);
+		if (latestId && latestId !== lastDoneId) {
+			untrack(() => {
+				lastDoneId = latestId;
+				justPasted = true;
+				clearTimeout(pastedTimer);
+				pastedTimer = setTimeout(() => { justPasted = false; }, 1500);
+			});
 		}
 	});
 
