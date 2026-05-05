@@ -672,6 +672,7 @@ async function processRecordingPipeline({
 	// Mark pipeline as running — blocks new trigger events
 	isPipelineRunning = true;
 	console.info('[Pipeline] started — transcription in progress');
+	window.dispatchEvent(new CustomEvent('speakpaste:pipeline-started'));
 
 	// Await transcription first (latency-critical path)
 	const { data: transcribedText, error: transcribeError } =
@@ -679,6 +680,7 @@ async function processRecordingPipeline({
 
 	if (transcribeError) {
 		isPipelineRunning = false;
+		window.dispatchEvent(new CustomEvent('speakpaste:pipeline-error'));
 		// Transcription failed - update status
 		recordings.update(recording.id, { transcriptionStatus: 'FAILED' });
 		if (transcribeError.name === 'WhisperingError') {
