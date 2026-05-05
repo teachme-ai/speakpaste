@@ -7,7 +7,7 @@
   ],
   "permissions": [
     "core:default",
-    "tray:default",
+    "core:tray:default",
     "opener:default",
     "dialog:default",
     "fs:default",
