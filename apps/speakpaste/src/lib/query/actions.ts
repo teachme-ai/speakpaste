@@ -59,6 +59,10 @@ let isRecordingOperationBusy = false;
 let isCooldown = false;
 let isPipelineRunning = false; // true while transcribing/delivering
 
+// Safety reset on module load — prevents stale state from HMR or previous sessions
+isCooldown = false;
+isPipelineRunning = false;
+
 function enterCooldown() {
 	isCooldown = true;
 	console.info('[Trigger] cooldown started (700ms)');
@@ -701,6 +705,9 @@ async function processRecordingPipeline({
 	isPipelineRunning = false;
 	enterCooldown();
 	console.info('[Pipeline] complete — cooldown started');
+
+	// Signal UI to reload history from filesystem
+	window.dispatchEvent(new CustomEvent('speakpaste:pipeline-complete'));
 
 	// Check audio save result (best-effort)
 	const { error: saveAudioError } = await saveAudioPromise;

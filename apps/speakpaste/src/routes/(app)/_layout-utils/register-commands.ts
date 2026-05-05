@@ -117,6 +117,7 @@ export async function syncGlobalShortcutsWithSettings() {
 				getGlobalShortcutKey(command.id),
 			) as Accelerator | null;
 			if (!accelerator) return null;
+			console.info(`[Shortcuts] registering global: ${command.id} = ${accelerator}`);
 			return { command, accelerator };
 		})
 		.filter((item) => item !== null);

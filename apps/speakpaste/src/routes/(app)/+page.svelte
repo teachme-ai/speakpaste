@@ -99,18 +99,15 @@
 		}
 	}
 
-	// Load on mount and after each transcription completes
-	onMount(() => { loadFsRecordings(); });
-
-	// Reload from disk after each recording session ends
-	let prevRecorderState = 'IDLE';
-	$effect(() => {
-		const current = recorderState;
-		if (prevRecorderState === 'RECORDING' && current === 'IDLE') {
-			// Delay to allow Rust to finish writing the markdown file
-			setTimeout(() => loadFsRecordings(), 1500);
-		}
-		prevRecorderState = current;
+	// Reload history when pipeline completes (event fired from actions.ts after paste)
+	onMount(() => {
+		loadFsRecordings();
+		const handler = () => {
+			console.log('[SpeakPaste] pipeline-complete event received, reloading history');
+			loadFsRecordings();
+		};
+		window.addEventListener('speakpaste:pipeline-complete', handler);
+		return () => window.removeEventListener('speakpaste:pipeline-complete', handler);
 	});
 
 	const autoPaste = $derived(settings.get('output.transcription.cursor'));
