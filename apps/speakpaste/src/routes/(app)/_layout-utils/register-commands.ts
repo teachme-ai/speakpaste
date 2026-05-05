@@ -28,7 +28,7 @@ const DEFAULT_LOCAL_SHORTCUTS: Record<string, string | null> = {
 /** Default values for global OS shortcuts. Keyed by command id string. */
 const DEFAULT_GLOBAL_SHORTCUTS: Record<string, string | null> = {
 	pushToTalk: `${CommandOrAlt}+Shift+D`,
-	toggleManualRecording: 'Command+Option+R',
+	toggleManualRecording: `${CommandOrControl}+Shift+Return`,
 	startManualRecording: null,
 	stopManualRecording: null,
 	cancelManualRecording: `${CommandOrControl}+Shift+'`,
@@ -123,9 +123,31 @@ export async function syncGlobalShortcutsWithSettings() {
 		.filter((item) => item !== null);
 
 	const results = await Promise.all(
-		commandsWithAccelerators.map((item) =>
-			desktopRpc.globalShortcuts.registerCommand(item),
-		),
+		commandsWithAccelerators.map(async (item) => {
+			console.info(`[Shortcuts] attempting global registration: ${item.command.id} = ${item.accelerator}`);
+			const result = await desktopRpc.globalShortcuts.registerCommand(item);
+			if (result.error) {
+				console.warn(`[Shortcuts] registration failed: ${item.command.id} = ${item.accelerator}`, result.error);
+				// Fallback for toggleManualRecording
+				if (item.command.id === 'toggleManualRecording') {
+					const fallback = `${CommandOrControl}+Shift+F5` as Accelerator;
+					console.info(`[Shortcuts] trying fallback: ${item.command.id} = ${fallback}`);
+					const fallbackResult = await desktopRpc.globalShortcuts.registerCommand({
+						command: item.command,
+						accelerator: fallback,
+					});
+					if (!fallbackResult.error) {
+						console.info(`[Shortcuts] fallback registered: ${item.command.id} = ${fallback}`);
+					} else {
+						console.warn(`[Shortcuts] fallback also failed: ${item.command.id} = ${fallback}`);
+					}
+					return fallbackResult;
+				}
+			} else {
+				console.info(`[Shortcuts] registered: ${item.command.id} = ${item.accelerator}`);
+			}
+			return result;
+		}),
 	);
 	const { errs } = partitionResults(results);
 	if (errs.length > 0) {

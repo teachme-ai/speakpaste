@@ -37,11 +37,14 @@
 		window.commands = commandCallbacks;
 		window.goto = goto;
 
-		// Clear any stale shortcut that isn't F7
+		// Migrate stale/conflicting shortcuts to Command+Shift+Return
+		// Covers: Space, Spacebar, Command+Shift+Space, Command+Option+R, F7, Command+Shift+; (all previous bad defaults)
 		const staleKey = 'speakpaste.device.shortcuts.global.toggleManualRecording';
 		const stored = localStorage.getItem(staleKey);
-		if (stored && !stored.includes('Option+R')) {
-			console.info('[Shortcuts] clearing stale shortcut:', stored);
+		const BAD_DEFAULTS = ['Space', ';', 'Option+R', 'F7'];
+		const isStale = stored && BAD_DEFAULTS.some((bad) => stored.includes(bad));
+		if (isStale) {
+			console.info('[Shortcuts] migrating stale shortcut to Command+Shift+Return:', stored);
 			localStorage.removeItem(staleKey);
 		}
 
