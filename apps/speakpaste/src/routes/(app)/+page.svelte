@@ -23,6 +23,8 @@
 	import { formatDistanceToNow } from 'date-fns';
 	import { WHISPER_MODELS } from '$lib/services/transcription/local/whispercpp';
 
+	import { PATHS } from '$lib/constants/paths';
+
 	const getRecorderStateQuery = createQuery(
 		() => rpc.recorder.getRecorderState.options,
 	);
@@ -32,6 +34,27 @@
 	const isTranscribing = $derived(
 		recordings.sorted[0]?.transcriptionStatus === 'TRANSCRIBING',
 	);
+
+	// Pasted state: fires when the latest recording transitions to DONE.
+	// We watch the ID of the most recent DONE recording — each new one means
+	// delivery just completed. Show "Pasted" for 1500ms then return to Ready.
+	let justPasted = $state(false);
+	let pastedTimer: ReturnType<typeof setTimeout> | undefined;
+	let lastDoneId = $state('');
+
+	$effect(() => {
+		const latest = recordings.sorted.find(
+			(r) => r.transcriptionStatus === 'DONE' && r.transcript.trim(),
+		);
+		if (latest && latest.id !== lastDoneId) {
+			lastDoneId = latest.id;
+			justPasted = true;
+			clearTimeout(pastedTimer);
+			pastedTimer = setTimeout(() => {
+				justPasted = false;
+			}, 1500);
+		}
+	});
 
 	const lastPasted = $derived(
 		recordings.sorted.find((r) => r.transcriptionStatus === 'DONE' && r.transcript.trim()),
@@ -50,6 +73,24 @@
 		WHISPER_MODELS.find((m) => modelPath.endsWith(m.file.filename))?.id ?? 'tiny.en'
 	);
 
+	// Resolve the whisper model directory — uses PATHS.MODELS.WHISPER() on new install
+	async function resolveModelDir(): Promise<string> {
+		if (modelPath) {
+			const lastSlash = modelPath.lastIndexOf('/');
+			if (lastSlash > 0) return modelPath.substring(0, lastSlash + 1);
+		}
+		// New install: resolve from app data dir
+		const whisperDir = await PATHS.MODELS.WHISPER();
+		return whisperDir + '/';
+	}
+
+	async function selectModel(modelId: string) {
+		const selected = WHISPER_MODELS.find((m) => m.id === modelId);
+		if (!selected) return;
+		const dir = await resolveModelDir();
+		deviceConfig.set('transcription.whispercpp.modelPath', dir + selected.file.filename);
+	}
+
 	function timeAgo(dateStr: string) {
 		try {
 			return formatDistanceToNow(new Date(dateStr), { addSuffix: true });
@@ -59,10 +100,10 @@
 	}
 
 	const pills = $derived([
-		{ label: 'Ready',               active: recorderState === 'IDLE' && !isTranscribing },
+		{ label: 'Ready',               active: recorderState === 'IDLE' && !isTranscribing && !justPasted },
 		{ label: 'Listening',           active: recorderState === 'RECORDING' },
 		{ label: 'Transcribing locally',active: isTranscribing },
-		{ label: 'Pasted',              active: false },
+		{ label: 'Pasted',              active: justPasted },
 	]);
 </script>
 
@@ -113,14 +154,7 @@
 							<select
 								class="border border-gray-200 rounded-lg px-2.5 py-1 text-sm text-gray-700 bg-gray-50 appearance-none pr-6 cursor-pointer"
 								value={modelLabel}
-								onchange={(e) => {
-									const selected = WHISPER_MODELS.find((m) => m.id === e.currentTarget.value);
-									if (selected) {
-										const dir = modelPath ? modelPath.substring(0, modelPath.lastIndexOf('/') + 1) : '';
-										deviceConfig.set('transcription.whispercpp.modelPath', dir + selected.file.filename);
-									}
-								}}
-							>
+								onchange={(e) => selectModel(e.currentTarget.value)}
 								{#each WHISPER_MODELS as model}
 									<option value={model.id}>{model.id}</option>
 								{/each}
