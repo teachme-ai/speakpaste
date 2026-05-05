@@ -9,7 +9,7 @@
 		"active": true,
 		"category": "Productivity",
 		"publisher": "Braden Wong",
-		"copyright": "Copyright © 2025 Braden Wong",
+		"copyright": "Copyright \u00a9 2025 Braden Wong",
 		"homepage": "https://whispering.epicenter.so",
 		"targets": "all",
 		"icon": [
@@ -20,7 +20,7 @@
 			"icons/icon.ico"
 		],
 		"longDescription": "Seamlessly integrate speech-to-text transcriptions anywhere on your desktop. Powered by OpenAI's Whisper API.",
-		"shortDescription": "Press shortcut → speak → get text. Free and open source ❤️",
+		"shortDescription": "Press shortcut \u2192 speak \u2192 get text. Free and open source \u2764\ufe0f",
 		"createUpdaterArtifacts": true,
 		"macOS": {
 			"entitlements": "entitlements.plist",
@@ -45,7 +45,10 @@
 				"compression": "bzip2",
 				"installMode": "currentUser"
 			}
-		}
+		},
+		"resources": [
+			"recorder-state-icons/*"
+		]
 	},
 	"productName": "SpeakPaste",
 	"version": "0.1.0",
