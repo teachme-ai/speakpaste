@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { Toaster } from '@epicenter/ui/sonner';
 	import { QueryClientProvider } from '@tanstack/svelte-query';
-	import { SvelteQueryDevtools } from '@tanstack/svelte-query-devtools';
 	import { ModeWatcher } from 'mode-watcher';
 	import { onNavigate } from '$app/navigation';
 	import { queryClient } from '$lib/query/client';
@@ -45,7 +44,7 @@
 	}}
 />
 <ModeWatcher defaultMode="light" track={false} />
-<SvelteQueryDevtools client={queryClient} buttonPosition="bottom-right" />
+
 
 <style>
 	/* Override inspector button to bottom-center, above sidebar (z-10).

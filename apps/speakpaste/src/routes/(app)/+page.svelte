@@ -211,7 +211,7 @@
 	</div>
 
 	<!-- State pills -->
-	<div class="flex items-center justify-center gap-2 px-6 py-2 flex-wrap">
+	<div class="flex items-center justify-center gap-2 px-6 pt-2 pb-6 flex-wrap">
 		{#each pills as pill}
 			<span class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all border {
 				pill.active
@@ -233,7 +233,7 @@
 	</div>
 
 	<!-- Mic button with glow rings -->
-	<div class="flex flex-col items-center justify-center py-4 gap-5">
+	<div class="flex flex-col items-center justify-center py-8 gap-7">
 		<div class="relative flex items-center justify-center">
 			<!-- Outer glow rings -->
 			<div class="absolute size-52 rounded-full bg-blue-100/40 {recorderState === 'RECORDING' ? 'animate-ping' : ''}"></div>
@@ -291,7 +291,7 @@
 	</div>
 
 	<!-- Cards section -->
-	<div class="flex flex-col gap-3 px-5 pb-6">
+	<div class="flex flex-col gap-3 px-5 pt-2 pb-8">
 
 		<!-- Last pasted card -->
 		{#if lastPasted?.transcript}
