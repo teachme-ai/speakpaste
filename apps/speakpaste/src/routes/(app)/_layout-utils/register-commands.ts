@@ -28,7 +28,7 @@ const DEFAULT_LOCAL_SHORTCUTS: Record<string, string | null> = {
 /** Default values for global OS shortcuts. Keyed by command id string. */
 const DEFAULT_GLOBAL_SHORTCUTS: Record<string, string | null> = {
 	pushToTalk: `${CommandOrAlt}+Shift+D`,
-	toggleManualRecording: `${CommandOrControl}+Shift+;`,
+	toggleManualRecording: `${CommandOrControl}+Shift+Space`,
 	startManualRecording: null,
 	stopManualRecording: null,
 	cancelManualRecording: `${CommandOrControl}+Shift+'`,

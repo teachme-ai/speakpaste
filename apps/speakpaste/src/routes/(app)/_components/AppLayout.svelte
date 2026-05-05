@@ -36,6 +36,15 @@
 	onMount(() => {
 		window.commands = commandCallbacks;
 		window.goto = goto;
+
+		// Migrate stale Command+Shift+; shortcut (was invalid — semicolon not a valid accelerator key)
+		const staleKey = 'speakpaste.device.shortcuts.global.toggleManualRecording';
+		const stored = localStorage.getItem(staleKey);
+		if (stored && stored.includes(';')) {
+			console.info('[Shortcuts] removing stale Command+Shift+; shortcut');
+			localStorage.removeItem(staleKey);
+		}
+
 		syncLocalShortcutsWithSettings();
 		resetLocalShortcutsToDefaultIfDuplicates();
 		registerOnboarding();
