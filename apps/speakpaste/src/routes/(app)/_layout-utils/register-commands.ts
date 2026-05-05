@@ -14,7 +14,7 @@ import { settings } from '$lib/state/settings.svelte';
 /** Default values for in-app (local) shortcuts. Keyed by command id string. */
 const DEFAULT_LOCAL_SHORTCUTS: Record<string, string | null> = {
 	pushToTalk: 'p',
-	toggleManualRecording: ' ',
+	toggleManualRecording: null,
 	startManualRecording: null,
 	stopManualRecording: null,
 	cancelManualRecording: 'c',

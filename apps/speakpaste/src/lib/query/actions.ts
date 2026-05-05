@@ -52,6 +52,22 @@ let manualRecordingStartTime: number | null = null;
  */
 let isRecordingOperationBusy = false;
 
+/**
+ * Cooldown guard — blocks new recordings for 700ms after paste completes.
+ * Prevents accidental double-triggers from held keys or rapid presses.
+ */
+let isCooldown = false;
+let isPipelineRunning = false; // true while transcribing/delivering
+
+function enterCooldown() {
+	isCooldown = true;
+	console.info('[Trigger] cooldown started (700ms)');
+	setTimeout(() => {
+		isCooldown = false;
+		console.info('[Trigger] cooldown ended — ready');
+	}, 700);
+}
+
 // Internal mutations for manual recording
 const startManualRecording = defineMutation({
 	mutationKey: ['commands', 'startManualRecording'] as const,
@@ -344,6 +360,16 @@ export const actions = {
 	toggleManualRecording: defineMutation({
 		mutationKey: ['commands', 'toggleManualRecording'] as const,
 		mutationFn: async () => {
+			// Block during cooldown (post-paste window)
+			if (isCooldown) {
+				console.info('[Trigger] ignored — in cooldown');
+				return Ok(undefined);
+			}
+			// Block during transcription/delivery pipeline
+			if (isPipelineRunning) {
+				console.info('[Trigger] ignored — pipeline running');
+				return Ok(undefined);
+			}
 			const { data: recorderState, error: getRecorderStateError } =
 				await recorder.getRecorderState.fetch();
 			if (getRecorderStateError) {
@@ -639,11 +665,16 @@ async function processRecordingPipeline({
 	const saveAudioPromise = services.blobs.audio.save(recording.id, blob);
 	const transcribePromise = transcribeBlob(blob);
 
+	// Mark pipeline as running — blocks new trigger events
+	isPipelineRunning = true;
+	console.info('[Pipeline] started — transcription in progress');
+
 	// Await transcription first (latency-critical path)
 	const { data: transcribedText, error: transcribeError } =
 		await transcribePromise;
 
 	if (transcribeError) {
+		isPipelineRunning = false;
 		// Transcription failed - update status
 		recordings.update(recording.id, { transcriptionStatus: 'FAILED' });
 		if (transcribeError.name === 'WhisperingError') {
@@ -665,6 +696,11 @@ async function processRecordingPipeline({
 		text: transcribedText,
 		toastId: transcribeToastId,
 	});
+
+	// Pipeline done — enter cooldown before allowing next trigger
+	isPipelineRunning = false;
+	enterCooldown();
+	console.info('[Pipeline] complete — cooldown started');
 
 	// Check audio save result (best-effort)
 	const { error: saveAudioError } = await saveAudioPromise;

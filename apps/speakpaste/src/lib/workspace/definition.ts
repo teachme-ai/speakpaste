@@ -325,7 +325,7 @@ const analytics = {
  * `null` = unbound.
  */
 const shortcuts = {
-	'shortcut.toggleManualRecording': defineKv(type('string | null'), ' '),
+	'shortcut.toggleManualRecording': defineKv(type('string | null'), null),
 	'shortcut.startManualRecording': defineKv(type('string | null'), null),
 	'shortcut.stopManualRecording': defineKv(type('string | null'), null),
 	'shortcut.cancelManualRecording': defineKv(type('string | null'), 'c'),

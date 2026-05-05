@@ -24,6 +24,8 @@
 	import { WHISPER_MODELS } from '$lib/services/transcription/local/whispercpp';
 
 	import { PATHS } from '$lib/constants/paths';
+	import { getShortcutDisplayLabel } from '$lib/constants/keyboard';
+	import { commandCallbacks } from '$lib/commands';
 
 	const getRecorderStateQuery = createQuery(
 		() => rpc.recorder.getRecorderState.options,
@@ -112,6 +114,14 @@
 	});
 
 	const autoPaste = $derived(settings.get('output.transcription.cursor'));
+
+	// Trigger shortcut — reads from actual saved global shortcut, not hardcoded
+	const triggerShortcut = $derived(
+		deviceConfig.get('shortcuts.global.toggleManualRecording'),
+	);
+	const triggerLabel = $derived(
+		triggerShortcut ? getShortcutDisplayLabel(triggerShortcut) : '⌘ ⇧ ;',
+	);
 
 	const modelPath = $derived(deviceConfig.get('transcription.whispercpp.modelPath'));
 	const modelLabel = $derived(
@@ -307,7 +317,7 @@
 		<!-- Hint text -->
 		<div class="flex flex-col items-center gap-0.5 text-center">
 			<p class="text-sm font-medium text-gray-700">
-				Hold <span class="text-blue-500 font-semibold">Fn</span> / <span class="text-blue-500 font-semibold">Globe</span> to speak
+				Hold <span class="text-blue-500 font-semibold">{triggerLabel}</span> to speak
 			</p>
 			<p class="text-sm text-gray-500">Release to transcribe and paste</p>
 		</div>
