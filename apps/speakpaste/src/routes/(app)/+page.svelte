@@ -15,7 +15,7 @@
 	import InfoIcon from '@lucide/svelte/icons/info';
 	import TrashIcon from '@lucide/svelte/icons/trash-2';
 	import MoreHorizontalIcon from '@lucide/svelte/icons/more-horizontal';
-	import { commandCallbacks } from '$lib/commands';
+	import { onMount } from 'svelte';
 	import { rpc } from '$lib/query';
 	import { recordings } from '$lib/state/recordings.svelte';
 	import { settings } from '$lib/state/settings.svelte';
@@ -35,36 +35,79 @@
 		recordings.sorted[0]?.transcriptionStatus === 'TRANSCRIBING',
 	);
 
-	// Pasted state: fires when the latest recording transitions to DONE.
-	// We watch the ID of the most recent DONE recording — each new one means
-	// delivery just completed. Show "Pasted" for 1500ms then return to Ready.
+	// Pasted state: fires when a new recording appears on disk
 	let justPasted = $state(false);
 	let pastedTimer: ReturnType<typeof setTimeout> | undefined;
 	let lastDoneId = $state('');
 
 	$effect(() => {
-		const latest = recordings.sorted.find(
-			(r) => r.transcript?.trim(),
-		);
+		const latest = fsRecordings[0];
 		if (latest && latest.id !== lastDoneId) {
 			lastDoneId = latest.id;
 			justPasted = true;
 			clearTimeout(pastedTimer);
-			pastedTimer = setTimeout(() => {
-				justPasted = false;
-			}, 1500);
+			pastedTimer = setTimeout(() => { justPasted = false; }, 1500);
 		}
 	});
 
-	const lastPasted = $derived(
-		recordings.sorted.find((r) => r.transcript?.trim()),
-	);
+	const lastPasted = $derived(fsRecordings[0]);
+	const recentItems = $derived(fsRecordings.slice(0, 3));
 
-	const recentItems = $derived(
-		recordings.sorted
-			.filter((r) => r.transcript?.trim())
-			.slice(0, 3),
-	);
+	import { readDir, readTextFile } from '@tauri-apps/plugin-fs';
+	import { PATHS } from '$lib/constants/paths';
+
+	// Direct filesystem read for history cards — bypasses Yjs reactivity issue
+	let fsRecordings = $state<Array<{id: string, transcript: string, recordedAt: string}>>([]);
+
+	async function loadFsRecordings() {
+		try {
+			const dir = await PATHS.DB.RECORDINGS();
+			const entries = await readDir(dir);
+			const mdFiles = entries
+				.filter((e) => e.name?.endsWith('.md'))
+				.map((e) => e.name!);
+
+			const results = await Promise.all(
+				mdFiles.map(async (filename) => {
+					try {
+						const path = await PATHS.DB.RECORDING_FILE(filename);
+						const content = await readTextFile(path);
+						// Parse frontmatter
+						const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+						if (!match) return null;
+						const frontmatter = match[1];
+						const transcript = match[2].trim();
+						if (!transcript) return null;
+						const idMatch = frontmatter.match(/^id:\s*(.+)$/m);
+						const dateMatch = frontmatter.match(/^recordedAt:\s*'(.+)'$/m);
+						if (!idMatch || !dateMatch) return null;
+						return { id: idMatch[1].trim(), transcript, recordedAt: dateMatch[1].trim() };
+					} catch { return null; }
+				})
+			);
+
+			fsRecordings = results
+				.filter((r): r is NonNullable<typeof r> => r !== null)
+				.sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime());
+			console.log('[SpeakPaste] fs recordings loaded:', fsRecordings.length);
+		} catch (e) {
+			console.warn('[SpeakPaste] fs recordings load failed:', e);
+		}
+	}
+
+	// Load on mount and after each transcription completes
+	onMount(() => { loadFsRecordings(); });
+
+	// Reload from disk after each recording session ends
+	let prevRecorderState = 'IDLE';
+	$effect(() => {
+		const current = recorderState;
+		if (prevRecorderState === 'RECORDING' && current === 'IDLE') {
+			// Delay to allow Rust to finish writing the markdown file
+			setTimeout(() => loadFsRecordings(), 1500);
+		}
+		prevRecorderState = current;
+	});
 
 	const autoPaste = $derived(settings.get('output.transcription.cursor'));
 
