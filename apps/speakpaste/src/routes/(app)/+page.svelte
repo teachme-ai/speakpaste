@@ -54,7 +54,6 @@
 	const recentItems = $derived(fsRecordings.slice(0, 3));
 
 	import { readDir, readTextFile } from '@tauri-apps/plugin-fs';
-	import { PATHS } from '$lib/constants/paths';
 
 	// Direct filesystem read for history cards — bypasses Yjs reactivity issue
 	let fsRecordings = $state<Array<{id: string, transcript: string, recordedAt: string}>>([]);
