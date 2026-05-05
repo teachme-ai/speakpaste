@@ -155,6 +155,7 @@
 								class="border border-gray-200 rounded-lg px-2.5 py-1 text-sm text-gray-700 bg-gray-50 appearance-none pr-6 cursor-pointer"
 								value={modelLabel}
 								onchange={(e) => selectModel(e.currentTarget.value)}
+							>
 								{#each WHISPER_MODELS as model}
 									<option value={model.id}>{model.id}</option>
 								{/each}
