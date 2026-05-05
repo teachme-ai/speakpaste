@@ -44,7 +44,7 @@
 
 	$effect(() => {
 		const latest = recordings.sorted.find(
-			(r) => r.transcriptionStatus === 'DONE' && r.transcript.trim(),
+			(r) => r.transcript?.trim(),
 		);
 		if (latest && latest.id !== lastDoneId) {
 			lastDoneId = latest.id;
@@ -57,12 +57,12 @@
 	});
 
 	const lastPasted = $derived(
-		recordings.sorted.find((r) => r.transcriptionStatus === 'DONE' && r.transcript.trim()),
+		recordings.sorted.find((r) => r.transcript?.trim()),
 	);
 
 	const recentItems = $derived(
 		recordings.sorted
-			.filter((r) => r.transcriptionStatus === 'DONE' && r.transcript.trim())
+			.filter((r) => r.transcript?.trim())
 			.slice(0, 3),
 	);
 
@@ -112,7 +112,7 @@
 <div class="relative flex flex-col min-h-screen bg-[#f5f0eb] overflow-y-auto">
 
 	<!-- Header: title + settings gear -->
-	<div class="flex items-start justify-between px-6 pt-6 pb-2">
+	<div class="flex items-start justify-between px-6 pt-8 pb-2">
 		<div class="flex-1 flex flex-col items-center">
 			<h1 class="text-2xl font-bold tracking-tight text-gray-900">SpeakPaste</h1>
 			<p class="text-sm text-gray-500 mt-0.5">Local voice typing for any Mac app.</p>
@@ -211,7 +211,7 @@
 	</div>
 
 	<!-- State pills -->
-	<div class="flex items-center justify-center gap-2 px-6 pt-2 pb-6 flex-wrap">
+	<div class="flex items-center justify-center gap-2 px-6 pt-4 pb-8 flex-wrap">
 		{#each pills as pill}
 			<span class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all border {
 				pill.active
@@ -233,7 +233,7 @@
 	</div>
 
 	<!-- Mic button with glow rings -->
-	<div class="flex flex-col items-center justify-center py-8 gap-7">
+	<div class="flex flex-col items-center justify-center py-6 gap-8">
 		<div class="relative flex items-center justify-center">
 			<!-- Outer glow rings -->
 			<div class="absolute size-52 rounded-full bg-blue-100/40 {recorderState === 'RECORDING' ? 'animate-ping' : ''}"></div>

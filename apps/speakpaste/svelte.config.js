@@ -22,15 +22,7 @@ const config = {
 	preprocess: vitePreprocess(),
 
 	vitePlugin: {
-		inspector: {
-			holdMode: true,
-			showToggleButton: 'always',
-			// Using 'bottom-left' as base position, but CSS overrides in
-			// src/routes/+layout.svelte move it to bottom-center to avoid
-			// conflicts with devtools (bottom-left) and toasts (bottom-right)
-			toggleButtonPos: 'bottom-left',
-			toggleKeyCombo: 'alt-x',
-		},
+		inspector: false,
 	},
 };
 
