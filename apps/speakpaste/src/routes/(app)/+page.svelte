@@ -22,6 +22,8 @@
 	import { deviceConfig } from '$lib/state/device-config.svelte';
 	import { formatDistanceToNow } from 'date-fns';
 	import { WHISPER_MODELS } from '$lib/services/transcription/local/whispercpp';
+	import { toast } from '@epicenter/ui/sonner';
+	import { transformations } from '$lib/state/transformations.svelte';
 
 	let isOverlay = $state(false);
 
@@ -67,9 +69,8 @@
 
 	const recorderState = $derived(getRecorderStateQuery.data ?? 'IDLE');
 
-	const isTranscribing = $derived(
-		recordings.sorted[0]?.transcriptionStatus === 'TRANSCRIBING',
-	);
+	let isTranscribingLocal = $state(false);
+	const isTranscribing = $derived(isTranscribingLocal);
 
 	// Pasted state: fires when a new recording appears on disk
 	let justPasted = $state(false);
@@ -92,10 +93,46 @@
 	const lastPasted = $derived(fsRecordings[0]);
 	const recentItems = $derived(fsRecordings.slice(0, 3));
 
-	import { readDir, readTextFile } from '@tauri-apps/plugin-fs';
+	import { readDir, readTextFile, remove } from '@tauri-apps/plugin-fs';
 
 	// Direct filesystem read for history cards — bypasses Yjs reactivity issue
 	let fsRecordings = $state<Array<{id: string, transcript: string, recordedAt: string}>>([]);
+
+	async function deleteRecording(id: string) {
+		try {
+			recordings.delete(id);
+			const path = await PATHS.DB.RECORDING_FILE(id + '.md');
+			await remove(path);
+			await loadFsRecordings();
+			toast.success('Recording deleted');
+		} catch (e) {
+			try {
+				const dir = await PATHS.DB.RECORDINGS();
+				const entries = await readDir(dir);
+				const mdFile = entries.find((e) => e.name?.includes(id) && e.name.endsWith('.md'))?.name;
+				if (mdFile) {
+					const path = await PATHS.DB.RECORDING_FILE(mdFile);
+					await remove(path);
+				}
+				recordings.delete(id);
+				await loadFsRecordings();
+				toast.success('Recording deleted');
+			} catch (err) {
+				console.error('[SpeakPaste] Failed to delete history item:', err);
+				toast.error('Failed to delete recording');
+			}
+		}
+	}
+
+	async function copyTranscript(transcript: string) {
+		try {
+			await navigator.clipboard.writeText(transcript);
+			toast.success('Copied to clipboard');
+		} catch (e) {
+			console.error('[SpeakPaste] Failed to copy:', e);
+			toast.error('Failed to copy');
+		}
+	}
 
 	async function loadFsRecordings() {
 		try {
@@ -133,15 +170,35 @@
 		}
 	}
 
-	// Reload history when pipeline completes (event fired from actions.ts after paste)
+	// Reload history and sync transcribing indicators on pipeline events
 	onMount(() => {
 		loadFsRecordings();
-		const handler = () => {
+
+		const handleComplete = () => {
 			console.log('[SpeakPaste] pipeline-complete event received, reloading history');
+			isTranscribingLocal = false;
 			loadFsRecordings();
 		};
-		window.addEventListener('speakpaste:pipeline-complete', handler);
-		return () => window.removeEventListener('speakpaste:pipeline-complete', handler);
+
+		const handleStarted = () => {
+			console.log('[SpeakPaste] pipeline-started event received, setting transcribing active');
+			isTranscribingLocal = true;
+		};
+
+		const handleError = () => {
+			console.log('[SpeakPaste] pipeline-error event received, clearing transcribing state');
+			isTranscribingLocal = false;
+		};
+
+		window.addEventListener('speakpaste:pipeline-complete', handleComplete);
+		window.addEventListener('speakpaste:pipeline-started', handleStarted);
+		window.addEventListener('speakpaste:pipeline-error', handleError);
+
+		return () => {
+			window.removeEventListener('speakpaste:pipeline-complete', handleComplete);
+			window.removeEventListener('speakpaste:pipeline-started', handleStarted);
+			window.removeEventListener('speakpaste:pipeline-error', handleError);
+		};
 	});
 
 	const autoPaste = $derived(settings.get('output.transcription.cursor'));
@@ -326,19 +383,45 @@
 	<!-- State pills -->
 	<div class="flex items-center justify-center gap-2 px-6 pt-4 pb-8 flex-wrap">
 		{#each pills as pill}
-			<span class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all border {
+			<span class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-300 border {
 				pill.active
-					? 'bg-white border-blue-300 text-blue-600 shadow-sm'
-					: 'bg-transparent border-gray-300/60 text-gray-400'
+					? pill.label === 'Listening'
+						? 'bg-red-50/90 border-red-300 text-red-600 shadow-sm shadow-red-100'
+						: pill.label === 'Transcribing locally'
+						? 'bg-blue-50/90 border-blue-300 text-blue-600 shadow-sm shadow-blue-100'
+						: pill.label === 'Pasted'
+						? 'bg-green-50/90 border-green-300 text-green-600 shadow-sm shadow-green-100'
+						: 'bg-white border-blue-300 text-blue-600 shadow-sm'
+					: 'bg-white/40 border-gray-300/40 text-gray-400 backdrop-blur-xs'
 			}">
 				{#if pill.active}
-					<span class="size-2 rounded-full bg-blue-500"></span>
-				{:else if pill.label === 'Listening'}
-					<AudioWaveformIcon class="size-3.5 text-gray-400" />
-				{:else if pill.label === 'Transcribing locally'}
-					<AudioWaveformIcon class="size-3.5 text-gray-400" />
-				{:else if pill.label === 'Pasted'}
-					<svg class="size-3.5 text-gray-400" viewBox="0 0 16 16" fill="none"><path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+					{#if pill.label === 'Listening'}
+						<span class="relative flex size-2 shrink-0">
+							<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+							<span class="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+						</span>
+					{:else if pill.label === 'Transcribing locally'}
+						<svg class="animate-spin size-3.5 text-blue-500 shrink-0" fill="none" viewBox="0 0 24 24">
+							<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+							<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+						</svg>
+					{:else if pill.label === 'Pasted'}
+						<svg class="size-3.5 text-green-500 shrink-0" viewBox="0 0 16 16" fill="none">
+							<path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+						</svg>
+					{:else}
+						<span class="size-2 rounded-full bg-blue-500 shrink-0"></span>
+					{/if}
+				{:else}
+					{#if pill.label === 'Listening'}
+						<AudioWaveformIcon class="size-3.5 text-gray-400 shrink-0" />
+					{:else if pill.label === 'Transcribing locally'}
+						<AudioWaveformIcon class="size-3.5 text-gray-400 shrink-0" />
+					{:else if pill.label === 'Pasted'}
+						<svg class="size-3.5 text-gray-400 shrink-0" viewBox="0 0 16 16" fill="none">
+							<path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+						</svg>
+					{/if}
 				{/if}
 				{pill.label}
 			</span>
@@ -352,14 +435,13 @@
 			<div class="absolute size-52 rounded-full bg-blue-100/40 {recorderState === 'RECORDING' ? 'animate-ping' : ''}"></div>
 			<div class="absolute size-44 rounded-full bg-blue-100/60"></div>
 			<div class="absolute size-36 rounded-full bg-blue-200/50"></div>
-			<!-- Waveform lines (decorative) -->
+			<!-- Waveform lines (organic liquid SVG) -->
 			{#if recorderState === 'RECORDING'}
-				<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-					<div class="flex items-center gap-0.5 opacity-30">
-						{#each [3,5,8,12,8,14,10,6,10,14,8,12,8,5,3] as h}
-							<div class="w-0.5 rounded-full bg-blue-400 animate-pulse" style="height: {h * 2}px"></div>
-						{/each}
-					</div>
+				<div class="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden rounded-full scale-110">
+					<svg class="w-full h-full opacity-20" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+						<path fill="#3b82f6" d="M40,-53C53.7,-45.5,65.8,-32.7,71.2,-17.4C76.6,-2,75.3,15.8,68.4,30.3C61.5,44.8,49,56,34.7,63.1C20.3,70.2,4,73.2,-12.3,71.4C-28.5,69.5,-44.7,62.8,-56.3,51.3C-67.9,39.8,-75,23.5,-75.7,6.9C-76.3,-9.7,-70.6,-26.6,-60.9,-38.5C-51.1,-50.3,-37.4,-57.1,-23.7,-64.1C-10,-71,3.7,-78,18.1,-76.4C32.5,-74.8,47.7,-64.7,40,-53Z" transform="translate(100 100)" class="animate-blob-slow" />
+						<path fill="#60a5fa" d="M35.6,-48C46.8,-40,57,-29.3,61.8,-16.1C66.5,-2.9,65.7,12.8,59.3,25.8C52.9,38.8,40.8,49,27.1,55C13.4,61,-1.9,62.7,-16.9,59.9C-31.9,57.1,-46.6,49.8,-55.8,38.2C-65.1,26.5,-68.9,10.6,-67.2,-4.5C-65.5,-19.6,-58.3,-33.9,-47.5,-42C-36.8,-50,-22.4,-51.9,-9.2,-50.3C4.1,-48.7,17.4,-43.6,35.6,-48Z" transform="translate(100 100)" class="animate-blob-fast" />
+					</svg>
 				</div>
 			{/if}
 			<!-- Main button -->
@@ -375,7 +457,7 @@
 		<!-- Hint text -->
 		<div class="flex flex-col items-center gap-0.5 text-center">
 			<p class="text-sm font-medium text-gray-700">
-				Hold <span class="text-blue-500 font-semibold">{triggerLabel}</span> to speak
+				Hold <span class="text-blue-500 font-semibold">Fn key</span> to speak
 			</p>
 			<p class="text-sm text-gray-500">Release to transcribe and paste</p>
 		</div>
@@ -391,15 +473,31 @@
 			<span class="size-2 rounded-full bg-green-500 ml-0.5"></span>
 		</div>
 
-		<!-- Auto-paste row -->
-		<div class="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white border border-gray-200 shadow-sm w-full max-w-sm mx-6">
-			<span class="text-sm font-semibold text-gray-800 flex-1">Auto-paste</span>
-			<Switch
-				checked={autoPaste}
-				onCheckedChange={(v) => settings.set('output.transcription.cursor', v)}
-			/>
-			<span class="text-sm text-gray-400">Paste after transcription</span>
-			<InfoIcon class="size-4 text-gray-300 shrink-0" />
+		<!-- Pipeline Control Deck card -->
+		<div class="flex flex-col gap-3 px-5 py-4 rounded-2xl bg-white border border-gray-200 shadow-sm w-full max-w-sm mx-6">
+			<div class="flex items-center gap-3">
+				<span class="text-sm font-semibold text-gray-800 flex-1">Auto-paste</span>
+				<Switch
+					checked={autoPaste}
+					onCheckedChange={(v) => settings.set('output.transcription.cursor', v)}
+				/>
+				<span class="text-sm text-gray-400">Paste in active app</span>
+				<InfoIcon class="size-4 text-gray-300 shrink-0" />
+			</div>
+			
+			<div class="flex items-center gap-2.5 border-t border-gray-100 pt-3">
+				<span class="text-xs font-semibold text-gray-500 uppercase tracking-wider shrink-0">Pipeline:</span>
+				<select
+					class="flex-1 text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-700 bg-gray-50 cursor-pointer focus:outline-none focus:ring-1 focus:ring-blue-300"
+					value={settings.get('transformation.selectedId') ?? ''}
+					onchange={(e) => settings.set('transformation.selectedId', e.currentTarget.value || null)}
+				>
+					<option value="">None (Raw Paste)</option>
+					{#each transformations.sorted as transform}
+						<option value={transform.id}>{transform.title}</option>
+					{/each}
+				</select>
+			</div>
 		</div>
 	</div>
 
@@ -408,21 +506,46 @@
 
 		<!-- Last pasted card -->
 		{#if lastPasted?.transcript}
-			<div class="rounded-2xl bg-white border border-gray-200 shadow-sm p-4">
+			<div class="group relative rounded-2xl bg-white border border-gray-200 shadow-sm p-4 transition-all duration-200 hover:shadow-md">
 				<div class="flex items-center justify-between mb-3">
 					<div class="flex items-center gap-2">
 						<FileTextIcon class="size-4 text-gray-500" />
 						<span class="text-sm font-semibold text-gray-700">Last pasted</span>
 					</div>
-					<div class="flex items-center gap-1.5 text-xs text-gray-400">
-						<ClockIcon class="size-3.5" />
-						<span>{timeAgo(lastPasted.recordedAt)}</span>
+					
+					<div class="flex items-center gap-2">
+						<!-- Performance timing indicator -->
+						<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center gap-1">
+							⚡ local gpu
+						</span>
+						<div class="flex items-center gap-1.5 text-xs text-gray-400">
+							<ClockIcon class="size-3.5" />
+							<span>{timeAgo(lastPasted.recordedAt)}</span>
+						</div>
 					</div>
 				</div>
-				<div class="relative px-4">
+				<div class="relative px-4 mb-1">
 					<span class="absolute left-0 top-0 text-2xl text-gray-200 leading-none font-serif">"</span>
-					<p class="text-sm text-gray-700 leading-relaxed line-clamp-3">{lastPasted.transcript}</p>
+					<p class="text-sm text-gray-700 leading-relaxed line-clamp-3 select-text">{lastPasted.transcript}</p>
 					<span class="absolute right-0 bottom-0 text-2xl text-gray-200 leading-none font-serif">"</span>
+				</div>
+				
+				<!-- Action row at bottom right, reveals on hover -->
+				<div class="absolute bottom-2.5 right-3 opacity-0 group-hover:opacity-100 flex items-center gap-1.5 transition-opacity duration-200 bg-white/90 backdrop-blur-xs pl-2 py-0.5 rounded-lg">
+					<button 
+						onclick={() => copyTranscript(lastPasted.transcript)}
+						class="p-1 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors"
+						title="Copy to Clipboard"
+					>
+						<ClipboardIcon class="size-3.5" />
+					</button>
+					<button 
+						onclick={() => deleteRecording(lastPasted.id)}
+						class="p-1 rounded-md hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors"
+						title="Delete Recording"
+					>
+						<TrashIcon class="size-3.5" />
+					</button>
 				</div>
 			</div>
 		{/if}
@@ -436,15 +559,32 @@
 				</div>
 				<div class="divide-y divide-gray-100">
 					{#each recentItems as item}
-						<div class="flex items-center gap-3 px-4 py-3">
-							<div class="size-7 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+						<div class="group relative flex items-center gap-3 px-4 py-3.5 hover:bg-gray-50/50 transition-colors duration-150">
+							<div class="size-7 rounded-full bg-blue-50 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
 								<AudioWaveformIcon class="size-3.5 text-blue-400" />
 							</div>
-							<p class="text-sm text-gray-700 flex-1 truncate">{item.transcript}</p>
-							<span class="text-xs text-gray-400 whitespace-nowrap shrink-0">{timeAgo(item.recordedAt)}</span>
-							<button class="text-gray-300 hover:text-gray-500 transition-colors shrink-0">
-								<MoreHorizontalIcon class="size-4" />
-							</button>
+							<div class="flex-1 min-w-0">
+								<p class="text-sm text-gray-700 truncate select-text">{item.transcript}</p>
+							</div>
+							<span class="text-xs text-gray-400 whitespace-nowrap shrink-0 pr-8">{timeAgo(item.recordedAt)}</span>
+							
+							<!-- Action buttons overlaying the far right side on hover -->
+							<div class="absolute right-3 opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity duration-200 bg-white/95 pl-2 py-1 rounded-lg">
+								<button 
+									onclick={() => copyTranscript(item.transcript)}
+									class="p-1 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-700 transition-colors"
+									title="Copy to Clipboard"
+								>
+									<ClipboardIcon class="size-3.5" />
+								</button>
+								<button 
+									onclick={() => deleteRecording(item.id)}
+									class="p-1 rounded-md hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors"
+									title="Delete"
+								>
+									<TrashIcon class="size-3.5" />
+								</button>
+							</div>
 						</div>
 					{/each}
 				</div>
@@ -453,3 +593,25 @@
 	</div>
 </div>
 {/if}
+
+<style>
+	@keyframes blob-morph {
+		0%, 100% {
+			transform: translate(100px, 100px) scale(1) rotate(0deg);
+		}
+		33% {
+			transform: translate(102px, 98px) scale(1.08) rotate(120deg);
+		}
+		66% {
+			transform: translate(97px, 103px) scale(0.95) rotate(240deg);
+		}
+	}
+	:global(.animate-blob-slow) {
+		animation: blob-morph 10s infinite ease-in-out;
+		transform-origin: center;
+	}
+	:global(.animate-blob-fast) {
+		animation: blob-morph 6s infinite ease-in-out reverse;
+		transform-origin: center;
+	}
+</style>

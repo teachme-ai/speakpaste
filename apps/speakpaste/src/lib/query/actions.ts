@@ -666,6 +666,7 @@ async function processRecordingPipeline({
 
 	// Save metadata to workspace (instant) and audio blob to BlobStore (async)
 	recordings.set(recording);
+	recordings.update(recording.id, { transcriptionStatus: 'TRANSCRIBING' });
 	const saveAudioPromise = services.blobs.audio.save(recording.id, blob);
 	const transcribePromise = transcribeBlob(blob);
 
