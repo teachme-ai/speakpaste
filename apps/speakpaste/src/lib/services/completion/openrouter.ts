@@ -5,7 +5,7 @@ export const OpenRouterCompletionServiceLive =
 		providerLabel: 'OpenRouter',
 		getBaseUrl: () => 'https://openrouter.ai/api/v1', // Always use OpenRouter endpoint
 		defaultHeaders: {
-			'HTTP-Referer': 'https://whispering.epicenter.so',
+			'HTTP-Referer': 'https://github.com/irfan1476/speakpaste',
 			'X-Title': 'SpeakPaste',
 		},
 	});

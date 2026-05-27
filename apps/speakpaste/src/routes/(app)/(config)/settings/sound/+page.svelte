@@ -14,6 +14,34 @@
 	<Field.Separator />
 	<Field.Group>
 		<Field.Set>
+			<Field.Legend variant="label">Sound Theme</Field.Legend>
+			<Field.Description>
+				Select the audio style used for key triggers and events.
+			</Field.Description>
+			<div class="grid grid-cols-3 gap-3 mt-2">
+				{#each [
+					{ id: 'classic', title: 'Classic Chime', desc: 'Mechanical alarm clock clicks and beeps' },
+					{ id: 'modern', title: 'Modern Haptic', desc: 'Short, clean mechanical blips and clicks' },
+					{ id: 'scifi', title: 'Futuristic Sci-Fi', desc: 'Bright bell chimes and synth success notes' }
+				] as theme}
+					<button
+						type="button"
+						class="flex flex-col text-left p-3.5 rounded-xl border transition-all duration-200 bg-white shadow-sm
+							{settings.get('sound.theme') === theme.id 
+								? 'border-blue-500 ring-2 ring-blue-500/20' 
+								: 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'}"
+						onclick={() => settings.set('sound.theme', theme.id)}
+					>
+						<span class="text-sm font-semibold text-gray-800">{theme.title}</span>
+						<span class="text-xs text-gray-500 mt-1 leading-normal">{theme.desc}</span>
+					</button>
+				{/each}
+			</div>
+		</Field.Set>
+
+		<Field.Separator />
+
+		<Field.Set>
 			<Field.Legend variant="label">Manual Recording Sounds</Field.Legend>
 			<Field.Description>
 				Configure sounds for manual recording events.

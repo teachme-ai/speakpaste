@@ -147,13 +147,20 @@ export const delivery = {
 
 			// Main delivery flow - operations are independent
 
+			const startDelivery = performance.now();
+
 			// Check if user wants to copy to clipboard
 			if (settings.get('output.transcription.clipboard')) {
+				const startClipboard = performance.now();
 				const { error: copyError } = await rpc.text.copyToClipboard({
 					text,
 				});
 				if (!copyError) {
 					copied = true;
+					const durationClipboard = performance.now() - startClipboard;
+					console.info(
+						`[Telemetry] [Delivery] Copy to clipboard took ${durationClipboard.toFixed(2)}ms`
+					);
 				} else {
 					warnAutoCopyFailed(copyError);
 				}
@@ -161,16 +168,27 @@ export const delivery = {
 
 			// Check if user wants to write to cursor (independent of copy)
 			if (settings.get('output.transcription.cursor')) {
+				const startCursor = performance.now();
 				const { error: writeError } = await rpc.text.writeToCursor({
 					text,
 				});
 				if (!writeError) {
 					written = true;
+					const durationCursor = performance.now() - startCursor;
+					console.info(
+						`[Telemetry] [Delivery] Write to cursor (Cmd+V sandwich) took ${durationCursor.toFixed(2)}ms`
+					);
 					// Optionally simulate Enter keystroke after successful write
 					if (settings.get('output.transcription.enter')) {
+						const startEnter = performance.now();
 						const { error: enterError } =
 							await rpc.text.simulateEnterKeystroke();
-						if (enterError) {
+						if (!enterError) {
+							const durationEnter = performance.now() - startEnter;
+							console.info(
+								`[Telemetry] [Delivery] Simulate Enter keystroke took ${durationEnter.toFixed(2)}ms`
+							);
+						} else {
 							rpc.notify.warning({
 								title: 'Unable to simulate Enter keystroke',
 								description: enterError.message,
@@ -182,6 +200,11 @@ export const delivery = {
 					warnWriteToCursorFailed(writeError);
 				}
 			}
+
+			const durationDelivery = performance.now() - startDelivery;
+			console.info(
+				`[Telemetry] [Delivery] deliverTranscriptionResult total latency: ${durationDelivery.toFixed(2)}ms`
+			);
 
 			// Show appropriate notification
 			showSuccessNotification();

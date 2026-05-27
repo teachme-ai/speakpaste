@@ -495,6 +495,7 @@ pub async fn transcribe_audio_whisper(
     initial_prompt: Option<String>,
     model_manager: tauri::State<'_, ModelManager>,
 ) -> Result<String, TranscriptionError> {
+    let total_start = std::time::Instant::now();
     info!(
         "[Transcription] starting Whisper transcription: audio_bytes={} model_path={}",
         audio_data.len(),
@@ -502,6 +503,7 @@ pub async fn transcribe_audio_whisper(
     );
 
     // Convert audio to 16kHz mono format that whisper requires
+    let conversion_start = std::time::Instant::now();
     let wav_data = convert_audio_for_whisper(audio_data)?;
     debug!(
         "[Transcription] audio conversion complete: wav_bytes={}",
@@ -510,9 +512,9 @@ pub async fn transcribe_audio_whisper(
 
     // Extract samples from WAV
     let samples = extract_samples_from_wav(wav_data)?;
-    debug!(
-        "[Transcription] extracted {} PCM samples for Whisper engine",
-        samples.len()
+    info!(
+        "[Telemetry] Audio conversion & sample extraction took {:?}",
+        conversion_start.elapsed()
     );
 
     // Return early if audio is empty
@@ -522,10 +524,14 @@ pub async fn transcribe_audio_whisper(
     }
 
     // Get or load the model using the persistent model manager
+    let model_start = std::time::Instant::now();
     let engine_arc = model_manager
         .get_or_load_whisper(PathBuf::from(&model_path))
         .map_err(|e| TranscriptionError::ModelLoadError { message: e })?;
-    debug!("[Transcription] Whisper model ready: {}", model_path);
+    info!(
+        "[Telemetry] Model manager cache retrieval / loading took {:?}",
+        model_start.elapsed()
+    );
 
     // Configure inference parameters
     let mut params = WhisperInferenceParams::default();
@@ -541,6 +547,7 @@ pub async fn transcribe_audio_whisper(
 
     // Run transcription with the persistent engine
     // Use into_inner() to recover from poisoned mutex, but clear state to force fresh reload
+    let decode_start = std::time::Instant::now();
     let result = {
         let mut engine_guard = engine_arc.lock().unwrap_or_else(|poisoned| {
             warn!(
@@ -573,10 +580,17 @@ pub async fn transcribe_audio_whisper(
             })?
     };
 
+    let decode_duration = decode_start.elapsed();
     let transcript = result.text.trim().to_string();
     info!(
-        "[Transcription] Whisper transcription complete: characters={}",
-        transcript.len()
+        "[Telemetry] Whisper matrix decoding took {:?} for {} characters (approx. {:.1} chars/sec)",
+        decode_duration,
+        transcript.len(),
+        if decode_duration.as_secs_f32() > 0.0 { transcript.len() as f32 / decode_duration.as_secs_f32() } else { 0.0 }
+    );
+    info!(
+        "[Telemetry] Total transcribe_audio_whisper turnaround took {:?}",
+        total_start.elapsed()
     );
     Ok(transcript)
 }

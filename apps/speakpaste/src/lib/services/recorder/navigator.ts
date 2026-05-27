@@ -55,6 +55,8 @@ export const NavigatorRecorderServiceLive: RecorderService = {
 			return RecorderError.AlreadyRecording();
 		}
 
+		const startSetup = performance.now();
+
 		sendStatus({
 			title: '🎙️ Starting Recording',
 			description: 'Setting up your microphone...',
@@ -106,6 +108,11 @@ export const NavigatorRecorderServiceLive: RecorderService = {
 		// Start recording
 		mediaRecorder.start(TIMESLICE_MS);
 
+		const durationSetup = performance.now() - startSetup;
+		console.info(
+			`[Telemetry] [Recorder] Stream acquisition & MediaRecorder initialization took ${durationSetup.toFixed(2)}ms (Device: ${selectedDeviceId || 'Default'})`
+		);
+
 		// Return the device acquisition outcome
 		return Ok(deviceOutcome);
 	},
@@ -119,6 +126,8 @@ export const NavigatorRecorderServiceLive: RecorderService = {
 					'Cannot stop recording because no active recording session was found. Make sure you have started recording before attempting to stop it.',
 			});
 		}
+
+		const startStop = performance.now();
 
 		const recording = activeRecording;
 		activeRecording = null; // Clear immediately to prevent race conditions
@@ -147,6 +156,11 @@ export const NavigatorRecorderServiceLive: RecorderService = {
 		cleanupRecordingStream(recording.stream);
 
 		if (stopError) return Err(stopError);
+
+		const durationStop = performance.now() - startStop;
+		console.info(
+			`[Telemetry] [Recorder] stopRecording finalization & blob serialization took ${durationStop.toFixed(2)}ms (Size: ${blob.size} bytes, Type: ${blob.type})`
+		);
 
 		sendStatus({
 			title: '✅ Recording Saved',

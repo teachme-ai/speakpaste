@@ -32,6 +32,8 @@
 
 	let cleanupAccessibilityPermission: (() => void) | undefined;
 	let cleanupMicrophonePermission: (() => void) | undefined;
+	let unlistenFnKeyDown: (() => void) | undefined;
+	let unlistenFnKeyUp: (() => void) | undefined;
 
 	onMount(() => {
 		window.commands = commandCallbacks;
@@ -65,12 +67,31 @@
 				checkCompressionRecommendation(),
 				checkForUpdates(),
 			]);
+
+			// Standalone Fn Key Global Listener
+			import('@tauri-apps/api/event').then(({ listen }) => {
+				listen('fn-key-down', () => {
+					console.log('[FnKeyListener] fn-key-down event received from backend');
+					commandCallbacks.pushToTalk('Pressed');
+				}).then((unlisten) => {
+					unlistenFnKeyDown = unlisten;
+				});
+
+				listen('fn-key-up', () => {
+					console.log('[FnKeyListener] fn-key-up event received from backend');
+					commandCallbacks.pushToTalk('Released');
+				}).then((unlisten) => {
+					unlistenFnKeyUp = unlisten;
+				});
+			});
 		}
 	});
 
 	onDestroy(() => {
 		cleanupAccessibilityPermission?.();
 		cleanupMicrophonePermission?.();
+		unlistenFnKeyDown?.();
+		unlistenFnKeyUp?.();
 	});
 
 	if (window.__TAURI_INTERNALS__) {

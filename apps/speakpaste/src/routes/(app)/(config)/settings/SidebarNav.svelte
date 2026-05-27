@@ -15,6 +15,7 @@
 			href: '/settings/shortcuts/local',
 			activePathPrefix: '/settings/shortcuts',
 		},
+		{ title: 'About & Credits', href: '/settings/about' },
 	] satisfies {
 		title: string;
 		href: string;

@@ -26,6 +26,8 @@ use command::{execute_command, spawn_command};
 pub mod markdown;
 use markdown::{count_markdown_files, delete_files_in_directory, read_markdown_files, write_markdown_files};
 
+pub mod fn_key_listener;
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 #[tokio::main]
 pub async fn run() {
@@ -128,11 +130,22 @@ pub async fn run() {
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_shell::init())
-        // updater disabled for SpeakPaste local-only MVP
-        // .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
         .manage(AppData::new())
-        .manage(ModelManager::new());
+        .manage(ModelManager::new())
+        .setup(|app| {
+            let app_handle = app.handle().clone();
+            if let Err(err) = fn_key_listener::start_fn_key_listener(app_handle) {
+                log::warn!("[FnKeyListener] Global Fn key listener start failed: {}", err);
+            }
+            // Configure overlay window to float on top of full screen apps
+            if let Some(overlay) = app.get_webview_window("overlay") {
+                let _ = overlay.set_always_on_top(true);
+                let _ = overlay.set_visible_on_all_workspaces(true);
+            }
+            Ok(())
+        });
 
     #[cfg(desktop)]
     {

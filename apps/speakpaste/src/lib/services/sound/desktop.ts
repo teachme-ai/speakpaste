@@ -1,6 +1,6 @@
 import { tryAsync } from 'wellcrafted/result';
 import type { PlaySoundService } from '.';
-import { audioElements } from './assets';
+import { playThemedSound } from './assets';
 import { SoundError } from './types';
 
 export function createPlaySoundServiceDesktop(): PlaySoundService {
@@ -8,7 +8,7 @@ export function createPlaySoundServiceDesktop(): PlaySoundService {
 		playSound: async (soundName) =>
 			tryAsync({
 				try: async () => {
-					await audioElements[soundName].play();
+					await playThemedSound(soundName);
 				},
 				catch: (error) => SoundError.Play({ cause: error }),
 			}),

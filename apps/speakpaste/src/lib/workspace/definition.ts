@@ -205,6 +205,7 @@ export type TransformationStepRun = InferTableRow<typeof transformationStepRuns>
  * Manual = user-initiated recording. VAD = voice activity detection.
  */
 const sound = {
+	'sound.theme': defineKv(type("'classic' | 'modern' | 'scifi'"), 'classic'),
 	'sound.manualStart': defineKv(type('boolean'), true),
 	'sound.manualStop': defineKv(type('boolean'), true),
 	'sound.manualCancel': defineKv(type('boolean'), true),

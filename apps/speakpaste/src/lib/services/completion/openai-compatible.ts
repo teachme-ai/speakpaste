@@ -87,8 +87,8 @@ export type OpenAiCompatibleConfig = {
  * const openrouter = createOpenAiCompatibleCompletionService({
  *   providerLabel: 'OpenRouter',
  *   defaultHeaders: {
- *     'HTTP-Referer': 'https://whispering.epicenter.so',
- *     'X-Title': 'Whispering',
+ *     'HTTP-Referer': 'https://github.com/irfan1476/speakpaste',
+ *     'X-Title': 'SpeakPaste',
  *   },
  * });
  * ```
