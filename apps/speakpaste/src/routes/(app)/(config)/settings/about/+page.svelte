@@ -112,7 +112,7 @@
 			</p>
 			<div class="flex gap-4 text-xs font-medium mt-1">
 				<Link href="https://github.com/EpicenterHQ/epicenter" target="_blank">Original Epicenter Repo ↗</Link>
-				<Link href="https://github.com/irfan1476/speakpaste" target="_blank">SpeakPaste Project Home ↗</Link>
+				<Link href="https://github.com/teachme-ai/speakpaste" target="_blank">SpeakPaste Project Home ↗</Link>
 			</div>
 		</div>
 	</div>

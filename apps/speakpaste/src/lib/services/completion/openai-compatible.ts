@@ -87,7 +87,7 @@ export type OpenAiCompatibleConfig = {
  * const openrouter = createOpenAiCompatibleCompletionService({
  *   providerLabel: 'OpenRouter',
  *   defaultHeaders: {
- *     'HTTP-Referer': 'https://github.com/irfan1476/speakpaste',
+ *     'HTTP-Referer': 'https://github.com/teachme-ai/speakpaste',
  *     'X-Title': 'SpeakPaste',
  *   },
  * });
