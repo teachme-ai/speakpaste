@@ -125,8 +125,17 @@ type CGEventTapCallBack = unsafe extern "C" fn(
 // ==========================================
 // 6. Public Runner
 // ==========================================
+use std::sync::atomic::{AtomicBool, Ordering};
+
+static LISTENER_RUNNING: AtomicBool = AtomicBool::new(false);
+
 /// Initializes and starts the global Fn key listener in a background thread.
 pub fn start_fn_key_listener(app_handle: AppHandle) -> Result<(), &'static str> {
+    if LISTENER_RUNNING.load(Ordering::Relaxed) {
+        info!("[FnKeyListener] Listener is already running.");
+        return Ok(());
+    }
+
     // Check for macOS Accessibility permissions using AXIsProcessTrusted
     unsafe {
         if !accessibility_sys::AXIsProcessTrusted() {
@@ -134,6 +143,8 @@ pub fn start_fn_key_listener(app_handle: AppHandle) -> Result<(), &'static str> 
             return Err("Missing Accessibility permissions");
         }
     }
+
+    LISTENER_RUNNING.store(true, Ordering::Relaxed);
 
     // Spawn a background OS thread for the FFI run loop
     thread::spawn(move || {
@@ -159,6 +170,7 @@ pub fn start_fn_key_listener(app_handle: AppHandle) -> Result<(), &'static str> 
             
             if tap.is_null() {
                 error!("[FnKeyListener] Failed to create CGEventTap. Ensure Accessibility permissions are active.");
+                LISTENER_RUNNING.store(false, Ordering::Relaxed);
                 let _ = Box::from_raw(state); // Free state to prevent leak
                 return;
             }
@@ -168,6 +180,7 @@ pub fn start_fn_key_listener(app_handle: AppHandle) -> Result<(), &'static str> 
             if source.is_null() {
                 error!("[FnKeyListener] Failed to create CFRunLoopSource");
                 CFRelease(tap);
+                LISTENER_RUNNING.store(false, Ordering::Relaxed);
                 let _ = Box::from_raw(state);
                 return;
             }
@@ -185,6 +198,7 @@ pub fn start_fn_key_listener(app_handle: AppHandle) -> Result<(), &'static str> 
             CFRunLoopRun();
             
             // Cleanup (only reached if the run loop is programmatically terminated)
+            LISTENER_RUNNING.store(false, Ordering::Relaxed);
             CFRelease(source);
             CFRelease(tap);
             let _ = Box::from_raw(state);
@@ -193,3 +207,12 @@ pub fn start_fn_key_listener(app_handle: AppHandle) -> Result<(), &'static str> 
     
     Ok(())
 }
+
+#[tauri::command]
+pub async fn initialize_fn_key_listener(app: tauri::AppHandle) -> Result<bool, String> {
+    match start_fn_key_listener(app) {
+        Ok(_) => Ok(true),
+        Err(e) => Err(e.to_string()),
+    }
+}
+

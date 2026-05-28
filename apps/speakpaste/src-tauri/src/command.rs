@@ -158,3 +158,99 @@ pub async fn spawn_command(command: String) -> Result<u32, String> {
         }
     }
 }
+
+use futures_util::StreamExt;
+use std::path::Path;
+use tauri::Emitter;
+
+#[derive(serde::Serialize, Clone)]
+struct DownloadProgressPayload {
+    progress: u32,
+    downloaded_bytes: u64,
+    total_bytes: u64,
+}
+
+#[tauri::command]
+pub async fn download_model_file(
+    app: tauri::AppHandle,
+    url: String,
+    file_path: String,
+    event_id: String,
+) -> Result<(), String> {
+    log::info!("[Downloader] Starting download from {} to {}", url, file_path);
+
+    // Ensure parent directory exists
+    let path = Path::new(&file_path);
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create directories: {}", e))?;
+    }
+
+    let client = reqwest::Client::new();
+    let response = client
+        .get(&url)
+        .send()
+        .await
+        .map_err(|e| format!("Network request failed: {}", e))?;
+
+    if !response.status().is_success() {
+        return Err(format!("Download failed with status: {}", response.status()));
+    }
+
+    let total_bytes = response
+        .content_length()
+        .unwrap_or(0);
+
+    let mut file = tokio::fs::File::create(&file_path)
+        .await
+        .map_err(|e| format!("Failed to create file: {}", e))?;
+
+    let mut downloaded_bytes = 0;
+    let mut stream = response.bytes_stream();
+
+    // Use a throttle or periodic update to avoid flooding Svelte with events
+    let mut last_progress_emitted = 0;
+
+    while let Some(chunk_result) = stream.next().await {
+        let chunk = chunk_result.map_err(|e| format!("Error while reading chunk: {}", e))?;
+        tokio::io::AsyncWriteExt::write_all(&mut file, &chunk)
+            .await
+            .map_err(|e| format!("Failed to write to file: {}", e))?;
+
+        downloaded_bytes += chunk.len() as u64;
+
+        if total_bytes > 0 {
+            let progress = ((downloaded_bytes as f64 / total_bytes as f64) * 100.0) as u32;
+            // Emit progress event either on change or if it reaches 100
+            if progress > last_progress_emitted || progress == 100 {
+                last_progress_emitted = progress;
+                let _ = app.emit(
+                    &event_id,
+                    DownloadProgressPayload {
+                        progress,
+                        downloaded_bytes,
+                        total_bytes,
+                    },
+                );
+            }
+        } else {
+            // Unknown size - emit size updates directly
+            let _ = app.emit(
+                &event_id,
+                DownloadProgressPayload {
+                    progress: 0,
+                    downloaded_bytes,
+                    total_bytes: 0,
+                },
+            );
+        }
+    }
+
+    tokio::io::AsyncWriteExt::flush(&mut file)
+        .await
+        .map_err(|e| format!("Failed to flush file: {}", e))?;
+
+    log::info!("[Downloader] Download completed successfully for {}", file_path);
+    Ok(())
+}
+

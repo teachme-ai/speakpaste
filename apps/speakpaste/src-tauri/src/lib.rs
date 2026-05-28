@@ -21,7 +21,7 @@ pub mod graceful_shutdown;
 use graceful_shutdown::send_sigint;
 
 pub mod command;
-use command::{execute_command, spawn_command};
+use command::{execute_command, spawn_command, download_model_file};
 
 pub mod markdown;
 use markdown::{count_markdown_files, delete_files_in_directory, read_markdown_files, write_markdown_files};
@@ -139,6 +139,14 @@ pub async fn run() {
             if let Err(err) = fn_key_listener::start_fn_key_listener(app_handle) {
                 log::warn!("[FnKeyListener] Global Fn key listener start failed: {}", err);
             }
+            
+            // Apply macOS vibrancy to main window
+            #[cfg(target_os = "macos")]
+            if let Some(main_window) = app.get_webview_window("main") {
+                use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
+                let _ = apply_vibrancy(&main_window, NSVisualEffectMaterial::HudWindow, None, None);
+            }
+
             // Configure overlay window to float on top of full screen apps
             if let Some(overlay) = app.get_webview_window("overlay") {
                 let _ = overlay.set_always_on_top(true);
@@ -181,6 +189,8 @@ pub async fn run() {
         // Command execution (prevents console window flash on Windows)
         execute_command,
         spawn_command,
+        download_model_file,
+        fn_key_listener::initialize_fn_key_listener,
         // Filesystem utilities
         read_markdown_files,
         count_markdown_files,

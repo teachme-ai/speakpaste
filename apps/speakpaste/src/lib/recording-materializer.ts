@@ -91,6 +91,41 @@ export function attachRecordingMarkdownFiles(
 		await config.whenReady;
 		syncQueue = syncQueue.then(async () => {
 			const dir = await dirPromise;
+			
+			// Hydrate from FS to Yjs
+			try {
+				const { readDir, readTextFile, join } = await import('@tauri-apps/plugin-fs');
+				const entries = await readDir(dir).catch(() => []);
+				const mdFiles = entries.filter((e) => e.name?.endsWith('.md'));
+				
+				for (const mdFile of mdFiles) {
+					try {
+						const path = await join(dir, mdFile.name!);
+						const content = await readTextFile(path);
+						const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+						if (match) {
+							const frontmatter = yaml.load(match[1]) as any;
+							if (frontmatter && frontmatter.id) {
+								if (frontmatter.recordedAt instanceof Date) frontmatter.recordedAt = frontmatter.recordedAt.toISOString();
+								if (frontmatter.updatedAt instanceof Date) frontmatter.updatedAt = frontmatter.updatedAt.toISOString();
+								if (!frontmatter.title) frontmatter.title = 'Recording';
+								if (!frontmatter.transcriptionStatus) frontmatter.transcriptionStatus = 'DONE';
+								frontmatter.transcript = match[2].trim();
+								const existing = recordings.get(frontmatter.id);
+								if (!existing?.data) {
+									// Load missing record from disk into memory
+									recordings.set({ ...frontmatter, _v: 2 } as Recording);
+								}
+							}
+						}
+					} catch (e) {
+						console.error(`[recording-materializer] Failed to load ${mdFile.name}:`, e);
+					}
+				}
+			} catch (e) {
+				console.error('[recording-materializer] Hydration failed:', e);
+			}
+
 			const files = recordings.getAllValid().map(toRecordingMarkdownFile);
 			if (files.length) {
 				await invoke('write_markdown_files', { directory: dir, files });

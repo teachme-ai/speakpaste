@@ -535,7 +535,7 @@
 							<Field.Description>
 								Models are downloaded from{' '}
 								<Link
-									href="https://github.com/EpicenterHQ/epicenter/releases/tag/models/parakeet-tdt-0.6b-v3-int8"
+									href="https://github.com/teachme-ai/speakpaste/releases/tag/models/parakeet-tdt-0.6b-v3-int8"
 									target="_blank"
 									rel="noopener noreferrer"
 								>

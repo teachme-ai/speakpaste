@@ -105,49 +105,6 @@
 
 		<Field.Separator />
 
-		<Field.Set>
-			<Field.Legend variant="label">Transformation output</Field.Legend>
-			<Field.Description>
-				Applies after you run a saved transformation on a transcription.
-			</Field.Description>
-			<Field.Group>
-				<Field.Field orientation="horizontal">
-					<Switch
-						id="transformation.copyToClipboardOnSuccess"
-						bind:checked={() => settings.get('output.transformation.clipboard'),
-							(v) => settings.set('output.transformation.clipboard', v)}
-					/>
-					<Field.Label for="transformation.copyToClipboardOnSuccess">
-						Copy transformed text to clipboard
-					</Field.Label>
-				</Field.Field>
-
-				<Field.Field orientation="horizontal">
-					<Switch
-						id="transformation.writeToCursorOnSuccess"
-						bind:checked={() => settings.get('output.transformation.cursor'),
-							(v) => settings.set('output.transformation.cursor', v)}
-					/>
-					<Field.Label for="transformation.writeToCursorOnSuccess">
-						Paste transformed text at cursor
-					</Field.Label>
-				</Field.Field>
-
-				{#if window.__TAURI_INTERNALS__ && settings.get('output.transformation.cursor')}
-					<Field.Field orientation="horizontal">
-						<Switch
-							id="transformation.simulateEnterAfterOutput"
-							bind:checked={() => settings.get('output.transformation.enter'),
-								(v) => settings.set('output.transformation.enter', v)}
-						/>
-						<Field.Label for="transformation.simulateEnterAfterOutput">
-							Press Enter after pasting transformed text
-						</Field.Label>
-					</Field.Field>
-				{/if}
-			</Field.Group>
-		</Field.Set>
-
 		<Field.Separator />
 
 		<Field.Field>

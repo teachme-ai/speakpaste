@@ -66,7 +66,7 @@
 			<div class="flex flex-col gap-3 sm:flex-row">
 				<Button
 					tooltip="Download SpeakPaste Desktop App"
-					href="https://github.com/EpicenterHQ/epicenter/releases"
+					href="https://github.com/teachme-ai/speakpaste/releases"
 					target="_blank"
 					rel="noopener noreferrer"
 					variant="default"

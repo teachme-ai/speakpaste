@@ -14,7 +14,7 @@ export function registerOnboarding() {
 	// Check transcription service configuration
 	if (!selectedService) {
 		rpc.notify.info({
-			title: 'Welcome to Whispering!',
+			title: 'Welcome to SpeakPaste!',
 			description: 'Please select a transcription service to get started.',
 			action: {
 				type: 'link',
@@ -36,7 +36,7 @@ export function registerOnboarding() {
 		)[selectedService.location];
 
 		rpc.notify.info({
-			title: 'Welcome to Whispering!',
+			title: 'Welcome to SpeakPaste!',
 			description: `Please configure your ${missingConfig} to get started.`,
 			action: {
 				type: 'link',

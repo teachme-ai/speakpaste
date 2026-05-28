@@ -18,6 +18,7 @@
 	import { Textarea } from '@epicenter/ui/textarea';
 	import { cn } from '@epicenter/ui/utils';
 	import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';
+	import ChevronLeftIcon from '@lucide/svelte/icons/chevron-left';
 	import CopyIcon from '@lucide/svelte/icons/copy';
 	import EllipsisIcon from '@lucide/svelte/icons/ellipsis';
 	import LoadingTranscriptionIcon from '@lucide/svelte/icons/ellipsis';
@@ -354,18 +355,24 @@
 <svelte:head> <title>All Recordings</title> </svelte:head>
 
 <main class="flex w-full flex-1 flex-col gap-2 px-4 py-4 sm:px-8 mx-auto">
-	<SectionHeader.Root>
-		<SectionHeader.Title
-			level={1}
-			class="scroll-m-20 text-4xl tracking-tight lg:text-5xl"
-		>
-			Recordings
-		</SectionHeader.Title>
-		<SectionHeader.Description>
-			Your latest recordings and transcriptions, stored locally
-			{window.__TAURI_INTERNALS__ ? 'on your file system' : 'in IndexedDB'}.
-		</SectionHeader.Description>
-	</SectionHeader.Root>
+	<div class="flex items-center gap-4">
+		<Button href="/" variant="outline" size="icon" class="rounded-full">
+			<ChevronLeftIcon class="size-4" />
+			<span class="sr-only">Back to Main</span>
+		</Button>
+		<SectionHeader.Root class="mb-0">
+			<SectionHeader.Title
+				level={1}
+				class="scroll-m-20 text-4xl tracking-tight lg:text-5xl"
+			>
+				Recordings
+			</SectionHeader.Title>
+			<SectionHeader.Description>
+				Your latest recordings and transcriptions, stored locally
+				{window.__TAURI_INTERNALS__ ? 'on your file system' : 'in IndexedDB'}.
+			</SectionHeader.Description>
+		</SectionHeader.Root>
+	</div>
 	<Card class="flex flex-col gap-4 p-6">
 		<div class="flex flex-col md:flex-row items-center justify-between gap-2">
 			<Input

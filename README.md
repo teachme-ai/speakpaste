@@ -3,7 +3,7 @@
 **SpeakPaste** is a premium, Mac-only, local-first, and privacy-first voice dictation utility. Operating seamlessly in the background, it captures your speech at the press of a shortcut, transcribes it instantly, processes it through customizable formatting pipelines, and types it directly at your active text cursor.
 
 ```
-⌥ Shift D (or ⌘ ⇧ ;) ──> Speak ──> local whisper.cpp ──> Post-Process ──> Auto-Paste
+Fn key (or ⌘ ⇧ F8) ──> Speak ──> local whisper.cpp ──> Post-Process ──> Auto-Paste
 ```
 
 ---
@@ -69,7 +69,41 @@ cd apps/speakpaste
 bun run dev
 ```
 
-*On First Launch:* Navigate to **Settings** > **Transcription** > select **Whisper C++** > click **Download a Model** (Small recommended) > Grant macOS Accessibility Permissions under System Settings > Press `⌥ Shift D` and speak!
+*On First Launch:* Navigate to **Settings** > **Transcription** > select **Whisper C++** > click **Download a Model** (Small recommended) > Grant macOS Accessibility Permissions under System Settings > Press the standalone **Fn** key (or the `Command+Shift+F8` shortcut) and speak!
+
+---
+
+## 🔒 Auto-Updates without Source Exposure
+
+SpeakPaste leverages Tauri v2's native **Updater Plugin** to deliver secure, automated software updates without exposing private repository source code:
+
+* **Secure Signature Validation**: All release binaries are signed using a private key (configured in secure CI environments). The app verifies the signature using a public key configured in `tauri.conf.json`.
+* **Zero-Source Exposure**: The update workflow checks a public `update.json` file hosted on anonymous/free static hosting (such as GitHub Pages or Cloudflare Pages/R2):
+  ```
+  [SpeakPaste App] ──> Fetch update.json ──> Validate Signature ──> Download & Install .dmg
+  ```
+* **Seamless Installation**: Updates are downloaded in the background, showing a non-intrusive progress state, and can be activated with a single click to hot-restart the application.
+
+---
+
+## 📁 Repository Structure
+
+SpeakPaste is organized as a high-performance **Bun monorepo** to maximize code reuse, type safety, and component isolation:
+
+```
+speakpaste/
+├── apps/
+│   └── speakpaste/              # Main Tauri v2 + SvelteKit Application
+│       ├── src-tauri/           # Native Rust shell (audio recorder, keyboard emulation, tray)
+│       └── src/                 # Svelte 5 frontend (TanStack Query, custom pipelines UI)
+├── packages/                    # Monorepo Shared Libraries
+│   ├── constants/               # Universal configurations, settings defaults, and schemas
+│   ├── svelte-utils/            # Reusable Svelte utility logic and hooks
+│   ├── sync/                    # Yjs state sync logic and protocols
+│   ├── ui/                      # Beautiful design tokens & custom Tailwind components
+│   └── workspace/               # Collaborative CRDT structures and model managers
+└── licenses/                    # Legal compliance documentation
+```
 
 ---
 
@@ -101,3 +135,4 @@ SpeakPaste is developed and distributed under the **MIT** and **AGPL-3.0** licen
 
 ### Attribution Credits
 SpeakPaste is adapted from the open-source **Whispering** project, which is part of the **Epicenter** application monorepo created and maintained by **Braden Wong** and contributors. All original copyrights and structural layouts are fully acknowledged and respected under standard open-source guidelines.
+

@@ -6,6 +6,7 @@
 	import { queryClient } from '$lib/query/client';
 	import '@epicenter/ui/app.css';
 	import * as Tooltip from '@epicenter/ui/tooltip';
+	import { deviceConfig } from '$lib/state/device-config.svelte';
 
 	let { children } = $props();
 
@@ -43,7 +44,7 @@
 		},
 	}}
 />
-<ModeWatcher defaultMode="light" track={false} />
+<ModeWatcher defaultMode="system" track={true} />
 
 
 <style>

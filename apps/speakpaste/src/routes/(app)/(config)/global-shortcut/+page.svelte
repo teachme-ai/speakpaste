@@ -22,7 +22,7 @@
 		<div class="flex flex-col gap-2 md:flex-row">
 			<Button
 				tooltip="Check out the Chrome Extension"
-				href="https://github.com/EpicenterHQ/epicenter/releases"
+				href="https://github.com/teachme-ai/speakpaste/releases"
 				target="_blank"
 				rel="noopener noreferrer"
 				variant="default"

@@ -2,6 +2,7 @@
 	import * as Sidebar from '@epicenter/ui/sidebar';
 	import { useSidebar } from '@epicenter/ui/sidebar';
 	import Database from '@lucide/svelte/icons/database';
+	import FlaskConical from '@lucide/svelte/icons/flask-conical';
 	import Minimize2Icon from '@lucide/svelte/icons/minimize-2';
 	import MoonIcon from '@lucide/svelte/icons/moon';
 	import LogsIcon from '@lucide/svelte/icons/scroll-text';
@@ -143,6 +144,18 @@
 					</Sidebar.MenuButton>
 				</Sidebar.MenuItem>
 			{/if}
+
+			<!-- Settings Diagnostics -->
+			<Sidebar.MenuItem>
+				<Sidebar.MenuButton isActive={(page.url.pathname as string) === '/debug/settings-test'}>
+					{#snippet child({ props })}
+						<a href="/debug/settings-test" {...props}>
+							<FlaskConical class="h-4 w-4" />
+							<span>Settings Diagnostics</span>
+						</a>
+					{/snippet}
+				</Sidebar.MenuButton>
+			</Sidebar.MenuItem>
 
 			<!-- Minimize (desktop only) -->
 			{#if window.__TAURI_INTERNALS__}

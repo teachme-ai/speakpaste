@@ -20,12 +20,13 @@
 			"icons/icon.ico"
 		],
 		"longDescription": "Seamlessly integrate speech-to-text transcriptions anywhere on your desktop. Powered by OpenAI's Whisper API.",
-		"shortDescription": "Press shortcut \u2192 speak \u2192 get text. Free and open source \u2764\ufe0f",
-		"createUpdaterArtifacts": true,
+		"shortDescription": "Press shortcut \u2192 speak \u2192 get text. Free.",
+		"createUpdaterArtifacts": false,
 		"macOS": {
 			"entitlements": "entitlements.plist",
 			"hardenedRuntime": true,
-			"minimumSystemVersion": "10.15"
+			"minimumSystemVersion": "10.15",
+			"signingIdentity": null
 		},
 		"linux": {
 			"appimage": {
@@ -66,10 +67,12 @@
 			{
 				"resizable": true,
 				"title": "SpeakPaste",
-				"width": 1080,
-				"height": 800,
-				"minHeight": 84,
-				"minWidth": 72
+				"width": 500,
+				"height": 850,
+				"minHeight": 850,
+				"minWidth": 460,
+				"transparent": true,
+				"decorations": true
 			},
 			{
 				"label": "overlay",

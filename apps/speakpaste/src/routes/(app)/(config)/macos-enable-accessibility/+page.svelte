@@ -11,8 +11,45 @@
 	import { asShellCommand } from '$lib/services/desktop/command';
 	import type { PageData } from './$types';
 
+	import { onMount, onDestroy } from 'svelte';
+	import { invoke } from '@tauri-apps/api/core';
+
 	let { data } = $props();
-	const isAccessibilityGranted = $derived(data.isAccessibilityGranted);
+	let isAccessibilityGranted = $state(data.isAccessibilityGranted);
+	let checkInterval: any;
+
+	onMount(() => {
+		if (isAccessibilityGranted) {
+			// Ensure it's initialized if already granted
+			invoke('initialize_fn_key_listener').catch((err) => {
+				console.error('[FnKeyListener] Failed to initialize Fn key listener:', err);
+			});
+			return;
+		}
+
+		checkInterval = setInterval(async () => {
+			const { data: granted, error } = await desktopServices.permissions.accessibility.check();
+			if (error) return;
+			if (granted) {
+				isAccessibilityGranted = true;
+				clearInterval(checkInterval);
+				toast.success('Accessibility permission granted!', {
+					description: 'SpeakPaste has successfully registered the global Fn key listener.',
+				});
+				try {
+					await invoke('initialize_fn_key_listener');
+				} catch (err) {
+					console.error('[FnKeyListener] Failed to initialize Fn key listener:', err);
+				}
+			}
+		}, 1000);
+	});
+
+	onDestroy(() => {
+		if (checkInterval) {
+			clearInterval(checkInterval);
+		}
+	});
 
 	async function requestPermissionOrShowGuidance() {
 		const { error } = await desktopServices.permissions.accessibility.request();
@@ -94,7 +131,7 @@
 					<!-- Direct video for web version -->
 					<video
 						class="max-w-md rounded-lg border"
-						src="https://github.com/EpicenterHQ/epicenter/releases/download/_assets/macos_enable_accessibility.mp4"
+						src="https://github.com/teachme-ai/speakpaste/releases/download/_assets/macos_enable_accessibility.mp4"
 						autoplay
 						loop
 						controls

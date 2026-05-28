@@ -15,7 +15,8 @@
 		stat,
 		writeFile,
 	} from '@tauri-apps/plugin-fs';
-	import { fetch } from '@tauri-apps/plugin-http';
+	import { invoke } from '@tauri-apps/api/core';
+	import { listen } from '@tauri-apps/api/event';
 	import { extractErrorMessage } from 'wellcrafted/error';
 	import { Ok, tryAsync } from 'wellcrafted/result';
 	import { PATHS } from '$lib/constants/paths';
@@ -179,46 +180,19 @@
 					filePath: string,
 					onProgress: (progress: number) => void,
 				): Promise<void> => {
-					const response = await fetch(url);
-					if (!response.ok) {
-						throw new Error(`Failed to download: ${response.status}`);
-					}
+					const eventId = `download-progress-${Math.random().toString(36).slice(2, 9)}`;
+					const unlisten = await listen<{ progress: number }>(eventId, (event) => {
+						onProgress(event.payload.progress);
+					});
 
-					const contentLength = response.headers.get('content-length');
-					const totalBytes = contentLength
-						? Number.parseInt(contentLength, 10)
-						: sizeBytes;
-
-					const reader = response.body?.getReader();
-					if (!reader) {
-						throw new Error('Failed to read response body');
-					}
-
-					// Create or truncate the file first
-					await writeFile(filePath, new Uint8Array());
-
-					let downloadedBytes = 0;
-
-					while (true) {
-						const { done, value } = await reader.read();
-						if (done) break;
-
-						// Write each chunk directly to disk using append mode
-						await writeFile(filePath, value, { append: true });
-
-						downloadedBytes += value.length;
-						const progress = Math.round((downloadedBytes / totalBytes) * 100);
-						onProgress(progress);
-					}
-
-					// Validate download completeness
-					if (downloadedBytes < totalBytes) {
-						await remove(filePath);
-						const downloadedMB = Math.round(downloadedBytes / 1_000_000);
-						const expectedMB = Math.round(totalBytes / 1_000_000);
-						throw new Error(
-							`Download incomplete: received ${downloadedMB}MB but expected ${expectedMB}MB. Please check your network connection and try again.`,
-						);
+					try {
+						await invoke('download_model_file', {
+							url,
+							filePath,
+							eventId,
+						});
+					} finally {
+						unlisten();
 					}
 				};
 

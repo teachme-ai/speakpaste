@@ -25,7 +25,7 @@ export function registerAccessibilityPermission() {
 			toast.warning('Accessibility Permission Issue', {
 				id: accessibilityToastId,
 				description:
-					'Whispering needs accessibility permissions. This often requires removing and re-adding the app after updates.',
+					'SpeakPaste needs accessibility permissions. This often requires removing and re-adding the app after updates.',
 				duration: Number.POSITIVE_INFINITY,
 				action: {
 					label: 'View Guide',
@@ -36,6 +36,15 @@ export function registerAccessibilityPermission() {
 					},
 				},
 			});
+		} else {
+			// Initialize global Fn key listener now that permission is confirmed
+			try {
+				const { invoke } = await import('@tauri-apps/api/core');
+				await invoke('initialize_fn_key_listener');
+				console.log('[FnKeyListener] Standalone Fn key listener initialized successfully.');
+			} catch (err) {
+				console.error('[FnKeyListener] Failed to initialize Fn key listener:', err);
+			}
 		}
 	})();
 
@@ -65,7 +74,7 @@ export function registerMicrophonePermission() {
 			// Toast if permission not granted
 			toast.info('Microphone Permission Required', {
 				id: microphoneToastId,
-				description: 'Whispering needs microphone access to record audio',
+				description: 'SpeakPaste needs microphone access to record audio',
 				duration: Number.POSITIVE_INFINITY,
 				action: {
 					label: 'Enable Permission',

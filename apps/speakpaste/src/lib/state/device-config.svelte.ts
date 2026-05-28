@@ -126,6 +126,12 @@ const DEVICE_DEFINITIONS = {
 		type('string | null'),
 		`${CommandOrControl}+Shift+R` as string | null,
 	),
+
+	// ── Appearance ────────────────────────────────────────────────────────────
+	'appearance.bgOpacity': defineEntry(
+		type('number'),
+		0, // 0 = fully transparent (vibrancy), 1 = fully opaque
+	),
 };
 
 // ── Types ────────────────────────────────────────────────────────────────────
