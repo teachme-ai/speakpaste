@@ -88,25 +88,10 @@ export function registerAccessibilityPermission() {
 			return;
 		}
 
-		if (!isAccessibilityGranted) {
-			// Toast if permission not granted
-			toast.warning('Accessibility Permission Issue', {
-				id: accessibilityToastId,
-				description:
-					'SpeakPaste needs accessibility permissions. This often requires removing and re-adding the app after updates.',
-				duration: Number.POSITIVE_INFINITY,
-				action: {
-					label: 'View Guide',
-					onClick: () => {
-						goto('/macos-enable-accessibility');
-						// Dismiss the toast
-						toast.dismiss(accessibilityToastId);
-					},
-				},
-			});
-		} else {
-			await initializeFnKeyListener(accessibilityToastId);
-		}
+        // We MUST attempt to initialize the Fn key listener even if check() is false.
+        // Calling the Rust initialization is what actually triggers the native macOS prompt.
+        // If it fails, the catch block inside initializeFnKeyListener will handle the toast.
+        await initializeFnKeyListener(accessibilityToastId);
 	})();
 
 	// Return cleanup function
