@@ -191,6 +191,9 @@ pub async fn run() {
         count_markdown_files,
         delete_files_in_directory,
         write_markdown_files,
+        check_app_translocation,
+        reset_tcc_permissions,
+        open_mac_privacy_pane,
     ]);
 
     let app = builder
@@ -322,4 +325,43 @@ async fn simulate_enter_keystroke() -> Result<(), String> {
         .map_err(|e| format!("Failed to simulate Enter key: {}", e))?;
 
     Ok(())
+}
+
+#[tauri::command]
+fn check_app_translocation() -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        if let Ok(exe_path) = std::env::current_exe() {
+            let path_str = exe_path.to_string_lossy();
+            // App Translocation places apps in randomized read-only paths under /private/var/folders/...
+            if path_str.contains("AppTranslocation") {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+#[tauri::command]
+async fn reset_tcc_permissions() -> Result<bool, String> {
+    #[cfg(target_os = "macos")]
+    {
+        info!("[Permissions] Purging old signatures from TCC database using tccutil");
+        let _ = std::process::Command::new("tccutil")
+            .args(["reset", "Accessibility", "com.speakpaste.app"])
+            .status();
+    }
+    Ok(true)
+}
+
+#[tauri::command]
+async fn open_mac_privacy_pane(pane: String) -> Result<bool, String> {
+    #[cfg(target_os = "macos")]
+    {
+        let url = format!("x-apple.systemsettings:com.apple.preference.security?{}", pane);
+        let _ = std::process::Command::new("open")
+            .arg(&url)
+            .spawn();
+    }
+    Ok(true)
 }

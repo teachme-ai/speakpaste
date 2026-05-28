@@ -320,6 +320,11 @@ const analytics = {
 	'analytics.enabled': defineKv(type('boolean'), false),
 } as const;
 
+/** App-level internal state. */
+const appState = {
+	'app.last_version': defineKv(type('string | null'), null),
+} as const;
+
 /**
  * In-app keyboard shortcuts. System-global shortcuts are device-specific and stay
  * in localStorage — these are only the shortcuts within the Whispering window.
@@ -364,4 +369,5 @@ export const whisperingKv = {
 	...transformation,
 	...analytics,
 	...shortcuts,
+	...appState,
 };

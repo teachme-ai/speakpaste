@@ -4,21 +4,43 @@ import { goto } from '$app/navigation';
 import { IS_MACOS } from '$lib/constants/platform';
 import { desktopServices } from '$lib/services/desktop';
 import { asShellCommand } from '$lib/services/desktop/command';
+import { settings } from '$lib/state/settings.svelte';
+import { getVersion } from '@tauri-apps/api/app';
 
 function isMacDesktop() {
 	return IS_MACOS && window.__TAURI_INTERNALS__;
 }
 
 async function openMacPrivacyPane(pane: 'Privacy_Accessibility' | 'Privacy_Microphone') {
-	const { error } = await desktopServices.command.execute(
-		asShellCommand(
-			`open "x-apple.systemsettings:com.apple.preference.security?${pane}"`,
-		),
-	);
+    const { invoke } = await import('@tauri-apps/api/core');
+    await invoke('open_mac_privacy_pane', { pane });
+}
 
-	if (error) {
-		console.error(`Failed to open macOS privacy pane ${pane}:`, error);
-	}
+async function runOsLevelPermissionFixes() {
+    const { invoke } = await import('@tauri-apps/api/core');
+    
+    // 1. Check Translocation
+    const isTranslocated = await invoke('check_app_translocation');
+    if (isTranslocated) {
+        goto('/macos-translocation-warning');
+        return false;
+    }
+
+    // 2. TCC Signature Invalidation (run once per version)
+    const currentVersion = await getVersion();
+    const lastVersion = localStorage.getItem('app.last_version');
+
+    if (currentVersion !== lastVersion) {
+        console.log(`[Permissions] App version changed (${lastVersion} -> ${currentVersion}). Purging ghost TCC signatures.`);
+        try {
+            await invoke('reset_tcc_permissions');
+            localStorage.setItem('app.last_version', currentVersion);
+        } catch (err) {
+            console.error('[Permissions] Failed to reset TCC permissions:', err);
+        }
+    }
+    
+    return true;
 }
 
 async function initializeFnKeyListener(accessibilityToastId: string) {
@@ -33,10 +55,10 @@ async function initializeFnKeyListener(accessibilityToastId: string) {
 		toast.warning('Fn key listener needs Accessibility access', {
 			id: accessibilityToastId,
 			description:
-				'If you already enabled Accessibility, remove SpeakPaste from the list, add it again, then reopen SpeakPaste.',
+				'SpeakPaste needs accessibility permissions to trigger voice typing globally.',
 			duration: Number.POSITIVE_INFINITY,
 			action: {
-				label: 'View Guide',
+				label: 'Enable Access',
 				onClick: () => {
 					goto('/macos-enable-accessibility');
 					toast.dismiss(accessibilityToastId);
@@ -54,6 +76,10 @@ export function registerAccessibilityPermission() {
 
 	// Check accessibility permission once on mount
 	(async () => {
+        // Run our automated OS-level fixes first
+        const canProceed = await runOsLevelPermissionFixes();
+        if (!canProceed) return;
+
 		const { data: isAccessibilityGranted, error } =
 			await desktopServices.permissions.accessibility.check();
 
