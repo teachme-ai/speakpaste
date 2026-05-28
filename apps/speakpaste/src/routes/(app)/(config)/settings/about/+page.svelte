@@ -142,8 +142,7 @@
 				In complete compliance with the **MIT** and **AGPL-3.0** licensing agreements of the upstream source, all original copyrights, framework abstractions, and shared library structures remain owned by their respective authors. We sincerely thank Braden and the Epicenter community for providing the architectural layout that made this utility possible.
 			</p>
 			<div class="flex gap-4 text-xs font-medium mt-1">
-				<Link href="https://github.com/teachme-ai/speakpaste" target="_blank">Original Epicenter Repo ↗</Link>
-				<Link href="https://github.com/teachme-ai/speakpaste" target="_blank">SpeakPaste Project Home ↗</Link>
+				<Link href="https://speakpaste.online" target="_blank">SpeakPaste Website ↗</Link>
 			</div>
 		</div>
 	</div>

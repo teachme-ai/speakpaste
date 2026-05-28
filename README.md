@@ -58,7 +58,8 @@ Before running the application locally, make sure you have:
 ### Install and Run
 ```bash
 # 1. Clone the private repository
-git clone https://github.com/teachme-ai/speakpaste.git
+Visit the official website for installation instructions and downloads:
+https://speakpaste.online
 cd speakpaste
 
 # 2. Install monorepo workspace dependencies
