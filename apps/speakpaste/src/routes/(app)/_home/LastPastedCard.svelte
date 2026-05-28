@@ -32,17 +32,10 @@
 				</div>
 			</div>
 		</div>
-		<div class="relative min-w-0 px-4 mb-1">
-			{#if lastPasted.transcript}
-				<span class="absolute left-0 top-0 text-2xl text-muted-foreground/30 leading-none font-serif">"</span>
-				<p class="text-sm text-foreground leading-relaxed line-clamp-3 break-words select-text">{lastPasted.transcript}</p>
-				<span class="absolute right-0 bottom-0 text-2xl text-muted-foreground/30 leading-none font-serif">"</span>
-			{:else}
-				<div class="flex items-center gap-2 py-1">
-					<AudioWaveformIcon class="size-4 text-primary/60" />
-					<p class="text-sm text-muted-foreground font-mono truncate">{lastPasted.filename}</p>
-				</div>
-			{/if}
+		<div class="relative px-4 mb-1">
+			<span class="absolute left-0 top-0 text-2xl text-muted-foreground/30 leading-none font-serif">"</span>
+			<p class="text-sm text-foreground leading-relaxed line-clamp-3 select-text">{lastPasted.transcript}</p>
+			<span class="absolute right-0 bottom-0 text-2xl text-muted-foreground/30 leading-none font-serif">"</span>
 		</div>
 		
 		<!-- Action row at bottom right, reveals on hover -->

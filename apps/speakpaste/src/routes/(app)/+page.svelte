@@ -178,10 +178,10 @@
 							const match = content.match(/^---\n[\s\S]*?\n---\n([\s\S]*)$/);
 							if (match) transcript = match[1].trim();
 						} catch {
-							// No companion MD file — show WAV entry without transcript
+							// No companion MD file
 						}
-
-						// Use companion .md frontmatter date if available, otherwise use current time
+						
+						if (!transcript || transcript.trim() === '') return null;
 						let recordedAt = new Date().toISOString();
 						try {
 							const mdPath = await PATHS.DB.RECORDING_FILE(id + '.md');

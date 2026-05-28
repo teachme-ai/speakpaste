@@ -97,7 +97,9 @@ export function attachRecordingMarkdownFiles(
 				const { readDir, readTextFile, join } = await import('@tauri-apps/plugin-fs');
 				const entries = await readDir(dir).catch(() => []);
 				const mdFiles = entries.filter((e) => e.name?.endsWith('.md'));
+				const wavFiles = entries.filter((e) => e.name?.endsWith('.wav'));
 				
+				// 1. Hydrate valid .md files
 				for (const mdFile of mdFiles) {
 					try {
 						const path = await join(dir, mdFile.name!);
@@ -120,6 +122,26 @@ export function attachRecordingMarkdownFiles(
 						}
 					} catch (e) {
 						console.error(`[recording-materializer] Failed to load ${mdFile.name}:`, e);
+					}
+				}
+
+				// 2. Hydrate orphaned .wav files
+				for (const wavFile of wavFiles) {
+					const id = wavFile.name!.replace(/\.wav$/, '');
+					const existing = recordings.get(id);
+					// If there's no record in memory and no .md file for it, it's an orphaned audio file.
+					if (!existing?.data && !mdFiles.some(m => m.name === `${id}.md`)) {
+						console.log(`[recording-materializer] Found orphaned wav: ${wavFile.name}, creating entry...`);
+						const now = new Date().toISOString();
+						recordings.set({
+							id,
+							title: 'Audio Recording',
+							transcript: '',
+							recordedAt: now,
+							updatedAt: now,
+							transcriptionStatus: 'UNPROCESSED',
+							_v: 2
+						} as Recording);
 					}
 				}
 			} catch (e) {

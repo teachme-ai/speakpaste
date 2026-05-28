@@ -25,13 +25,9 @@
 						<AudioWaveformIcon class="size-3.5 text-primary" />
 					</div>
 					<div class="flex-1 min-w-0">
-						{#if item.transcript}
-							<p class="line-clamp-2 text-sm leading-relaxed text-foreground break-words select-text">{item.transcript}</p>
-						{:else}
-							<p class="text-sm text-muted-foreground font-mono truncate">{item.filename}</p>
-						{/if}
+						<p class="text-sm text-foreground truncate select-text">{item.transcript}</p>
 					</div>
-					<span class="text-xs text-muted-foreground whitespace-nowrap shrink-0 pr-8 pt-0.5">{timeAgo(item.recordedAt)}</span>
+					<span class="text-xs text-muted-foreground whitespace-nowrap shrink-0 pr-8">{timeAgo(item.recordedAt)}</span>
 					
 					<!-- Action buttons overlaying the far right side on hover -->
 					<div class="absolute right-3 opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity duration-200 bg-card/95 pl-2 py-1 rounded-lg">
