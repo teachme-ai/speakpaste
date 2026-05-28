@@ -124,33 +124,27 @@
 
 	import { readDir, readTextFile, remove } from '@tauri-apps/plugin-fs';
 
-	// Direct filesystem read for history cards — bypasses Yjs reactivity issue
-	let fsRecordings = $state<Array<{id: string, transcript: string, recordedAt: string}>>([]);
+	// Direct filesystem read for history cards — shows WAV audio files
+	let fsRecordings = $state<Array<{id: string, filename: string, transcript: string, recordedAt: string}>>([]);
 	let initialLoadComplete = $state(false);
 
 	async function deleteRecording(id: string) {
 		try {
 			recordings.delete(id);
-			const path = await PATHS.DB.RECORDING_FILE(id + '.md');
-			await remove(path);
+			// Delete both WAV and MD files for this recording
+			try {
+				const wavPath = await PATHS.DB.RECORDING_FILE(id + '.wav');
+				await remove(wavPath);
+			} catch { /* WAV might not exist */ }
+			try {
+				const mdPath = await PATHS.DB.RECORDING_FILE(id + '.md');
+				await remove(mdPath);
+			} catch { /* MD might not exist */ }
 			await loadFsRecordings();
 			toast.success('Recording deleted');
-		} catch (e) {
-			try {
-				const dir = await PATHS.DB.RECORDINGS();
-				const entries = await readDir(dir);
-				const mdFile = entries.find((e) => e.name?.includes(id) && e.name.endsWith('.md'))?.name;
-				if (mdFile) {
-					const path = await PATHS.DB.RECORDING_FILE(mdFile);
-					await remove(path);
-				}
-				recordings.delete(id);
-				await loadFsRecordings();
-				toast.success('Recording deleted');
-			} catch (err) {
-				console.error('[SpeakPaste] Failed to delete history item:', err);
-				toast.error('Failed to delete recording');
-			}
+		} catch (err) {
+			console.error('[SpeakPaste] Failed to delete history item:', err);
+			toast.error('Failed to delete recording');
 		}
 	}
 
@@ -168,25 +162,37 @@
 		try {
 			const dir = await PATHS.DB.RECORDINGS();
 			const entries = await readDir(dir);
-			const mdFiles = entries
-				.filter((e) => e.name?.endsWith('.md'))
+			const wavFiles = entries
+				.filter((e) => e.name?.endsWith('.wav'))
 				.map((e) => e.name!);
 
 			const results = await Promise.all(
-				mdFiles.map(async (filename) => {
+				wavFiles.map(async (filename) => {
 					try {
-						const path = await PATHS.DB.RECORDING_FILE(filename);
-						const content = await readTextFile(path);
-						// Parse frontmatter
-						const match = content.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-						if (!match) return null;
-						const frontmatter = match[1];
-						const transcript = match[2].trim();
-						if (!transcript) return null;
-						const idMatch = frontmatter.match(/^id:\s*(.+)$/m);
-						const dateMatch = frontmatter.match(/^recordedAt:\s*'(.+)'$/m);
-						if (!idMatch || !dateMatch) return null;
-						return { id: idMatch[1].trim(), transcript, recordedAt: dateMatch[1].trim() };
+						const id = filename.replace(/\.wav$/, '');
+						// Try to read companion .md file for transcript text
+						let transcript = '';
+						try {
+							const mdPath = await PATHS.DB.RECORDING_FILE(id + '.md');
+							const content = await readTextFile(mdPath);
+							const match = content.match(/^---\n[\s\S]*?\n---\n([\s\S]*)$/);
+							if (match) transcript = match[1].trim();
+						} catch {
+							// No companion MD file — show WAV entry without transcript
+						}
+
+						// Use companion .md frontmatter date if available, otherwise use current time
+						let recordedAt = new Date().toISOString();
+						try {
+							const mdPath = await PATHS.DB.RECORDING_FILE(id + '.md');
+							const content = await readTextFile(mdPath);
+							const dateMatch = content.match(/^recordedAt:\s*'(.+)'$/m);
+							if (dateMatch) recordedAt = dateMatch[1].trim();
+						} catch {
+							// Fallback — no .md date available
+						}
+
+						return { id, filename, transcript, recordedAt };
 					} catch { return null; }
 				})
 			);
@@ -194,9 +200,9 @@
 			fsRecordings = results
 				.filter((r): r is NonNullable<typeof r> => r !== null)
 				.sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime());
-			console.log('[SpeakPaste] fs recordings loaded:', fsRecordings.length);
+			console.log('[SpeakPaste] WAV recordings loaded:', fsRecordings.length);
 		} catch (e) {
-			console.warn('[SpeakPaste] fs recordings load failed:', e);
+			console.warn('[SpeakPaste] WAV recordings load failed:', e);
 		} finally {
 			initialLoadComplete = true;
 		}

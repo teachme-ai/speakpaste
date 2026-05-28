@@ -1,18 +1,19 @@
 <script lang="ts">
 	import FileTextIcon from '@lucide/svelte/icons/file-text';
+	import AudioWaveformIcon from '@lucide/svelte/icons/audio-waveform';
 	import ClockIcon from '@lucide/svelte/icons/clock';
 	import ClipboardIcon from '@lucide/svelte/icons/clipboard';
 	import TrashIcon from '@lucide/svelte/icons/trash-2';
 
 	let { lastPasted, timeAgo, copyTranscript, deleteRecording } = $props<{
-		lastPasted: { id: string; transcript: string; recordedAt: string } | null;
+		lastPasted: { id: string; filename: string; transcript: string; recordedAt: string } | null;
 		timeAgo: (dateStr: string) => string;
 		copyTranscript: (transcript: string) => Promise<void>;
 		deleteRecording: (id: string) => Promise<void>;
 	}>();
 </script>
 
-{#if lastPasted?.transcript}
+{#if lastPasted}
 	<div class="group relative w-full min-w-0 rounded-2xl bg-card border border-border shadow-sm p-4 transition-all duration-200 hover:shadow-md">
 		<div class="flex min-w-0 items-center justify-between gap-3 mb-3">
 			<div class="flex min-w-0 items-center gap-2">
@@ -32,9 +33,16 @@
 			</div>
 		</div>
 		<div class="relative min-w-0 px-4 mb-1">
-			<span class="absolute left-0 top-0 text-2xl text-muted-foreground/30 leading-none font-serif">"</span>
-			<p class="text-sm text-foreground leading-relaxed line-clamp-3 break-words select-text">{lastPasted.transcript}</p>
-			<span class="absolute right-0 bottom-0 text-2xl text-muted-foreground/30 leading-none font-serif">"</span>
+			{#if lastPasted.transcript}
+				<span class="absolute left-0 top-0 text-2xl text-muted-foreground/30 leading-none font-serif">"</span>
+				<p class="text-sm text-foreground leading-relaxed line-clamp-3 break-words select-text">{lastPasted.transcript}</p>
+				<span class="absolute right-0 bottom-0 text-2xl text-muted-foreground/30 leading-none font-serif">"</span>
+			{:else}
+				<div class="flex items-center gap-2 py-1">
+					<AudioWaveformIcon class="size-4 text-primary/60" />
+					<p class="text-sm text-muted-foreground font-mono truncate">{lastPasted.filename}</p>
+				</div>
+			{/if}
 		</div>
 		
 		<!-- Action row at bottom right, reveals on hover -->

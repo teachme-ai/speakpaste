@@ -5,7 +5,7 @@
 	import TrashIcon from '@lucide/svelte/icons/trash-2';
 
 	let { recentItems, timeAgo, copyTranscript, deleteRecording } = $props<{
-		recentItems: Array<{ id: string; transcript: string; recordedAt: string }>;
+		recentItems: Array<{ id: string; filename: string; transcript: string; recordedAt: string }>;
 		timeAgo: (dateStr: string) => string;
 		copyTranscript: (transcript: string) => Promise<void>;
 		deleteRecording: (id: string) => Promise<void>;
@@ -25,7 +25,11 @@
 						<AudioWaveformIcon class="size-3.5 text-primary" />
 					</div>
 					<div class="flex-1 min-w-0">
-						<p class="line-clamp-2 text-sm leading-relaxed text-foreground break-words select-text">{item.transcript}</p>
+						{#if item.transcript}
+							<p class="line-clamp-2 text-sm leading-relaxed text-foreground break-words select-text">{item.transcript}</p>
+						{:else}
+							<p class="text-sm text-muted-foreground font-mono truncate">{item.filename}</p>
+						{/if}
 					</div>
 					<span class="text-xs text-muted-foreground whitespace-nowrap shrink-0 pr-8 pt-0.5">{timeAgo(item.recordedAt)}</span>
 					

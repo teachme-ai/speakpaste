@@ -7,7 +7,6 @@
 	import ClipboardIcon from '@lucide/svelte/icons/clipboard';
 	import ListIcon from '@lucide/svelte/icons/list';
 	import TrashIcon from '@lucide/svelte/icons/trash-2';
-	import FlaskConical from '@lucide/svelte/icons/flask-conical';
 	import { settings } from '$lib/state/settings.svelte';
 	import { recordings } from '$lib/state/recordings.svelte';
 	import { deviceConfig } from '$lib/state/device-config.svelte';
@@ -93,13 +92,6 @@
 						<span class="text-sm font-medium text-foreground">Full Settings Menu</span>
 					</div>
 					<svg class="size-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-				</a>
-				<a href="/debug/settings-test" class="flex items-center justify-between px-4 py-2.5 hover:bg-muted transition-colors">
-					<div class="flex items-center gap-2.5">
-						<FlaskConical class="size-4 text-primary animate-pulse" />
-						<span class="text-sm font-medium text-primary font-semibold">Settings Diagnostics</span>
-					</div>
-					<svg class="size-4 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
 				</a>
 			</div>
 

@@ -5,6 +5,7 @@
 	import { toast } from '@epicenter/ui/sonner';
 	import ArrowLeft from '@lucide/svelte/icons/arrow-left';
 	import CheckIcon from '@lucide/svelte/icons/check';
+	import ClipboardIcon from '@lucide/svelte/icons/clipboard';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 	import { goto } from '$app/navigation';
 	import { desktopServices } from '$lib/services/desktop';
@@ -17,6 +18,8 @@
 	let { data } = $props();
 	let isAccessibilityGranted = $state(data.isAccessibilityGranted);
 	let checkInterval: any;
+	const quarantineCommand =
+		'xattr -dr com.apple.quarantine /Applications/SpeakPaste.app';
 
 	onMount(() => {
 		if (isAccessibilityGranted) {
@@ -92,6 +95,16 @@
 			duration: 8000,
 		});
 	}
+
+	async function copyQuarantineCommand() {
+		try {
+			await navigator.clipboard.writeText(quarantineCommand);
+			toast.success('Command copied');
+		} catch (error) {
+			console.error('Failed to copy quarantine command:', error);
+			toast.error('Could not copy command');
+		}
+	}
 </script>
 
 <svelte:head> <title>MacOS Accessibility</title> </svelte:head>
@@ -107,45 +120,9 @@
 			</Card.Description>
 		</Card.Header>
 		<Card.Content>
-			<div class="flex flex-col items-center gap-2">
-				{#if window.__TAURI_INTERNALS__}
-					<!-- YouTube embed for Tauri app (external videos don't work well) -->
-					<iframe
-						class="max-w-md rounded-lg border"
-						width="560"
-						height="315"
-						src="https://www.youtube.com/embed/FJRktNkr1Fs"
-						title="macOS Accessibility Settings Guide"
-						frameborder="0"
-						allow="
-							accelerometer;
-							autoplay;
-							clipboard-write;
-							encrypted-media;
-							gyroscope;
-							picture-in-picture;
-						"
-						allowfullscreen
-					></iframe>
-				{:else}
-					<!-- Direct video for web version -->
-					<video
-						class="max-w-md rounded-lg border"
-						src="https://github.com/teachme-ai/speakpaste/releases/download/_assets/macos_enable_accessibility.mp4"
-						autoplay
-						loop
-						controls
-						muted
-						playsinline
-					>
-						<p class="text-muted-foreground text-sm">
-							Video guide not available. Please follow the written instructions
-							below.
-						</p>
-					</video>
-				{/if}
+			<div class="flex flex-col gap-5">
 				<ol
-					class="text-muted-foreground list-inside list-decimal space-y-1 text-sm leading-7"
+					class="text-muted-foreground list-inside list-decimal space-y-2 text-sm leading-7"
 				>
 					<li>
 						Go to
@@ -169,6 +146,39 @@
 						>
 					</li>
 				</ol>
+
+				<div class="rounded-xl border border-border bg-muted/40 p-4">
+					<div class="space-y-3">
+						<div>
+							<h2 class="text-sm font-semibold text-foreground">
+								If macOS blocks the downloaded app
+							</h2>
+							<p class="mt-1 text-sm leading-6 text-muted-foreground">
+								For early beta builds, macOS may say Apple cannot verify
+								SpeakPaste. After dragging SpeakPaste to Applications, run this
+								Terminal command once and open the app again.
+							</p>
+						</div>
+
+						<div
+							class="flex min-w-0 items-center gap-2 rounded-lg border border-border bg-background px-3 py-2"
+						>
+							<code
+								class="min-w-0 flex-1 overflow-x-auto whitespace-nowrap text-xs text-foreground"
+							>
+								{quarantineCommand}
+							</code>
+							<Button
+								variant="outline"
+								size="sm"
+								onclick={copyQuarantineCommand}
+								aria-label="Copy xattr command"
+							>
+								<ClipboardIcon class="size-4" />
+							</Button>
+						</div>
+					</div>
+				</div>
 			</div>
 		</Card.Content>
 		<Card.Footer>

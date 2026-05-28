@@ -39,7 +39,38 @@
 			</div>
 		</div>
 
+		<!-- Creator Card -->
+		<div class="rounded-xl border border-primary/20 bg-primary/5 p-6 shadow-sm">
+			<div class="flex flex-col sm:flex-row sm:items-center gap-4">
+				<div class="flex items-center gap-4 flex-1">
+					<div class="size-12 rounded-full bg-primary/20 flex items-center justify-center shrink-0 text-xl font-bold text-primary">
+						KI
+					</div>
+					<div class="space-y-0.5">
+						<p class="text-xs font-semibold uppercase tracking-wider text-primary/70">Creator</p>
+						<h3 class="text-base font-bold tracking-tight">Khalid Irfan</h3>
+						<p class="text-xs text-muted-foreground">TeachMe AI · SpeakPaste</p>
+					</div>
+				</div>
+				<div class="flex flex-col gap-1.5 text-xs sm:items-end">
+					<Link href="https://www.linkedin.com/in/irfankhalid/" target="_blank" class="flex items-center gap-1.5 hover:text-primary transition-colors">
+						<svg class="size-3.5" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+							<path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/>
+						</svg>
+						linkedin.com/in/irfankhalid
+					</Link>
+					<Link href="mailto:irfan@teachmeai.in" class="flex items-center gap-1.5 hover:text-primary transition-colors">
+						<svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+						</svg>
+						irfan@teachmeai.in
+					</Link>
+				</div>
+			</div>
+		</div>
+
 		<!-- Open Source Acknowledgements Section -->
+
 		<div class="space-y-3">
 			<h4 class="text-lg font-semibold tracking-tight flex items-center gap-2">
 				<HeartIcon class="size-4 text-red-500 fill-red-500 animate-pulse" />

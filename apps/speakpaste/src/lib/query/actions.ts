@@ -153,7 +153,6 @@ const startManualRecording = defineMutation({
 		// Track start time for duration calculation
 		manualRecordingStartTime = Date.now();
 		console.info('Recording started');
-		sound.playSoundIfEnabled('manual-start');
 		return Ok(undefined);
 	},
 });
@@ -196,7 +195,6 @@ const stopManualRecording = defineMutation({
 			description: 'Your recording has been saved',
 		});
 		console.info('Recording stopped');
-		sound.playSoundIfEnabled('manual-stop');
 
 		// Log manual recording completion
 		let duration: number | undefined;

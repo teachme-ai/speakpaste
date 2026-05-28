@@ -49,6 +49,11 @@ function createSettings() {
 			key: K,
 			value: InferKvValue<KvDefs[K]>,
 		) {
+			// Optimistic update: set the SvelteMap immediately so subsequent
+			// get() calls return the new value without waiting for the Yjs
+			// observer round-trip. The observer will fire later and set the
+			// same value (idempotent).
+			map.set(key, value);
 			whispering.kv.set(key, value);
 		},
 
