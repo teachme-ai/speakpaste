@@ -1,7 +1,7 @@
 {
 	"name": "speakpaste",
 	"private": true,
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "Mac-only local-first voice typing powered by whisper.cpp.",
 	"scripts": {
 		"dev:web": "vite dev",
