@@ -3,10 +3,52 @@ import { nanoid } from 'nanoid/non-secure';
 import { goto } from '$app/navigation';
 import { IS_MACOS } from '$lib/constants/platform';
 import { desktopServices } from '$lib/services/desktop';
+import { asShellCommand } from '$lib/services/desktop/command';
+
+function isMacDesktop() {
+	return IS_MACOS && window.__TAURI_INTERNALS__;
+}
+
+async function openMacPrivacyPane(pane: 'Privacy_Accessibility' | 'Privacy_Microphone') {
+	const { error } = await desktopServices.command.execute(
+		asShellCommand(
+			`open "x-apple.systemsettings:com.apple.preference.security?${pane}"`,
+		),
+	);
+
+	if (error) {
+		console.error(`Failed to open macOS privacy pane ${pane}:`, error);
+	}
+}
+
+async function initializeFnKeyListener(accessibilityToastId: string) {
+	try {
+		const { invoke } = await import('@tauri-apps/api/core');
+		await invoke('initialize_fn_key_listener');
+		console.log(
+			'[FnKeyListener] Standalone Fn key listener initialized successfully.',
+		);
+	} catch (err) {
+		console.error('[FnKeyListener] Failed to initialize Fn key listener:', err);
+		toast.warning('Fn key listener needs Accessibility access', {
+			id: accessibilityToastId,
+			description:
+				'If you already enabled Accessibility, remove SpeakPaste from the list, add it again, then reopen SpeakPaste.',
+			duration: Number.POSITIVE_INFINITY,
+			action: {
+				label: 'View Guide',
+				onClick: () => {
+					goto('/macos-enable-accessibility');
+					toast.dismiss(accessibilityToastId);
+				},
+			},
+		});
+	}
+}
 
 export function registerAccessibilityPermission() {
 	// Only run on macOS desktop
-	if (!IS_MACOS) return;
+	if (!isMacDesktop()) return;
 
 	const accessibilityToastId = nanoid();
 
@@ -37,14 +79,7 @@ export function registerAccessibilityPermission() {
 				},
 			});
 		} else {
-			// Initialize global Fn key listener now that permission is confirmed
-			try {
-				const { invoke } = await import('@tauri-apps/api/core');
-				await invoke('initialize_fn_key_listener');
-				console.log('[FnKeyListener] Standalone Fn key listener initialized successfully.');
-			} catch (err) {
-				console.error('[FnKeyListener] Failed to initialize Fn key listener:', err);
-			}
+			await initializeFnKeyListener(accessibilityToastId);
 		}
 	})();
 
@@ -56,7 +91,7 @@ export function registerAccessibilityPermission() {
 
 export function registerMicrophonePermission() {
 	// Only run on macOS desktop
-	if (!IS_MACOS) return;
+	if (!isMacDesktop()) return;
 
 	const microphoneToastId = nanoid();
 
@@ -83,8 +118,28 @@ export function registerMicrophonePermission() {
 							await desktopServices.permissions.microphone.request();
 
 						if (requestError) return toastOnError(requestError, 'Failed to request microphone permission');
-						// Dismiss the toast after requesting
-						toast.dismiss(microphoneToastId);
+
+						const { data: granted, error: checkError } =
+							await desktopServices.permissions.microphone.check();
+
+						if (checkError) {
+							toastOnError(checkError, 'Failed to check microphone permission');
+							return;
+						}
+
+						if (granted) {
+							toast.success('Microphone permission enabled');
+							toast.dismiss(microphoneToastId);
+							return;
+						}
+
+						await openMacPrivacyPane('Privacy_Microphone');
+						toast.warning('Enable microphone in System Settings', {
+							id: microphoneToastId,
+							description:
+								'If no prompt appeared, enable SpeakPaste under Privacy & Security > Microphone, then reopen the app.',
+							duration: Number.POSITIVE_INFINITY,
+						});
 					},
 				},
 			});

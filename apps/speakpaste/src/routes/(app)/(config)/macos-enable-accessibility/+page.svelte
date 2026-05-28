@@ -65,7 +65,10 @@
 					onClick: () => openSystemSettings(),
 				},
 			});
+			return;
 		}
+
+		await openSystemSettings();
 	}
 
 	async function openSystemSettings() {

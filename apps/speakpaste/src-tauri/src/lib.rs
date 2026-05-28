@@ -135,11 +135,6 @@ pub async fn run() {
         .manage(AppData::new())
         .manage(ModelManager::new())
         .setup(|app| {
-            let app_handle = app.handle().clone();
-            if let Err(err) = fn_key_listener::start_fn_key_listener(app_handle) {
-                log::warn!("[FnKeyListener] Global Fn key listener start failed: {}", err);
-            }
-            
             // Apply macOS vibrancy to main window
             #[cfg(target_os = "macos")]
             if let Some(main_window) = app.get_webview_window("main") {
