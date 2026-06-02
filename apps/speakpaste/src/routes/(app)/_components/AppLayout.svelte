@@ -10,6 +10,9 @@
 	import { rpc } from '$lib/query';
 	import { services } from '$lib/services';
 	import { dictationRuntime } from '$lib/state/dictation-runtime.svelte';
+	import { runtimeConfigBridge } from '$lib/state/runtime-config-bridge';
+	import { transformationSteps } from '$lib/state/transformation-steps.svelte';
+	import { deviceConfig } from '$lib/state/device-config.svelte';
 	import { recordings } from '$lib/state/recordings.svelte';
 	import { settings } from '$lib/state/settings.svelte';
 	import { syncWindowAlwaysOnTopWithRecorderState } from '../_layout-utils/alwaysOnTop.svelte';
@@ -102,6 +105,33 @@
 		syncWindowAlwaysOnTopWithRecorderState();
 		syncIconWithRecorderState();
 	}
+
+	$effect(() => {
+		if (!window.__TAURI_INTERNALS__) return;
+
+		deviceConfig.get('recording.method');
+		deviceConfig.get('recording.cpal.deviceId');
+		deviceConfig.get('recording.navigator.deviceId');
+		deviceConfig.get('recording.ffmpeg.deviceId');
+		deviceConfig.get('recording.cpal.sampleRate');
+		deviceConfig.get('recording.cpal.outputFolder');
+		deviceConfig.get('transcription.whispercpp.modelPath');
+		deviceConfig.get('transcription.parakeet.modelPath');
+		deviceConfig.get('transcription.moonshine.modelPath');
+		deviceConfig.get('shortcuts.global.toggleManualRecording');
+		deviceConfig.get('shortcuts.global.startManualRecording');
+		deviceConfig.get('shortcuts.global.stopManualRecording');
+		deviceConfig.get('shortcuts.global.cancelManualRecording');
+		deviceConfig.get('shortcuts.global.pushToTalk');
+		settings.get('transcription.service');
+		settings.get('output.transcription.cursor');
+		const selectedTextRuleId = settings.get('transformation.selectedId');
+		if (selectedTextRuleId) {
+			transformationSteps.getByTransformationId(selectedTextRuleId);
+		}
+
+		runtimeConfigBridge.scheduleSync();
+	});
 
 	$effect(() => {
 		const strategy = settings.get('retention.strategy');

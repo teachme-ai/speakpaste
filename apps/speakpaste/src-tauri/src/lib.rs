@@ -66,6 +66,9 @@ use dictation_runtime::{
     get_dictation_runtime_state, set_dictation_runtime_state, DictationRuntime,
 };
 
+pub mod runtime_config;
+use runtime_config::{read_runtime_config, write_runtime_config};
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 #[tokio::main]
 pub async fn run() {
@@ -218,6 +221,8 @@ pub async fn run() {
         fn_key_listener::initialize_fn_key_listener,
         get_dictation_runtime_state,
         set_dictation_runtime_state,
+        write_runtime_config,
+        read_runtime_config,
         // Filesystem utilities
         read_markdown_files,
         count_markdown_files,
