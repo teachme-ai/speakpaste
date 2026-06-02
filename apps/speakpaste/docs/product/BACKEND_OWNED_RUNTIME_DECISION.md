@@ -40,16 +40,21 @@ Status: done.
 
 ### Slice 2: Backend Runtime State Skeleton
 
-Next implementation target.
+Status: done in `0796dad Add dictation runtime state bridge`.
 
 - Add a Rust `DictationRuntime` managed state.
 - Define runtime states: `Idle`, `Recording`, `Transcribing`, `Pasting`, `Cooldown`, `Error`.
 - Add commands:
   - `get_dictation_runtime_state`
-  - `emit_dictation_runtime_state`
-  - `request_show_main_window`
+  - `set_dictation_runtime_state`
 - Emit `dictation:state-changed` events to the frontend.
 - Frontend listens and mirrors runtime state, but does not lose current JS behavior yet.
+
+Review verdict:
+
+- Antigravity's backend-owned architecture is correct as the north star.
+- Its proposed immediate deletion of `tray.ts` and removal of Svelte shortcut orchestration is too early.
+- The implemented state bridge is the right low-risk intermediate step because it creates a native source of truth without destabilizing the validated dictation path.
 
 ### Slice 3: Settings Bridge
 
@@ -101,4 +106,4 @@ Only after this slice should the JS tray service and JS dictation actions be ret
 
 ## Immediate Next Task
 
-Implement Slice 2: a Rust runtime state skeleton and frontend subscriber. This gives the app a native source of truth without destabilizing dictation.
+Implement Slice 3: mirror background-critical settings into a Rust-readable local config. This must happen before Rust can own Fn/global/tray dictation triggers safely.
