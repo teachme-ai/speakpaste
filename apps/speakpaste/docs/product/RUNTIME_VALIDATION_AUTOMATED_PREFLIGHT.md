@@ -125,3 +125,45 @@ Automated checks do not prove the native macOS loop. The user must still test:
 Antigravity should use this file as evidence when writing:
 
 `apps/speakpaste/docs/product/ANTIGRAVITY_REVIEW_RUNTIME_VALIDATION.md`
+
+## Latest Local Install Evidence
+
+Date: 2026-06-02
+
+Codex built the latest desktop app with:
+
+```bash
+bun tauri build
+```
+
+Result:
+
+- The Tauri web build and Rust release binary completed successfully.
+- The `.app` bundle was produced successfully at:
+
+```text
+apps/speakpaste/src-tauri/target/release/bundle/macos/SpeakPaste.app
+```
+
+- DMG bundling failed in `bundle_dmg.sh`, so the DMG was not used for runtime validation.
+- Codex installed the built `.app` directly to:
+
+```text
+/Applications/SpeakPaste.app
+```
+
+Installed app metadata:
+
+```text
+CFBundleName: SpeakPaste
+CFBundleIdentifier: com.speakpaste.app
+CFBundleShortVersionString: 0.1.1
+CFBundleExecutable: speakpaste
+Installed size: 29M
+```
+
+Signing observations:
+
+- The local build is ad-hoc signed.
+- `spctl --assess --type execute --verbose /Applications/SpeakPaste.app` returned an internal Code Signing subsystem error.
+- This is noted for distribution/notarization follow-up, but it does not block local runtime validation from `/Applications`.
