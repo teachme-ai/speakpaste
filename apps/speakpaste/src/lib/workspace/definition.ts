@@ -4,11 +4,7 @@ import { type } from 'arktype';
 // ── Constant imports ─────────────────────────────────────────────────────────
 
 import { RECORDING_MODES } from '$lib/constants/audio/recording-modes';
-import { INFERENCE_PROVIDER_IDS } from '$lib/constants/inference';
-import {
-	TRANSCRIPTION,
-	TRANSCRIPTION_SERVICE_IDS,
-} from '$lib/constants/transcription';
+import { TRANSCRIPTION_SERVICE_IDS } from '$lib/constants/transcription';
 import { ALWAYS_ON_TOP_MODES } from '$lib/constants/ui/always-on-top';
 import { FFMPEG_DEFAULT_COMPRESSION_OPTIONS } from '$lib/services/desktop/recorder/ffmpeg';
 
@@ -80,15 +76,9 @@ export type Transformation = InferTableRow<typeof transformations>;
 /**
  * Individual steps within a transformation pipeline.
  *
- * Uses a flat row schema — all `prompt_transform` and `find_replace` fields are
- * present on every row, discriminated by the `type` field. This is intentional:
+ * Uses a flat row schema so old prompt rows can still load while the active
+ * local-only editor creates find/replace rows.
  *
- * - `table.set()` replaces the entire row. A discriminated union would lose the
- *   inactive variant's data on every write. Flat rows preserve everything.
- * - Per-provider model memory: each inference provider's model selection is stored
- *   independently. Switching providers and switching back retains your choices.
- *
- * @see {@link https://github.com/EpicenterHQ/epicenter/blob/main/specs/20260312T170000-whispering-workspace-polish-and-migration.md | Spec Decision 1}
  */
 const transformationSteps = defineTable(
 	type({
@@ -97,10 +87,9 @@ const transformationSteps = defineTable(
 		order: 'number',
 		type: "'prompt_transform' | 'find_replace'",
 
-		// Prompt transform: active provider
-		inferenceProvider: type.enumerated(...INFERENCE_PROVIDER_IDS),
+		// Retired prompt transform fields kept only so legacy rows can deserialize.
+		inferenceProvider: 'string',
 
-		// Prompt transform: per-provider model memory
 		openaiModel: 'string',
 		groqModel: 'string',
 		anthropicModel: 'string',
@@ -109,7 +98,6 @@ const transformationSteps = defineTable(
 		customModel: 'string',
 		customBaseUrl: 'string',
 
-		// Prompt transform: prompt templates
 		systemPromptTemplate: 'string',
 		userPromptTemplate: 'string',
 
@@ -197,8 +185,8 @@ export type TransformationStepRun = InferTableRow<typeof transformationStepRuns>
  * natural namespace hierarchy and give per-key LWW granularity (unlike table rows
  * which are replaced atomically).
  *
- * Only preferences that roam across devices live here. API keys, filesystem paths,
- * hardware device IDs, base URLs, and global shortcuts stay in localStorage.
+ * Only preferences that roam across devices live here. Filesystem paths,
+ * hardware device IDs, and global shortcuts stay in localStorage.
  */
 /**
  * Sound effect toggles. Each event can independently play/mute a sound.
@@ -257,38 +245,12 @@ const recording = {
 } as const;
 
 /**
- * Transcription service and per-service model selections.
- *
- * Each service's model is its own KV entry so switching from OpenAI → Groq and
- * back preserves your OpenAI model choice. `temperature` is stored as a number
- * (0–1) — the old settings schema used a string for localStorage.
- *
- * @see {@link https://github.com/EpicenterHQ/epicenter/blob/main/specs/20260312T170000-whispering-workspace-polish-and-migration.md | Spec Decision 2}
+ * Transcription service and local engine options.
  */
 const transcription = {
 	'transcription.service': defineKv(
 		type.enumerated(...TRANSCRIPTION_SERVICE_IDS),
 		'whispercpp',
-	),
-	'transcription.openai.model': defineKv(
-		type('string'),
-		TRANSCRIPTION.OpenAI.defaultModel,
-	),
-	'transcription.groq.model': defineKv(
-		type('string'),
-		TRANSCRIPTION.Groq.defaultModel,
-	),
-	'transcription.elevenlabs.model': defineKv(
-		type('string'),
-		TRANSCRIPTION.ElevenLabs.defaultModel,
-	),
-	'transcription.deepgram.model': defineKv(
-		type('string'),
-		TRANSCRIPTION.Deepgram.defaultModel,
-	),
-	'transcription.mistral.model': defineKv(
-		type('string'),
-		TRANSCRIPTION.Mistral.defaultModel,
 	),
 	'transcription.language': defineKv(type('string'), 'auto'),
 	'transcription.prompt': defineKv(type('string'), ''),
@@ -301,18 +263,12 @@ const transcription = {
 } as const;
 
 /**
- * Currently active transformation pipeline and default completion model.
+ * Currently active local transformation pipeline.
  *
  * `selectedId`: FK to `transformations` table. `null` = no transformation selected.
- * `openrouterModel`: Default OpenRouter model for new transformation steps.
- * Merged from `completion.*` — this is transformation pipeline config, not a separate domain.
  */
 const transformation = {
 	'transformation.selectedId': defineKv(type('string | null'), null),
-	'transformation.openrouterModel': defineKv(
-		type('string'),
-		'mistralai/mixtral-8x7b',
-	),
 } as const;
 
 /** Anonymized event logging toggle (Aptabase). */

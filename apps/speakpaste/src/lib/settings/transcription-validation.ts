@@ -28,33 +28,11 @@ export function getSelectedTranscriptionService():
 export function isTranscriptionServiceConfigured(
 	service: TranscriptionService,
 ): boolean {
-	switch (service.location) {
-		case 'cloud': {
-			const apiKeyByService = {
-				Groq: 'apiKeys.groq',
-				OpenAI: 'apiKeys.openai',
-				ElevenLabs: 'apiKeys.elevenlabs',
-				Deepgram: 'apiKeys.deepgram',
-				Mistral: 'apiKeys.mistral',
-			} as const;
+	const modelPathByService = {
+		whispercpp: 'transcription.whispercpp.modelPath',
+		parakeet: 'transcription.parakeet.modelPath',
+		moonshine: 'transcription.moonshine.modelPath',
+	} as const;
 
-			return deviceConfig.get(apiKeyByService[service.id]) !== '';
-		}
-		case 'self-hosted': {
-			const url = deviceConfig.get('transcription.speaches.baseUrl');
-			return url !== '';
-		}
-		case 'local': {
-			const modelPathByService = {
-				whispercpp: 'transcription.whispercpp.modelPath',
-				parakeet: 'transcription.parakeet.modelPath',
-				moonshine: 'transcription.moonshine.modelPath',
-			} as const;
-
-			return deviceConfig.get(modelPathByService[service.id]) !== '';
-		}
-		default: {
-			return true;
-		}
-	}
+	return deviceConfig.get(modelPathByService[service.id]) !== '';
 }

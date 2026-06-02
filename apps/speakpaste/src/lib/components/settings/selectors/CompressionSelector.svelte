@@ -9,14 +9,10 @@
 	import { goto } from '$app/navigation';
 	import { CompressionBody } from '$lib/components/settings';
 	import { settings } from '$lib/state/settings.svelte';
-	import { isCompressionRecommended } from '$routes/(app)/_layout-utils/check-ffmpeg';
 
 	let { class: className }: { class?: string } = $props();
 
 	const popover = useCombobox();
-
-	// Check if we should show "Recommended" badge
-	const shouldShowRecommendedBadge = $derived(isCompressionRecommended());
 
 	// Visual state for the button icon
 	const isCompressionEnabled = $derived(
@@ -41,16 +37,7 @@
 						'text-lg',
 						isCompressionEnabled ? 'opacity-100' : 'opacity-60',
 					)}
-				>
-					🗜️
-				</PackageIcon>
-
-				<!-- Recommended badge indicator -->
-				{#if shouldShowRecommendedBadge}
-					<span
-						class="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-blue-500 before:absolute before:left-0 before:top-0 before:h-full before:w-full before:rounded-full before:bg-blue-500/50 before:animate-ping"
-					></span>
-				{/if}
+				/>
 			</Button>
 		{/snippet}
 	</Popover.Trigger>

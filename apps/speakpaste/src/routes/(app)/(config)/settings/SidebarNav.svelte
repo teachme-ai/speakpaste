@@ -15,6 +15,7 @@
 			href: '/settings/shortcuts/local',
 			activePathPrefix: '/settings/shortcuts',
 		},
+		{ title: 'Local Technology', href: '/settings/local-technology' },
 		{ title: 'About & Credits', href: '/settings/about' },
 	] satisfies {
 		title: string;

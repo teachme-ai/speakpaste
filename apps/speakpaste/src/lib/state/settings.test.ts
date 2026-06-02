@@ -11,31 +11,17 @@ const localStorageMock = {
 
 describe("🎙️ SpeakPaste LocalStorage Settings 100% Full-Coverage Suite", () => {
 	
-	test("🔑 API Keys State & Integrity Assertions", () => {
-		const openaiKey = "speakpaste.device.apiKeys.openai";
-		const anthropicKey = "speakpaste.device.apiKeys.anthropic";
-		const groqKey = "speakpaste.device.apiKeys.groq";
-		const googleKey = "speakpaste.device.apiKeys.google";
+	test("🔒 Retired Remote Credential Keys Stay Unused", () => {
+		const retiredKeys = [
+			"speakpaste.device.apiKeys.openai",
+			"speakpaste.device.apiKeys.anthropic",
+			"speakpaste.device.apiKeys.groq",
+			"speakpaste.device.apiKeys.google",
+		];
 
-		// OpenAI key
-		localStorageMock.setItem(openaiKey, "sk-test-cli-key-123456");
-		expect(localStorageMock.getItem(openaiKey)).toBe("sk-test-cli-key-123456");
-
-		// Anthropic key
-		localStorageMock.setItem(anthropicKey, "sk-ant-test-cli-789");
-		expect(localStorageMock.getItem(anthropicKey)).toBe("sk-ant-test-cli-789");
-
-		// Google Key
-		localStorageMock.setItem(googleKey, "google-ai-test-cli-key");
-		expect(localStorageMock.getItem(googleKey)).toBe("google-ai-test-cli-key");
-
-		// Groq empty fallback
-		localStorageMock.setItem(groqKey, "");
-		expect(localStorageMock.getItem(groqKey)).toBe("");
-
-		// Cleanup and defaults
-		localStorageMock.removeItem(openaiKey);
-		expect(localStorageMock.getItem(openaiKey)).toBeNull();
+		for (const key of retiredKeys) {
+			expect(localStorageMock.getItem(key)).toBeNull();
+		}
 	});
 
 	test("🎙️ Recording Constraints & Sample Rate Assertions", () => {
@@ -107,8 +93,8 @@ describe("🎙️ SpeakPaste LocalStorage Settings 100% Full-Coverage Suite", ()
 		const tempKey = "speakpaste.settings.transcription.temperature";
 		const promptKey = "speakpaste.settings.transcription.prompt";
 
-		// switches between transcription services
-		const allowedServices = ["OpenAI", "Groq", "whispercpp", "parakeet", "moonshine"];
+		// switches between local transcription services
+		const allowedServices = ["whispercpp", "parakeet", "moonshine"];
 		localStorageMock.setItem(serviceKey, "whispercpp");
 		expect(allowedServices).toContain(localStorageMock.getItem(serviceKey) || "");
 

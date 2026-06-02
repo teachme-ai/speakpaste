@@ -24,21 +24,6 @@ import {
  * localStorage under the `whispering.device.{key}` prefix.
  */
 const DEVICE_DEFINITIONS = {
-	// ── API keys (secrets, never synced) ──────────────────────────────
-	'apiKeys.openai': defineEntry(type('string'), ''),
-	'apiKeys.anthropic': defineEntry(type('string'), ''),
-	'apiKeys.groq': defineEntry(type('string'), ''),
-	'apiKeys.google': defineEntry(type('string'), ''),
-	'apiKeys.deepgram': defineEntry(type('string'), ''),
-	'apiKeys.elevenlabs': defineEntry(type('string'), ''),
-	'apiKeys.mistral': defineEntry(type('string'), ''),
-	'apiKeys.openrouter': defineEntry(type('string'), ''),
-	'apiKeys.custom': defineEntry(type('string'), ''),
-
-	// ── API endpoint overrides ────────────────────────────────────────
-	'apiEndpoints.openai': defineEntry(type('string'), ''),
-	'apiEndpoints.groq': defineEntry(type('string'), ''),
-
 	// ── Recording hardware ────────────────────────────────────────────
 	'recording.method': defineEntry(
 		type("'cpal' | 'navigator' | 'ffmpeg'"),
@@ -70,23 +55,9 @@ const DEVICE_DEFINITIONS = {
 	),
 
 	// ── Local model paths ─────────────────────────────────────────────
-	'transcription.speaches.baseUrl': defineEntry(
-		type('string'),
-		'http://localhost:8000',
-	),
-	'transcription.speaches.modelId': defineEntry(
-		type('string'),
-		'Systran/faster-distil-whisper-small.en',
-	),
 	'transcription.whispercpp.modelPath': defineEntry(type('string'), ''),
 	'transcription.parakeet.modelPath': defineEntry(type('string'), ''),
 	'transcription.moonshine.modelPath': defineEntry(type('string'), ''),
-
-	// ── Self-hosted server URLs ───────────────────────────────────────
-	'completion.custom.baseUrl': defineEntry(
-		type('string'),
-		'http://localhost:11434/v1',
-	),
 
 	// ── Global OS shortcuts (device-specific, never synced) ───────────
 	'shortcuts.global.toggleManualRecording': defineEntry(

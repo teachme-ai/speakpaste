@@ -19,8 +19,8 @@
 			"icons/icon.icns",
 			"icons/icon.ico"
 		],
-		"longDescription": "Seamlessly integrate speech-to-text transcriptions anywhere on your desktop. Powered by OpenAI's Whisper API.",
-		"shortDescription": "Press shortcut \u2192 speak \u2192 get text. Free.",
+		"longDescription": "Local-only speech-to-text and writing modes for your Mac. Uses on-device engines and Apple frameworks when available. No cloud transcription, no remote rewrite, and no remote analytics.",
+		"shortDescription": "Press shortcut \u2192 speak \u2192 get text. Local-only.",
 		"createUpdaterArtifacts": false,
 		"macOS": {
 			"entitlements": "entitlements.plist",

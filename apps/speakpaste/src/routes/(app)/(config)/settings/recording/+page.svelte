@@ -19,10 +19,8 @@
 	import { deviceConfig } from '$lib/state/device-config.svelte';
 	import { settings } from '$lib/state/settings.svelte';
 	import {
-		COMPRESSION_RECOMMENDED_MESSAGE,
 		hasNavigatorLocalTranscriptionIssue,
-		isCompressionRecommended,
-	} from '$routes/(app)/_layout-utils/check-ffmpeg';
+	} from '../../../_layout-utils/check-ffmpeg';
 	import DesktopOutputFolder from './DesktopOutputFolder.svelte';
 	import FfmpegCommandBuilder from './FfmpegCommandBuilder.svelte';
 	import ManualSelectRecordingDevice from './ManualSelectRecordingDevice.svelte';
@@ -54,8 +52,8 @@
 			value: 'cpal',
 			label: 'CPAL',
 			description: IS_MACOS
-				? 'Native Rust audio method. Records uncompressed WAV, reliable with shortcuts. Works with all transcription methods.'
-				: 'Native Rust audio method. Records uncompressed WAV format. Works with all transcription methods.',
+				? 'Native Rust audio method. Records uncompressed WAV, reliable with shortcuts, and pairs best with local transcription.'
+				: 'Native Rust audio method. Records uncompressed WAV format and pairs best with local transcription.',
 		},
 		{
 			value: 'ffmpeg',
@@ -76,8 +74,8 @@
 			value: 'navigator',
 			label: 'Browser API',
 			description: IS_MACOS
-				? 'Web MediaRecorder API. Creates compressed files suitable for cloud transcription. Requires FFmpeg for local transcription (Whisper C++/Parakeet). May have delays with shortcuts when app is in background (macOS AppNap).'
-				: 'Web MediaRecorder API. Creates compressed files suitable for cloud transcription. Requires FFmpeg for local transcription (Whisper C++/Parakeet).',
+				? 'Web MediaRecorder API. Creates compressed files that require FFmpeg conversion for local transcription. May have delays with shortcuts when app is in background (macOS AppNap).'
+				: 'Web MediaRecorder API. Creates compressed files that require FFmpeg conversion for local transcription.',
 		},
 	];
 
@@ -226,23 +224,7 @@
 							href="/install-ffmpeg"
 							class="font-medium underline underline-offset-4 hover:text-red-700 dark:hover:text-red-300"
 						>
-							Install FFmpeg →
-						</Link>
-					</Alert.Description>
-				</Alert.Root>
-			{:else if isCompressionRecommended()}
-				<Alert.Root class="border-blue-500/20 bg-blue-500/5">
-					<InfoIcon class="size-4 text-blue-600 dark:text-blue-400" />
-					<Alert.Title class="text-blue-600 dark:text-blue-400">
-						Enable Compression for Faster Uploads
-					</Alert.Title>
-					<Alert.Description>
-						{COMPRESSION_RECOMMENDED_MESSAGE}
-						<Link
-							href="/settings/transcription"
-							class="font-medium underline underline-offset-4 hover:text-blue-700 dark:hover:text-blue-300"
-						>
-							Enable in Transcription Settings →
+							Install FFmpeg
 						</Link>
 					</Alert.Description>
 				</Alert.Root>
@@ -276,11 +258,6 @@
 								<Link href="/install-ffmpeg">Install FFmpeg</Link>
 								to keep using Browser API recording
 							</div>
-							<div class="text-sm">
-								<strong>Option 3:</strong>
-								Switch to a cloud transcription service (OpenAI, Groq, Deepgram,
-								etc.) which work with all recording methods
-							</div>
 						</div>
 					</Alert.Description>
 				</Alert.Root>
@@ -313,7 +290,7 @@
 							target="_blank"
 							class="font-medium underline underline-offset-4 hover:text-red-700 dark:hover:text-red-300"
 						>
-							Learn more →
+							Learn more
 						</Link>
 					</Alert.Description>
 				</Alert.Root>

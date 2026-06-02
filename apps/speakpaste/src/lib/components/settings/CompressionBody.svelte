@@ -16,31 +16,26 @@
 		FFMPEG_SMALLEST_COMPRESSION_OPTIONS,
 	} from '$lib/services/desktop/recorder/ffmpeg';
 	import { settings } from '$lib/state/settings.svelte';
-	import { isCompressionRecommended } from '$routes/(app)/_layout-utils/check-ffmpeg';
 
 	// Compression preset definitions (UI only - not stored in settings)
 	const COMPRESSION_PRESETS = {
 		recommended: {
-			label: 'Recommended',
-			icon: '🎯',
-			description: 'Best for speech with silence removal',
+			label: 'Speech',
+			description: 'Smaller speech files with silence removal',
 			options: FFMPEG_DEFAULT_COMPRESSION_OPTIONS,
 		},
 		preserve: {
 			label: 'Preserve Audio',
-			icon: '📼',
 			description: 'Compress but keep all audio',
 			options: '-c:a libopus -b:a 32k -ar 16000 -ac 1 -compression_level 10',
 		},
 		smallest: {
 			label: 'Smallest',
-			icon: '🗜️',
 			description: 'Maximum compression with silence removal',
 			options: FFMPEG_SMALLEST_COMPRESSION_OPTIONS,
 		},
 		compatible: {
 			label: 'MP3',
-			icon: '✅',
 			description: 'Universal compatibility',
 			options: '-c:a libmp3lame -b:a 32k -ar 16000 -ac 1 -q:a 9',
 		},
@@ -67,9 +62,6 @@
 
 	const isFfmpegInstalled = $derived(ffmpegQuery.data ?? false);
 	const isFfmpegCheckLoading = $derived(ffmpegQuery.isPending);
-
-	// Show recommended badge if compression is recommended
-	const showRecommendedBadge = $derived(isCompressionRecommended());
 </script>
 
 <Field.Group>
@@ -78,7 +70,7 @@
 		<Checkbox
 			id="compression-enabled"
 			checked={settings.get('transcription.compressionEnabled')}
-			onCheckedChange={(checked) =>
+			onCheckedChange={(checked: boolean | 'indeterminate') =>
 				settings.set(
 					'transcription.compressionEnabled',
 					checked === true,
@@ -93,13 +85,10 @@
 				>
 					Compress audio before transcription
 				</Field.Label>
-				{#if showRecommendedBadge}
-					<Badge variant="secondary" class="text-xs">Recommended</Badge>
-				{/if}
+				<Badge variant="secondary" class="text-xs">Optional</Badge>
 			</div>
 			<Field.Description>
-				Reduce file sizes and trim silence for faster uploads and lower API
-				costs
+				Reduce local file size and trim silence before local transcription.
 			</Field.Description>
 		</Field.Content>
 	</Field.Field>
@@ -129,7 +118,6 @@
 								preset.options,
 							)}
 						>
-							<span class="mr-1">{preset.icon}</span>
 							<span>{preset.label}</span>
 						</Button>
 					{/each}
@@ -146,10 +134,10 @@
 					<Input
 						id="compression-options"
 						value={settings.get('transcription.compressionOptions')}
-						oninput={(e) =>
+						oninput={(e: Event) =>
 						settings.set(
 							'transcription.compressionOptions',
-							e.currentTarget.value,
+							(e.currentTarget as HTMLInputElement).value,
 						)}
 						placeholder={FFMPEG_DEFAULT_COMPRESSION_OPTIONS}
 						class="flex-1"

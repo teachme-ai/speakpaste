@@ -5,7 +5,7 @@ import {
 } from '$lib/settings/transcription-validation';
 
 /**
- * Checks if the user has configured the necessary API keys/settings for their selected transcription service.
+ * Checks if the selected local transcription engine has the needed model file.
  * Shows an onboarding toast if configuration is missing.
  */
 export function registerOnboarding() {
@@ -27,17 +27,9 @@ export function registerOnboarding() {
 	}
 
 	if (!isTranscriptionServiceConfigured(selectedService)) {
-		const missingConfig = (
-			{
-				cloud: `${selectedService.name} API key`,
-				'self-hosted': `${selectedService.name} server URL`,
-				local: `${selectedService.name} model file`,
-			} as const
-		)[selectedService.location];
-
 		rpc.notify.info({
 			title: 'Welcome to SpeakPaste!',
-			description: `Please configure your ${missingConfig} to get started.`,
+			description: `Please configure your ${selectedService.name} model file to get started.`,
 			action: {
 				type: 'link',
 				label: 'Configure',

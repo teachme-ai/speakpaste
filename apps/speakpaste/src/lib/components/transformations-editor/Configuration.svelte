@@ -15,28 +15,13 @@
 	import TrashIcon from '@lucide/svelte/icons/trash-2';
 	import { nanoid } from 'nanoid/non-secure';
 	import { slide } from 'svelte/transition';
-	import {
-		AnthropicApiKeyInput,
-		CustomEndpointInput,
-		GoogleApiKeyInput,
-		GroqApiKeyInput,
-		OpenAiApiKeyInput,
-		OpenRouterApiKeyInput,
-	} from '$lib/components/settings';
 	import { TRANSFORMATION_STEP_TYPE_OPTIONS } from '$lib/constants/database';
-	import {
-		INFERENCE,
-		INFERENCE_PROVIDER_OPTIONS,
-		type InferenceProviderId,
-	} from '$lib/constants/inference';
 	import { generateDefaultStep } from '$lib/state/transformation-steps.svelte';
 	import type { Transformation, TransformationStep } from '$lib/workspace';
 
 	// Derived labels for select triggers
 	const stepTypeLabel = (type: string) =>
 		TRANSFORMATION_STEP_TYPE_OPTIONS.find((o) => o.value === type)?.label;
-	const providerLabel = (provider: string) =>
-		INFERENCE[provider as InferenceProviderId]?.label;
 
 	let {
 		transformation = $bindable(),
@@ -190,11 +175,7 @@
 							</div>
 						</div>
 						{#if step.type === 'prompt_transform'}
-							<Card.Description>
-								{index === 0
-									? `Use '{{input}}' to refer to the original text`
-									: `Use '{{input}}' to refer to the text from step ${index}`}
-							</Card.Description>
+							<Card.Description>Retired prompt step</Card.Description>
 						{/if}
 					</Card.Header>
 					<Card.Content>
@@ -251,228 +232,14 @@
 								</Accordion.Root>
 							</div>
 						{:else if step.type === 'prompt_transform'}
-							<div class="space-y-6">
-								<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-									<Field.Field>
-										<Field.Label for="inferenceProvider">Provider</Field.Label>
-										<Select.Root
-											type="single"
-											bind:value={() => step.inferenceProvider,
-												(value) => {
-													if (value) {
-														updateStep(index, { inferenceProvider: value });
-													}
-												}}
-										>
-											<Select.Trigger id="inferenceProvider" class="w-full">
-												{providerLabel(step.inferenceProvider) ?? 'Select a provider'}
-											</Select.Trigger>
-											<Select.Content>
-												{#each INFERENCE_PROVIDER_OPTIONS as item}
-													<Select.Item value={item.value} label={item.label} />
-												{/each}
-											</Select.Content>
-										</Select.Root>
-									</Field.Field>
-
-									{#if step.inferenceProvider === 'OpenAI'}
-										<Field.Field>
-											<Field.Label for="openaiModel">Model</Field.Label>
-											<Select.Root
-												type="single"
-												bind:value={() => step.openaiModel,
-													(value) => {
-														if (value) {
-															updateStep(index, { openaiModel: value });
-														}
-													}}
-											>
-												<Select.Trigger id="openaiModel" class="w-full">
-													{step.openaiModel || 'Select a model'}
-												</Select.Trigger>
-												<Select.Content>
-													{#each INFERENCE.OpenAI.models as model}
-														<Select.Item value={model} label={model} />
-													{/each}
-												</Select.Content>
-											</Select.Root>
-										</Field.Field>
-									{:else if step.inferenceProvider === 'Groq'}
-										<Field.Field>
-											<Field.Label for="groqModel">Model</Field.Label>
-											<Select.Root
-												type="single"
-												bind:value={() => step.groqModel,
-													(value) => {
-														if (value) {
-															updateStep(index, { groqModel: value });
-														}
-													}}
-											>
-												<Select.Trigger id="groqModel" class="w-full">
-													{step.groqModel || 'Select a model'}
-												</Select.Trigger>
-												<Select.Content>
-													{#each INFERENCE.Groq.models as model}
-														<Select.Item value={model} label={model} />
-													{/each}
-												</Select.Content>
-											</Select.Root>
-										</Field.Field>
-									{:else if step.inferenceProvider === 'Anthropic'}
-										<Field.Field>
-											<Field.Label for="anthropicModel">Model</Field.Label>
-											<Select.Root
-												type="single"
-												bind:value={() => step.anthropicModel,
-													(value) => {
-														if (value) {
-															updateStep(index, { anthropicModel: value });
-														}
-													}}
-											>
-												<Select.Trigger id="anthropicModel" class="w-full">
-													{step.anthropicModel || 'Select a model'}
-												</Select.Trigger>
-												<Select.Content>
-													{#each INFERENCE.Anthropic.models as model}
-														<Select.Item value={model} label={model} />
-													{/each}
-												</Select.Content>
-											</Select.Root>
-										</Field.Field>
-									{:else if step.inferenceProvider === 'Google'}
-										<Field.Field>
-											<Field.Label for="googleModel">Model</Field.Label>
-											<Select.Root
-												type="single"
-												bind:value={() => step.googleModel,
-													(value) => {
-														if (value) {
-															updateStep(index, { googleModel: value });
-														}
-													}}
-											>
-												<Select.Trigger id="googleModel" class="w-full">
-													{step.googleModel || 'Select a model'}
-												</Select.Trigger>
-												<Select.Content>
-													{#each INFERENCE.Google.models as model}
-														<Select.Item value={model} label={model} />
-													{/each}
-												</Select.Content>
-											</Select.Root>
-										</Field.Field>
-									{:else if step.inferenceProvider === 'OpenRouter'}
-										<Field.Field>
-											<Field.Label for="openrouterModel">Model</Field.Label>
-											<Input
-												id="openrouterModel"
-												value={step.openrouterModel}
-												oninput={(e) => {
-													updateStep(index, { openrouterModel: e.currentTarget.value });
-												}}
-												placeholder="Enter model name"
-											/>
-										</Field.Field>
-									{:else if step.inferenceProvider === 'Custom'}
-										<div class="space-y-4">
-											<Field.Field>
-												<Field.Label for="customBaseUrl"
-													>API Base URL</Field.Label
-												>
-												<Input
-													id="customBaseUrl"
-													value={step.customBaseUrl}
-													oninput={(e) => {
-														updateStep(index, { customBaseUrl: e.currentTarget.value });
-													}}
-													placeholder="http://localhost:11434/v1"
-												/>
-												<Field.Description>
-													Overrides the default URL from Settings. Useful when
-													this step needs a different local model server.
-												</Field.Description>
-											</Field.Field>
-											<Field.Field>
-												<Field.Label for="customModel">Model</Field.Label>
-												<Input
-													id="customModel"
-													value={step.customModel}
-													oninput={(e) => {
-														updateStep(index, { customModel: e.currentTarget.value });
-													}}
-													placeholder="llama3.2"
-												/>
-												<Field.Description>
-													Enter the exact model name as it appears in your local
-													service (e.g., run
-													<code class="bg-muted px-1 rounded"
-														>ollama list</code
-													>).
-												</Field.Description>
-											</Field.Field>
-										</div>
-									{/if}
-								</div>
-
-								<Field.Field>
-									<Field.Label for="systemPromptTemplate"
-										>System Prompt Template</Field.Label
-									>
-									<Textarea
-										id="systemPromptTemplate"
-										value={step.systemPromptTemplate}
-										oninput={(e) => {
-											updateStep(index, { systemPromptTemplate: e.currentTarget.value });
-										}}
-										placeholder="Define the AI's role and expertise, e.g., 'You are an expert at formatting meeting notes. Structure the text into clear sections with bullet points.'"
-									/>
-								</Field.Field>
-								<Field.Field>
-									<Field.Label for="userPromptTemplate"
-										>User Prompt Template</Field.Label
-									>
-									<Textarea
-										id="userPromptTemplate"
-										value={step.userPromptTemplate}
-										oninput={(e) => {
-											updateStep(index, { userPromptTemplate: e.currentTarget.value });
-										}}
-										placeholder="Tell the AI what to do with your text. Use {'{{input}}'} where you want your text to appear, e.g., 'Format this transcript into clear sections: {'{{input}}'}'"
-									/>
-									{#if step.userPromptTemplate && !step.userPromptTemplate.includes('{{input}}')}
-										<Field.Description>
-											<span class="text-warning font-semibold">
-												Remember to include {'{{input}}'} in your prompt - this
-												is where your text will be inserted!
-											</span>
-										</Field.Description>
-									{/if}
-								</Field.Field>
-								<Accordion.Root type="single" class="w-full">
-									<Accordion.Item class="border-none" value="advanced">
-										<Accordion.Trigger class="text-sm">
-											Advanced Options
-										</Accordion.Trigger>
-										<Accordion.Content>
-											{#if step.inferenceProvider === 'OpenAI'}
-												<OpenAiApiKeyInput />
-											{:else if step.inferenceProvider === 'Groq'}
-												<GroqApiKeyInput />
-											{:else if step.inferenceProvider === 'Anthropic'}
-												<AnthropicApiKeyInput />
-											{:else if step.inferenceProvider === 'Google'}
-												<GoogleApiKeyInput />
-											{:else if step.inferenceProvider === 'OpenRouter'}
-												<OpenRouterApiKeyInput />
-											{:else if step.inferenceProvider === 'Custom'}
-												<CustomEndpointInput showBaseUrl={false} />
-											{/if}
-										</Accordion.Content>
-									</Accordion.Item>
-								</Accordion.Root>
-							</div>
+							<Alert.Root variant="warning">
+								<Alert.Title>Prompt steps are retired</Alert.Title>
+								<Alert.Description>
+									This step used a remote rewrite provider in the old build.
+									Replace it with a find/replace step now; local writing modes
+									will be introduced separately.
+								</Alert.Description>
+							</Alert.Root>
 						{/if}
 					</Card.Content>
 				</div>

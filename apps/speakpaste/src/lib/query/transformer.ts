@@ -12,8 +12,6 @@ import {
 	type WhisperingError,
 	type WhisperingResult,
 } from '$lib/result';
-import { services } from '$lib/services';
-import { deviceConfig } from '$lib/state/device-config.svelte';
 import { recordings } from '$lib/state/recordings.svelte';
 import { transformationRuns } from '$lib/state/transformation-runs.svelte';
 import { transformationSteps } from '$lib/state/transformation-steps.svelte';
@@ -23,7 +21,6 @@ import type {
 	TransformationStep,
 	TransformationStepRun,
 } from '$lib/workspace';
-import { asTemplateString, interpolateTemplate } from '$lib/utils/template';
 
 type TransformationRunRunning = Extract<
 	TransformationRun,
@@ -45,53 +42,6 @@ type TransformationStepRunCompleted = Extract<
 type TransformationStepRunFailed = Extract<
 	TransformationStepRun,
 	{ status: 'failed' }
->;
-
-/**
- * Config map for standard completion providers that share the same
- * `{ apiKey, model, systemPrompt, userPrompt }` call signature.
- * Custom is handled separately because it has per-step baseUrl logic.
- */
-const STANDARD_PROVIDER_CONFIG = {
-	OpenAI: {
-		service: services.completions.openai,
-		apiKeyPath: 'apiKeys.openai',
-		modelKey: 'openaiModel',
-	},
-	Groq: {
-		service: services.completions.groq,
-		apiKeyPath: 'apiKeys.groq',
-		modelKey: 'groqModel',
-	},
-	Anthropic: {
-		service: services.completions.anthropic,
-		apiKeyPath: 'apiKeys.anthropic',
-		modelKey: 'anthropicModel',
-	},
-	Google: {
-		service: services.completions.google,
-		apiKeyPath: 'apiKeys.google',
-		modelKey: 'googleModel',
-	},
-	OpenRouter: {
-		service: services.completions.openrouter,
-		apiKeyPath: 'apiKeys.openrouter',
-		modelKey: 'openrouterModel',
-	},
-} as const satisfies Record<
-	string,
-	{
-		service: {
-			complete: (opts: {
-				apiKey: string;
-				model: string;
-				systemPrompt: string;
-				userPrompt: string;
-			}) => Promise<Result<string, { message: string }>>;
-		};
-		apiKeyPath: Parameters<typeof deviceConfig.get>[0];
-		modelKey: keyof TransformationStep;
-	}
 >;
 
 export const TransformError = defineErrors({
@@ -232,49 +182,9 @@ async function handleStep({
 		}
 
 		case 'prompt_transform': {
-			const { inferenceProvider, systemPromptTemplate, userPromptTemplate } =
-				step;
-			const systemPrompt = interpolateTemplate(
-				asTemplateString(systemPromptTemplate),
-				{ input },
+			return Err(
+				'Prompt transformations have been retired from the local-only build. Use find/replace steps until local writing modes are implemented.',
 			);
-			const userPrompt = interpolateTemplate(
-				asTemplateString(userPromptTemplate),
-				{ input },
-			);
-
-			// Handle Custom separately—it has per-step baseUrl logic.
-			if (inferenceProvider === 'Custom') {
-				const model = step.customModel?.trim();
-				const stepBaseUrl = step.customBaseUrl?.trim();
-				const defaultBaseUrl = deviceConfig
-					.get('completion.custom.baseUrl')
-					?.trim();
-				const baseUrl = stepBaseUrl || defaultBaseUrl || '';
-
-				const { data, error } = await services.completions.custom.complete({
-					apiKey: deviceConfig.get('apiKeys.custom'),
-					model,
-					baseUrl,
-					systemPrompt,
-					userPrompt,
-				});
-				if (error) return Err(error.message);
-				return Ok(data);
-			}
-
-			// Standard providers all share the same call signature.
-			const config = STANDARD_PROVIDER_CONFIG[inferenceProvider];
-			if (!config) return Err(`Unsupported provider: ${inferenceProvider}`);
-
-			const { data, error } = await config.service.complete({
-				apiKey: deviceConfig.get(config.apiKeyPath),
-				model: step[config.modelKey] as string,
-				systemPrompt,
-				userPrompt,
-			});
-			if (error) return Err(error.message);
-			return Ok(data);
 		}
 
 		default:

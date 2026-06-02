@@ -1,6 +1,5 @@
 use log::{info, warn};
 use tauri::Manager;
-use tauri_plugin_aptabase::EventTracker;
 use tauri_plugin_log::{Target, TargetKind};
 
 pub mod recorder;
@@ -106,20 +105,8 @@ pub async fn run() {
         }))
         .build();
 
-    let mut builder = tauri::Builder::default().plugin(log_plugin);
-
-    // Try to get APTABASE_KEY from environment, use empty string if not found
-    let aptabase_key = option_env!("APTABASE_KEY").unwrap_or("");
-
-    // Only add Aptabase plugin if key is not empty
-    if !aptabase_key.is_empty() {
-        info!("Aptabase analytics enabled");
-        builder = builder.plugin(tauri_plugin_aptabase::Builder::new(aptabase_key).build());
-    } else {
-        warn!("APTABASE_KEY not found, analytics disabled");
-    }
-
-    builder = builder
+    let mut builder = tauri::Builder::default()
+        .plugin(log_plugin)
         .plugin(tauri_plugin_macos_permissions::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_dialog::init())
@@ -200,21 +187,7 @@ pub async fn run() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application");
 
-    app.run(|handler, event| {
-        // Only track events if Aptabase is enabled (key is not empty)
-        if !aptabase_key.is_empty() {
-            match event {
-                tauri::RunEvent::Exit { .. } => {
-                    let _ = handler.track_event("app_exited", None);
-                    handler.flush_events_blocking();
-                }
-                tauri::RunEvent::Ready { .. } => {
-                    let _ = handler.track_event("app_started", None);
-                }
-                _ => {}
-            }
-        }
-    });
+    app.run(|_handler, _event| {});
 }
 
 use enigo::{Direction, Enigo, Key, Keyboard, Settings};

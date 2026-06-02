@@ -181,6 +181,10 @@ function toInteger(raw: unknown): number | undefined {
 	return undefined;
 }
 
+function toLocalTranscriptionService(raw: unknown): string {
+	return raw === 'parakeet' || raw === 'moonshine' ? raw : 'whispercpp';
+}
+
 // ── Key mappings ─────────────────────────────────────────────────────────────
 
 /**
@@ -255,23 +259,7 @@ const WORKSPACE_KEY_MAP: readonly {
 	{
 		oldKey: 'transcription.selectedTranscriptionService',
 		newKey: 'transcription.service',
-	},
-	{
-		oldKey: 'transcription.openai.model',
-		newKey: 'transcription.openai.model',
-	},
-	{ oldKey: 'transcription.groq.model', newKey: 'transcription.groq.model' },
-	{
-		oldKey: 'transcription.elevenlabs.model',
-		newKey: 'transcription.elevenlabs.model',
-	},
-	{
-		oldKey: 'transcription.deepgram.model',
-		newKey: 'transcription.deepgram.model',
-	},
-	{
-		oldKey: 'transcription.mistral.model',
-		newKey: 'transcription.mistral.model',
+		convert: toLocalTranscriptionService,
 	},
 	{ oldKey: 'transcription.outputLanguage', newKey: 'transcription.language' },
 	{ oldKey: 'transcription.prompt', newKey: 'transcription.prompt' },
@@ -298,9 +286,6 @@ const WORKSPACE_KEY_MAP: readonly {
 		oldKey: 'completion.openrouter.model',
 		newKey: 'transformation.openrouterModel',
 	},
-
-	// Analytics
-	{ oldKey: 'analytics.enabled', newKey: 'analytics.enabled' },
 
 	// Local shortcuts
 	{
@@ -350,21 +335,6 @@ const WORKSPACE_KEY_MAP: readonly {
  *   3. `whispering-settings` original blob
  */
 const DEVICE_KEY_MAP: readonly { oldKey: string; newKey: string }[] = [
-	// API keys
-	{ oldKey: 'apiKeys.openai', newKey: 'apiKeys.openai' },
-	{ oldKey: 'apiKeys.anthropic', newKey: 'apiKeys.anthropic' },
-	{ oldKey: 'apiKeys.groq', newKey: 'apiKeys.groq' },
-	{ oldKey: 'apiKeys.google', newKey: 'apiKeys.google' },
-	{ oldKey: 'apiKeys.deepgram', newKey: 'apiKeys.deepgram' },
-	{ oldKey: 'apiKeys.elevenlabs', newKey: 'apiKeys.elevenlabs' },
-	{ oldKey: 'apiKeys.mistral', newKey: 'apiKeys.mistral' },
-	{ oldKey: 'apiKeys.openrouter', newKey: 'apiKeys.openrouter' },
-	{ oldKey: 'apiKeys.custom', newKey: 'apiKeys.custom' },
-
-	// API endpoints
-	{ oldKey: 'apiEndpoints.openai', newKey: 'apiEndpoints.openai' },
-	{ oldKey: 'apiEndpoints.groq', newKey: 'apiEndpoints.groq' },
-
 	// Recording hardware
 	{ oldKey: 'recording.method', newKey: 'recording.method' },
 	{ oldKey: 'recording.cpal.deviceId', newKey: 'recording.cpal.deviceId' },
@@ -397,14 +367,6 @@ const DEVICE_KEY_MAP: readonly { oldKey: string; newKey: string }[] = [
 
 	// Local model paths
 	{
-		oldKey: 'transcription.speaches.baseUrl',
-		newKey: 'transcription.speaches.baseUrl',
-	},
-	{
-		oldKey: 'transcription.speaches.modelId',
-		newKey: 'transcription.speaches.modelId',
-	},
-	{
 		oldKey: 'transcription.whispercpp.modelPath',
 		newKey: 'transcription.whispercpp.modelPath',
 	},
@@ -416,9 +378,6 @@ const DEVICE_KEY_MAP: readonly { oldKey: string; newKey: string }[] = [
 		oldKey: 'transcription.moonshine.modelPath',
 		newKey: 'transcription.moonshine.modelPath',
 	},
-
-	// Self-hosted server URLs
-	{ oldKey: 'completion.custom.baseUrl', newKey: 'completion.custom.baseUrl' },
 
 	// Global shortcuts (same key names in old and new)
 	{

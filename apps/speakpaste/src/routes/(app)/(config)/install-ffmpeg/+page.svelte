@@ -44,7 +44,7 @@
 						<Card.Title class="text-3xl">Install FFmpeg</Card.Title>
 						<Card.Description class="text-base leading-relaxed">
 							FFmpeg converts audio to WAV format for local transcription and
-							compresses files for efficient cloud API transmission.
+							compresses files for smaller local recordings.
 						</Card.Description>
 					</div>
 
