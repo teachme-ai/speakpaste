@@ -9,6 +9,7 @@
 	import { migrationDialog } from '$lib/migration/migration-dialog.svelte';
 	import { rpc } from '$lib/query';
 	import { services } from '$lib/services';
+	import { dictationRuntime } from '$lib/state/dictation-runtime.svelte';
 	import { recordings } from '$lib/state/recordings.svelte';
 	import { settings } from '$lib/state/settings.svelte';
 	import { syncWindowAlwaysOnTopWithRecorderState } from '../_layout-utils/alwaysOnTop.svelte';
@@ -31,6 +32,7 @@
 
 	let cleanupAccessibilityPermission: (() => void) | undefined;
 	let cleanupMicrophonePermission: (() => void) | undefined;
+	let cleanupDictationRuntime: (() => void) | undefined;
 	let unlistenFnKeyDown: (() => void) | undefined;
 	let unlistenFnKeyUp: (() => void) | undefined;
 
@@ -54,6 +56,9 @@
 		registerOnboarding();
 		cleanupAccessibilityPermission = registerAccessibilityPermission();
 		cleanupMicrophonePermission = registerMicrophonePermission();
+		void dictationRuntime.init().then((cleanup) => {
+			cleanupDictationRuntime = cleanup;
+		});
 
 		migrationDialog.check();
 
@@ -88,6 +93,7 @@
 	onDestroy(() => {
 		cleanupAccessibilityPermission?.();
 		cleanupMicrophonePermission?.();
+		cleanupDictationRuntime?.();
 		unlistenFnKeyDown?.();
 		unlistenFnKeyUp?.();
 	});

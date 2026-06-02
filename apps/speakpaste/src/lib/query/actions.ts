@@ -6,6 +6,7 @@ import { defineMutation } from '$lib/query/client';
 import { WhisperingErr } from '$lib/result';
 import { services } from '$lib/services';
 import { deviceConfig } from '$lib/state/device-config.svelte';
+import { dictationRuntime } from '$lib/state/dictation-runtime.svelte';
 import { recordings } from '$lib/state/recordings.svelte';
 import { settings } from '$lib/state/settings.svelte';
 import { transformations } from '$lib/state/transformations.svelte';
@@ -82,6 +83,7 @@ const startManualRecording = defineMutation({
 			return Ok(undefined);
 		}
 		isRecordingOperationBusy = true;
+		void dictationRuntime.setStatus('Recording', 'Preparing microphone');
 
 		settings.set('recording.mode', 'manual');
 
@@ -99,6 +101,7 @@ const startManualRecording = defineMutation({
 		isRecordingOperationBusy = false;
 
 		if (startRecordingError) {
+			void dictationRuntime.setStatus('Error', startRecordingError.message);
 			notify.error({ id: toastId, ...startRecordingError });
 			return Ok(undefined);
 		}
@@ -152,6 +155,7 @@ const startManualRecording = defineMutation({
 		}
 		// Track start time for duration calculation
 		manualRecordingStartTime = Date.now();
+		void dictationRuntime.setStatus('Recording', 'Listening');
 		console.info('Recording started');
 		return Ok(undefined);
 	},
@@ -166,6 +170,7 @@ const stopManualRecording = defineMutation({
 			return Ok(undefined);
 		}
 		isRecordingOperationBusy = true;
+		void dictationRuntime.setStatus('Transcribing', 'Finalizing recording');
 
 		const toastId = nanoid();
 		notify.loading({
@@ -183,6 +188,7 @@ const stopManualRecording = defineMutation({
 		isRecordingOperationBusy = false;
 
 		if (stopRecordingError) {
+			void dictationRuntime.setStatus('Error', stopRecordingError.message);
 			notify.error({ id: toastId, ...stopRecordingError });
 			return Ok(undefined);
 		}
@@ -411,6 +417,7 @@ export const actions = {
 			isRecordingOperationBusy = false;
 
 			if (cancelRecordingError) {
+				void dictationRuntime.setStatus('Error', cancelRecordingError.message);
 				notify.error({ id: toastId, ...cancelRecordingError });
 				return Ok(undefined);
 			}
@@ -432,6 +439,7 @@ export const actions = {
 						title: '✅ All Done!',
 						description: 'Recording cancelled successfully',
 					});
+					void dictationRuntime.setStatus('Idle', 'Recording cancelled');
 					sound.playSoundIfEnabled('manual-cancel');
 					console.info('Recording cancelled');
 					break;
@@ -655,6 +663,7 @@ async function processRecordingPipeline({
 	} as const;
 
 	// Show transcribing toast immediately
+	void dictationRuntime.setStatus('Transcribing', 'Transcribing locally');
 	const transcribeToastId = nanoid();
 	notify.loading({
 		id: transcribeToastId,
@@ -679,6 +688,7 @@ async function processRecordingPipeline({
 
 	if (transcribeError) {
 		isPipelineRunning = false;
+		void dictationRuntime.setStatus('Error', 'Transcription failed');
 		window.dispatchEvent(new CustomEvent('speakpaste:pipeline-error'));
 		// Transcription failed - update status
 		recordings.update(recording.id, { transcriptionStatus: 'FAILED' });
@@ -697,6 +707,7 @@ async function processRecordingPipeline({
 
 	// Transcription succeeded - deliver text immediately
 	sound.playSoundIfEnabled('transcriptionComplete');
+	void dictationRuntime.setStatus('Pasting', 'Writing at cursor');
 	await delivery.deliverTranscriptionResult({
 		text: transcribedText,
 		toastId: transcribeToastId,
@@ -704,8 +715,12 @@ async function processRecordingPipeline({
 
 	// Pipeline done — enter cooldown before allowing next trigger
 	isPipelineRunning = false;
+	void dictationRuntime.setStatus('Cooldown', 'Ready shortly');
 	enterCooldown();
 	console.info('[Pipeline] complete — cooldown started');
+	window.setTimeout(() => {
+		void dictationRuntime.setStatus('Idle', 'Ready');
+	}, 700);
 
 	// Signal UI to reload history from filesystem
 	window.dispatchEvent(new CustomEvent('speakpaste:pipeline-complete'));

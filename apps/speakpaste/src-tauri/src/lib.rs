@@ -52,12 +52,19 @@ pub mod graceful_shutdown;
 use graceful_shutdown::send_sigint;
 
 pub mod command;
-use command::{execute_command, spawn_command, download_model_file};
+use command::{download_model_file, execute_command, spawn_command};
 
 pub mod markdown;
-use markdown::{count_markdown_files, delete_files_in_directory, read_markdown_files, write_markdown_files};
+use markdown::{
+    count_markdown_files, delete_files_in_directory, read_markdown_files, write_markdown_files,
+};
 
 pub mod fn_key_listener;
+
+pub mod dictation_runtime;
+use dictation_runtime::{
+    get_dictation_runtime_state, set_dictation_runtime_state, DictationRuntime,
+};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 #[tokio::main]
@@ -156,6 +163,7 @@ pub async fn run() {
             }
         })
         .manage(AppData::new())
+        .manage(DictationRuntime::new())
         .manage(ModelManager::new())
         .setup(|app| {
             install_application_menu(app)?;
@@ -208,6 +216,8 @@ pub async fn run() {
         spawn_command,
         download_model_file,
         fn_key_listener::initialize_fn_key_listener,
+        get_dictation_runtime_state,
+        set_dictation_runtime_state,
         // Filesystem utilities
         read_markdown_files,
         count_markdown_files,
@@ -257,12 +267,17 @@ use tauri_plugin_clipboard_manager::ClipboardExt;
 ///   "paste_failed"         — paste simulation failed, transcript left on clipboard
 #[tauri::command]
 async fn write_text(app: tauri::AppHandle, text: String) -> Result<String, String> {
-    info!("[Paste] starting clipboard sandwich for {} chars", text.len());
+    info!(
+        "[Paste] starting clipboard sandwich for {} chars",
+        text.len()
+    );
 
     // 1. Save current clipboard content before we touch it
     let original_clipboard = app.clipboard().read_text().ok();
-    info!("[Paste] original clipboard saved ({} chars)",
-        original_clipboard.as_deref().map(|s| s.len()).unwrap_or(0));
+    info!(
+        "[Paste] original clipboard saved ({} chars)",
+        original_clipboard.as_deref().map(|s| s.len()).unwrap_or(0)
+    );
 
     // 2. Write transcript to clipboard
     app.clipboard()
@@ -293,7 +308,10 @@ async fn write_text(app: tauri::AppHandle, text: String) -> Result<String, Strin
 
     if let Err(e) = paste_result {
         // Paste simulation failed — leave transcript on clipboard, do not restore
-        warn!("[Paste] paste simulation failed: {} — transcript left on clipboard", e);
+        warn!(
+            "[Paste] paste simulation failed: {} — transcript left on clipboard",
+            e
+        );
         return Ok("paste_failed".to_string());
     }
 
@@ -377,10 +395,11 @@ async fn reset_tcc_permissions() -> Result<bool, String> {
 async fn open_mac_privacy_pane(pane: String) -> Result<bool, String> {
     #[cfg(target_os = "macos")]
     {
-        let url = format!("x-apple.systemsettings:com.apple.preference.security?{}", pane);
-        let _ = std::process::Command::new("open")
-            .arg(&url)
-            .spawn();
+        let url = format!(
+            "x-apple.systemsettings:com.apple.preference.security?{}",
+            pane
+        );
+        let _ = std::process::Command::new("open").arg(&url).spawn();
     }
     Ok(true)
 }
