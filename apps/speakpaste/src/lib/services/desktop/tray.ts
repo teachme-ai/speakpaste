@@ -174,10 +174,12 @@ async function buildMenu() {
 				id: 'dictate',
 				text: 'Start Dictation',
 				action: () => {
-					void getCurrentWindow().show();
 					// commandCallbacks.toggleManualRecording() — wired via window.commands
 					if (typeof window !== 'undefined' && (window as any).commands) {
 						(window as any).commands.toggleManualRecording();
+					} else {
+						void getCurrentWindow().show();
+						void getCurrentWindow().setFocus();
 					}
 				},
 			}),

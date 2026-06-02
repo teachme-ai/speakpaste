@@ -1,5 +1,5 @@
 use log::{info, warn};
-use tauri::Manager;
+use tauri::{Manager, WindowEvent};
 use tauri_plugin_log::{Target, TargetKind};
 
 pub mod recorder;
@@ -186,7 +186,18 @@ pub async fn run() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application");
 
-    app.run(|_handler, _event| {});
+    app.run(|app_handle, event| {
+        if let tauri::RunEvent::WindowEvent { label, event, .. } = event {
+            if label == "main" {
+                if let WindowEvent::CloseRequested { api, .. } = event {
+                    api.prevent_close();
+                    if let Some(window) = app_handle.get_webview_window("main") {
+                        let _ = window.hide();
+                    }
+                }
+            }
+        }
+    });
 }
 
 use enigo::{Direction, Enigo, Key, Keyboard, Settings};
