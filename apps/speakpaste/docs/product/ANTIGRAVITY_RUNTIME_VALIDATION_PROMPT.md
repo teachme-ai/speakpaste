@@ -8,12 +8,14 @@ Latest relevant commits:
 - `451b9c9` - Hide advanced recording and engine controls
 - `5f3be5e` - Polish launch settings navigation
 - `1d556b3` - Record final launch surface review
+- `938cf25` - Move dictation shortcuts toward native ownership
+- `35e84d6` - Reload native shortcuts on live config changes
 
 ## AG Task
 
 Act as the runtime-validation observer and reviewer for SpeakPaste.
 
-Do not edit code unless explicitly asked. Inspect the repository, review any runtime logs or manual test notes produced by Codex/user, and write findings to:
+Do not edit code unless explicitly asked. Build/install/test the latest app when possible, inspect runtime logs, review any manual notes produced by Codex/user, and write findings to:
 
 `apps/speakpaste/docs/product/ANTIGRAVITY_REVIEW_RUNTIME_VALIDATION.md`
 
@@ -28,6 +30,51 @@ SpeakPaste launch flow:
 5. App inserts text at cursor through Enigo.
 6. Transcript may also be copied to clipboard.
 7. Flow must work offline after the local model is already present.
+
+## Current AG Execution Task
+
+Please take over the heavier build/install/runtime validation loop for the latest committed code.
+
+1. Confirm the repository is on `local-only-product-surface` and includes commit `35e84d6`.
+2. Build the latest macOS app bundle:
+
+   ```bash
+   cd apps/speakpaste
+   bun tauri build --bundles app
+   ```
+
+3. Install the latest `.app` bundle to `/Applications/SpeakPaste.app`.
+   - If an older app exists, replace it with the newly built bundle.
+   - Do not require a DMG for this validation loop.
+   - If DMG packaging fails, record it as distribution follow-up only; do not block `.app` validation.
+4. Launch `/Applications/SpeakPaste.app`.
+5. Test live native shortcut reload:
+   - Start with the current configured global trigger shortcut.
+   - Confirm it records/transcribes/pastes.
+   - While the app is still open, change the global trigger shortcut in settings.
+   - Without restarting the app, confirm the new shortcut records/transcribes/pastes.
+   - Confirm the old shortcut no longer triggers, if feasible.
+6. Test background runtime:
+   - Close/hide the main UI window.
+   - Keep the menu bar/status item running.
+   - Focus TextEdit/Notes/another text field.
+   - Trigger dictation using the configured global shortcut or Fn flow.
+   - Confirm recording, local transcription, and paste succeed.
+7. Test restart persistence:
+   - Quit and relaunch the app.
+   - Confirm the latest shortcut survives restart and still triggers dictation.
+8. Append results to `ANTIGRAVITY_REVIEW_RUNTIME_VALIDATION.md`.
+
+## Current DMG Clarification
+
+The DMG is not required for this validation pass.
+
+Known state:
+
+- `.app` bundling works.
+- Local DMG creation has failed in the Codex sandbox because `hdiutil` returns `Device not configured`.
+- A normal terminal or release pipeline may still produce a DMG; treat that as packaging/distribution follow-up.
+- Runtime validation should use `/Applications/SpeakPaste.app`.
 
 ## What AG Should Review
 
