@@ -4,49 +4,37 @@
 	let { pills } = $props<{
 		pills: Array<{ label: string; active: boolean }>;
 	}>();
+
+	function pillClasses(pill: { label: string; active: boolean }) {
+		if (!pill.active) {
+			return 'border-black/10 bg-white/35 text-stone-500 dark:border-white/10 dark:bg-white/5 dark:text-stone-400';
+		}
+
+		switch (pill.label) {
+			case 'Listening':
+				return 'border-emerald-400/40 bg-emerald-500/10 text-emerald-700 shadow-[0_12px_30px_-20px_rgba(52,211,153,0.65)] dark:text-emerald-300';
+			case 'Transcribing locally':
+				return 'border-cyan-400/40 bg-cyan-500/10 text-cyan-700 shadow-[0_12px_30px_-20px_rgba(56,189,248,0.65)] dark:text-cyan-300';
+			case 'Pasted':
+				return 'border-stone-900/20 bg-stone-950 text-stone-50 shadow-[0_12px_30px_-20px_rgba(15,23,42,0.42)] dark:border-white/10';
+			default:
+				return 'border-black/10 bg-white/65 text-stone-900 shadow-sm dark:border-white/10 dark:bg-white/10 dark:text-stone-100';
+		}
+	}
 </script>
 
-<div class="flex items-center justify-center gap-2 px-6 pt-4 pb-8 flex-wrap" role="status" aria-live="polite">
+<div class="flex flex-wrap items-center justify-center gap-2 px-6 pt-3 pb-6" role="status" aria-live="polite">
 	{#each pills as pill}
-		<span class="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-sm font-medium transition-all duration-300 border {
-			pill.active
-				? pill.label === 'Listening'
-					? 'bg-destructive/10 border-destructive/40 text-destructive shadow-sm shadow-destructive/20'
-					: pill.label === 'Transcribing locally'
-					? 'bg-primary/10 border-primary/40 text-primary shadow-sm shadow-primary/20'
-					: pill.label === 'Pasted'
-					? 'bg-success/10 border-success/40 text-success shadow-sm shadow-success/20'
-					: 'bg-card border-primary/40 text-primary shadow-sm'
-				: 'bg-card/40 border-border/40 text-muted-foreground backdrop-blur-xs'
-		}">
+		<span class="flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm font-semibold transition-all duration-300 {pillClasses(pill)}">
 			{#if pill.active}
-				{#if pill.label === 'Listening'}
-					<span class="relative flex size-2 shrink-0">
-						<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive opacity-75"></span>
-						<span class="relative inline-flex rounded-full h-2 w-2 bg-destructive"></span>
-					</span>
-				{:else if pill.label === 'Transcribing locally'}
-					<svg class="animate-spin size-3.5 text-primary shrink-0" fill="none" viewBox="0 0 24 24">
-						<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-						<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-					</svg>
-				{:else if pill.label === 'Pasted'}
-					<svg class="size-3.5 text-success shrink-0" viewBox="0 0 16 16" fill="none">
-						<path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-					</svg>
-				{:else}
-					<span class="size-2 rounded-full bg-primary shrink-0"></span>
-				{/if}
+				<span class="relative flex size-2.5 shrink-0">
+					{#if pill.label === 'Listening'}
+						<span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-current opacity-60"></span>
+					{/if}
+					<span class="relative inline-flex size-2.5 rounded-full bg-current"></span>
+				</span>
 			{:else}
-				{#if pill.label === 'Listening'}
-					<AudioWaveformIcon class="size-3.5 text-muted-foreground shrink-0" />
-				{:else if pill.label === 'Transcribing locally'}
-					<AudioWaveformIcon class="size-3.5 text-muted-foreground shrink-0" />
-				{:else if pill.label === 'Pasted'}
-					<svg class="size-3.5 text-muted-foreground shrink-0" viewBox="0 0 16 16" fill="none">
-						<path d="M3 8l3.5 3.5L13 4.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-					</svg>
-				{/if}
+				<AudioWaveformIcon class="size-3.5 shrink-0 text-current opacity-70" />
 			{/if}
 			{pill.label}
 		</span>

@@ -2,33 +2,126 @@
 	import MicIcon from '@lucide/svelte/icons/mic';
 	import { commandCallbacks } from '$lib/commands';
 
-	let { recorderState } = $props<{ recorderState: string }>();
+	let { recorderState, isTranscribing, justPasted } = $props<{
+		recorderState: string;
+		isTranscribing: boolean;
+		justPasted: boolean;
+	}>();
+
+	const isReady = $derived(recorderState === 'IDLE' && !isTranscribing && !justPasted);
+	const isListening = $derived(recorderState === 'RECORDING');
+	const isProcessing = $derived(isTranscribing);
+	const isConfirmed = $derived(justPasted);
 </script>
 
-<div class="flex flex-col items-center justify-center py-6 gap-8">
+<div class="flex flex-col items-center justify-center py-6 gap-6">
 	<div class="relative flex items-center justify-center">
-		<!-- Outer glow rings -->
-		<div class="absolute size-40 rounded-full bg-primary/15 {recorderState === 'RECORDING' ? 'animate-ping' : ''}"></div>
-		<div class="absolute size-32 rounded-full bg-primary/20"></div>
-		<div class="absolute size-28 rounded-full bg-primary/25"></div>
-		
-		<!-- Waveform lines (organic liquid SVG) -->
-		{#if recorderState === 'RECORDING'}
-			<div class="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden rounded-full scale-110">
-				<svg class="w-full h-full opacity-20" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-					<path fill="var(--color-primary)" d="M40,-53C53.7,-45.5,65.8,-32.7,71.2,-17.4C76.6,-2,75.3,15.8,68.4,30.3C61.5,44.8,49,56,34.7,63.1C20.3,70.2,4,73.2,-12.3,71.4C-28.5,69.5,-44.7,62.8,-56.3,51.3C-67.9,39.8,-75,23.5,-75.7,6.9C-76.3,-9.7,-70.6,-26.6,-60.9,-38.5C-51.1,-50.3,-37.4,-57.1,-23.7,-64.1C-10,-71,3.7,-78,18.1,-76.4C32.5,-74.8,47.7,-64.7,40,-53Z" transform="translate(100 100)" class="animate-blob-slow" />
-					<path fill="var(--color-primary)" d="M35.6,-48C46.8,-40,57,-29.3,61.8,-16.1C66.5,-2.9,65.7,12.8,59.3,25.8C52.9,38.8,40.8,49,27.1,55C13.4,61,-1.9,62.7,-16.9,59.9C-31.9,57.1,-46.6,49.8,-55.8,38.2C-65.1,26.5,-68.9,10.6,-67.2,-4.5C-65.5,-19.6,-58.3,-33.9,-47.5,-42C-36.8,-50,-22.4,-51.9,-9.2,-50.3C4.1,-48.7,17.4,-43.6,35.6,-48Z" transform="translate(100 100)" class="animate-blob-fast" />
+		<div class="absolute h-[14.5rem] w-[14.5rem] rounded-full bg-stone-950/[0.04] dark:bg-white/[0.04]"></div>
+
+		{#if isReady}
+			<div class="glow-soft absolute h-[13rem] w-[13rem] rounded-full border border-emerald-300/15 bg-emerald-500/[0.04]"></div>
+			<div class="absolute h-[11.5rem] w-[11.5rem] rounded-full border border-stone-400/25 dark:border-white/10"></div>
+		{/if}
+
+		{#if isListening}
+			<div class="ring-breathe absolute h-[14rem] w-[14rem] rounded-full border border-emerald-300/25"></div>
+			<div class="absolute h-[12.25rem] w-[12.25rem] rounded-full border border-cyan-300/25"></div>
+			<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+				<svg class="h-[12.5rem] w-[12.5rem] opacity-70" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+					<circle cx="100" cy="100" r="74" stroke="rgba(52, 211, 153, 0.18)" stroke-width="1.5" class="wave-rotate" />
+					<circle cx="100" cy="100" r="58" stroke="rgba(56, 189, 248, 0.18)" stroke-width="1.5" class="wave-rotate-reverse" />
+					<path d="M48 102 C60 84 72 84 84 102 C96 120 108 120 120 102 C132 84 144 84 156 102" stroke="rgba(52, 211, 153, 0.55)" stroke-width="3" stroke-linecap="round" class="wave-breathe" />
+					<path d="M58 118 C70 106 82 106 94 118 C106 130 118 130 130 118 C142 106 150 106 160 118" stroke="rgba(56, 189, 248, 0.36)" stroke-width="2" stroke-linecap="round" class="wave-breathe-delayed" />
 				</svg>
 			</div>
 		{/if}
-		
-		<!-- Main button -->
+
+		{#if isProcessing}
+			<div class="absolute h-[13.5rem] w-[13.5rem] rounded-full border border-stone-400/20 bg-white/35 dark:bg-white/5"></div>
+			<div class="scan-ring absolute h-[12.25rem] w-[12.25rem] rounded-full border border-cyan-300/40"></div>
+		{/if}
+
+		{#if isConfirmed}
+			<div class="flash-ring absolute h-[13.75rem] w-[13.75rem] rounded-full bg-emerald-400/10"></div>
+			<div class="absolute h-[11.75rem] w-[11.75rem] rounded-full border border-emerald-300/25"></div>
+		{/if}
+
 		<button
 			onclick={() => commandCallbacks.toggleManualRecording()}
-			class="relative z-10 size-20 rounded-full bg-card shadow-lg border border-primary/20 flex items-center justify-center transition-all duration-200 hover:shadow-xl active:scale-95"
-			aria-label={recorderState === 'RECORDING' ? 'Stop recording' : 'Start recording'}
+			class="relative z-10 flex h-28 w-28 items-center justify-center rounded-full border border-white/80 bg-white/82 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.8)] transition-all duration-200 hover:shadow-[0_28px_70px_-44px_rgba(15,23,42,0.9)] active:scale-95 dark:border-white/10 dark:bg-white/10"
+			aria-label={isListening ? 'Stop recording' : 'Start recording'}
 		>
-			<MicIcon class="size-8 text-primary" strokeWidth={1.5} />
+			<MicIcon
+				class="h-10 w-10 {isListening ? 'text-emerald-500' : isProcessing ? 'text-cyan-500' : isConfirmed ? 'text-emerald-500' : 'text-stone-800 dark:text-stone-100'}"
+				strokeWidth={1.6}
+			/>
 		</button>
 	</div>
 </div>
+
+<style>
+	@keyframes glowSoft {
+		0%, 100% { opacity: 0.18; transform: scale(1); }
+		50% { opacity: 0.32; transform: scale(1.02); }
+	}
+
+	@keyframes waveBreathe {
+		0%, 100% { transform: translateY(0); opacity: 0.58; }
+		50% { transform: translateY(-5px); opacity: 1; }
+	}
+
+	@keyframes waveRotate {
+		0% { transform: rotate(0deg); }
+		100% { transform: rotate(360deg); }
+	}
+
+	@keyframes ringBreathe {
+		0%, 100% { transform: scale(0.98); opacity: 0.38; }
+		50% { transform: scale(1.04); opacity: 0.72; }
+	}
+
+	@keyframes scanRing {
+		0% { box-shadow: inset 0 0 0 0 rgba(56, 189, 248, 0.18); }
+		50% { box-shadow: inset 0 0 0 12px rgba(56, 189, 248, 0.1); }
+		100% { box-shadow: inset 0 0 0 0 rgba(56, 189, 248, 0.18); }
+	}
+
+	@keyframes flashRing {
+		0%, 100% { opacity: 0.18; transform: scale(1); }
+		50% { opacity: 0.36; transform: scale(1.02); }
+	}
+
+	.glow-soft {
+		animation: glowSoft 4s ease-in-out infinite;
+	}
+
+	.wave-breathe {
+		animation: waveBreathe 3.5s ease-in-out infinite;
+	}
+
+	.wave-breathe-delayed {
+		animation: waveBreathe 3.5s ease-in-out infinite 0.55s;
+	}
+
+	.wave-rotate {
+		animation: waveRotate 24s linear infinite;
+		transform-origin: center;
+	}
+
+	.wave-rotate-reverse {
+		animation: waveRotate 18s linear infinite reverse;
+		transform-origin: center;
+	}
+
+	.ring-breathe {
+		animation: ringBreathe 2.8s ease-in-out infinite;
+	}
+
+	.scan-ring {
+		animation: scanRing 2.5s ease-in-out infinite;
+	}
+
+	.flash-ring {
+		animation: flashRing 1.8s ease-in-out infinite;
+	}
+</style>

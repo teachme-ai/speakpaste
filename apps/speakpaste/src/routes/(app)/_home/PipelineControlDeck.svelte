@@ -1,27 +1,27 @@
 <script lang="ts">
 	import { Switch } from '@epicenter/ui/switch';
-	import InfoIcon from '@lucide/svelte/icons/info';
 	import { settings } from '$lib/state/settings.svelte';
 	import { transformations } from '$lib/state/transformations.svelte';
 
 	const autoPaste = $derived(settings.get('output.transcription.cursor'));
 </script>
 
-<div class="flex flex-col gap-3 px-5 py-4 rounded-2xl bg-card border border-border shadow-sm w-full max-w-sm mx-auto mt-4">
-	<div class="flex items-center gap-3">
-		<span class="text-sm font-semibold text-foreground flex-1">Auto-paste</span>
+<div class="mt-4 flex w-full max-w-sm flex-col gap-4 rounded-[28px] border border-black/10 bg-white/48 px-5 py-4 shadow-sm dark:border-white/10 dark:bg-white/[0.07]">
+	<div class="flex items-center justify-between gap-3">
+		<div>
+			<div class="text-sm font-semibold text-stone-950 dark:text-stone-50">Auto-paste</div>
+			<div class="text-xs text-stone-600 dark:text-stone-400">Send text directly into the active app.</div>
+		</div>
 		<Switch
 			checked={autoPaste}
 			onCheckedChange={(v) => settings.set('output.transcription.cursor', v)}
 		/>
-		<span class="text-sm text-muted-foreground">Paste in active app</span>
-		<InfoIcon class="size-4 text-muted-foreground/50 shrink-0" />
 	</div>
-	
-	<div class="flex items-center gap-2.5 border-t border-border pt-3">
-		<span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider shrink-0">Pipeline:</span>
+
+	<div class="grid gap-2">
+		<div class="text-xs font-semibold uppercase tracking-[0.26em] text-stone-500 dark:text-stone-400">Local mode</div>
 		<select
-			class="flex-1 text-xs border border-border rounded-lg px-2.5 py-1.5 text-foreground bg-muted cursor-pointer focus:outline-none focus:ring-1 focus:ring-ring"
+			class="w-full rounded-2xl border border-black/10 bg-white/55 px-3 py-2 text-sm text-stone-950 focus:outline-none focus:ring-2 focus:ring-emerald-300/40 dark:border-white/10 dark:bg-white/10 dark:text-stone-50"
 			value={settings.get('transformation.selectedId') ?? ''}
 			onchange={(e) => settings.set('transformation.selectedId', e.currentTarget.value || null)}
 		>

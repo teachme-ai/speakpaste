@@ -1,7 +1,4 @@
 <script lang="ts">
-	import FileTextIcon from '@lucide/svelte/icons/file-text';
-	import AudioWaveformIcon from '@lucide/svelte/icons/audio-waveform';
-	import ClockIcon from '@lucide/svelte/icons/clock';
 	import ClipboardIcon from '@lucide/svelte/icons/clipboard';
 	import TrashIcon from '@lucide/svelte/icons/trash-2';
 
@@ -14,45 +11,33 @@
 </script>
 
 {#if lastPasted}
-	<div class="group relative w-full min-w-0 rounded-2xl bg-card border border-border shadow-sm p-4 transition-all duration-200 hover:shadow-md">
-		<div class="flex min-w-0 items-center justify-between gap-3 mb-3">
-			<div class="flex min-w-0 items-center gap-2">
-				<FileTextIcon class="size-4 text-muted-foreground" />
-				<span class="text-sm font-semibold text-foreground">Last pasted</span>
+	<div class="group relative w-full min-w-0 overflow-hidden rounded-[28px] border border-black/10 bg-white/58 p-5 shadow-sm transition-all duration-200 hover:bg-white/72 hover:shadow-md dark:border-white/10 dark:bg-white/[0.07] dark:hover:bg-white/10">
+		<div class="flex items-center justify-between gap-3 mb-4">
+			<div class="flex items-center gap-2">
+				<span class="inline-flex h-2.5 w-2.5 rounded-full bg-cyan-400 shadow-[0_0_0_10px_rgba(56,189,248,0.14)]"></span>
+				<span class="text-sm font-semibold text-stone-950 dark:text-stone-50">Latest capture</span>
 			</div>
-			
-			<div class="flex shrink-0 items-center gap-2">
-				<!-- Performance timing indicator -->
-				<span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 flex items-center gap-1">
-					⚡ local gpu
-				</span>
-				<div class="flex items-center gap-1.5 text-xs text-muted-foreground">
-					<ClockIcon class="size-3.5" />
-					<span>{timeAgo(lastPasted.recordedAt)}</span>
-				</div>
-			</div>
+			<span class="text-xs uppercase tracking-[0.24em] text-stone-500 dark:text-stone-400">{timeAgo(lastPasted.recordedAt)}</span>
 		</div>
-		<div class="relative px-4 mb-1">
-			<span class="absolute left-0 top-0 text-2xl text-muted-foreground/30 leading-none font-serif">"</span>
-			<p class="text-sm text-foreground leading-relaxed line-clamp-3 select-text">{lastPasted.transcript}</p>
-			<span class="absolute right-0 bottom-0 text-2xl text-muted-foreground/30 leading-none font-serif">"</span>
+
+		<div class="relative border-l-2 border-emerald-400/45 pl-4">
+			<p class="text-sm leading-7 text-stone-800 select-text dark:text-stone-200">{lastPasted.transcript}</p>
 		</div>
-		
-		<!-- Action row at bottom right, reveals on hover -->
-		<div class="absolute bottom-2.5 right-3 opacity-0 group-hover:opacity-100 flex items-center gap-1.5 transition-opacity duration-200 bg-card/90 backdrop-blur-xs pl-2 py-0.5 rounded-lg">
-			<button 
+
+		<div class="absolute right-3 bottom-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+			<button
 				onclick={() => copyTranscript(lastPasted.transcript)}
-				class="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
+				class="inline-flex items-center justify-center rounded-full p-2 text-stone-500 transition-colors hover:bg-stone-900/5 hover:text-stone-950 dark:text-stone-400 dark:hover:bg-white/10 dark:hover:text-stone-50"
 				title="Copy to Clipboard"
 			>
-				<ClipboardIcon class="size-3.5" />
+				<ClipboardIcon class="size-4" />
 			</button>
-			<button 
+			<button
 				onclick={() => deleteRecording(lastPasted.id)}
-				class="p-1 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+				class="inline-flex items-center justify-center rounded-full p-2 text-stone-500 transition-colors hover:bg-rose-500/10 hover:text-destructive dark:text-stone-400"
 				title="Delete Recording"
 			>
-				<TrashIcon class="size-3.5" />
+				<TrashIcon class="size-4" />
 			</button>
 		</div>
 	</div>

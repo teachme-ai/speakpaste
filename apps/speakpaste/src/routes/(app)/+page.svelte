@@ -266,24 +266,28 @@
 {#if isOverlay}
 	<OverlayStatusPill {recorderState} {isTranscribing} {justPasted} />
 {:else}
-<div class="relative flex flex-col min-h-screen bg-background overflow-y-auto items-center">
-	<div class="w-full max-w-md min-w-0 flex flex-col items-center gap-6 px-4 pb-10">
+<div class="home-surface relative flex min-h-screen flex-col items-center overflow-y-auto">
+	<div class="w-full max-w-md min-w-0 flex flex-col items-center gap-5 px-4 pb-10">
 		<AppHeader />
 		<StatePillBar {pills} />
 
-		<MicButton {recorderState} />
-		<HintText />
-		<EngineBadge {modelLabel} />
-		<PipelineControlDeck />
+		<div class="voice-panel w-full rounded-[32px] border px-6 pt-6 pb-5 shadow-sm">
+			<MicButton {recorderState} {isTranscribing} {justPasted} />
+			<div class="flex flex-col items-center gap-4">
+				<HintText />
+				<EngineBadge {modelLabel} />
+			</div>
+			<PipelineControlDeck />
+		</div>
 
-		<div class="flex justify-center mt-10 mb-6">
-			<button class="text-sm font-medium text-foreground bg-secondary/50 hover:bg-secondary border border-border/50 transition-all flex items-center gap-2 px-6 py-2.5 rounded-full shadow-sm" onclick={toggleHistory}>
+		<div class="flex justify-center mt-7 mb-5">
+			<button class="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/60 px-5 py-2.5 text-sm font-semibold text-stone-900 shadow-sm transition-all hover:bg-white/85 dark:border-white/10 dark:bg-white/10 dark:text-stone-50 dark:hover:bg-white/15" onclick={toggleHistory}>
 				{#if showHistory}
 					<svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
-					Hide History
+					Hide captures
 				{:else}
 					<svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-					Show History
+					Show captures
 				{/if}
 			</button>
 		</div>
@@ -307,23 +311,32 @@
 {/if}
 
 <style>
-	@keyframes blob-morph {
-		0%, 100% {
-			transform: translate(100px, 100px) scale(1) rotate(0deg);
-		}
-		33% {
-			transform: translate(102px, 98px) scale(1.08) rotate(120deg);
-		}
-		66% {
-			transform: translate(97px, 103px) scale(0.95) rotate(240deg);
-		}
+	.home-surface {
+		background:
+			linear-gradient(180deg, oklch(0.985 0.006 95), oklch(0.94 0.012 105));
+		color: oklch(0.22 0.018 240);
 	}
-	:global(.animate-blob-slow) {
-		animation: blob-morph 10s infinite ease-in-out;
-		transform-origin: center;
+
+	.voice-panel {
+		border-color: oklch(0.35 0.02 240 / 0.12);
+		background: oklch(1 0 0 / 0.58);
+		box-shadow:
+			0 1px 0 oklch(1 0 0 / 0.72) inset,
+			0 18px 48px oklch(0.28 0.018 240 / 0.12);
+		backdrop-filter: blur(18px);
 	}
-	:global(.animate-blob-fast) {
-		animation: blob-morph 6s infinite ease-in-out reverse;
-		transform-origin: center;
+
+	:global(.dark) .home-surface {
+		background:
+			linear-gradient(180deg, oklch(0.19 0.014 245), oklch(0.13 0.012 245));
+		color: oklch(0.96 0.008 90);
+	}
+
+	:global(.dark) .voice-panel {
+		border-color: oklch(1 0 0 / 0.1);
+		background: oklch(0.24 0.018 245 / 0.58);
+		box-shadow:
+			0 1px 0 oklch(1 0 0 / 0.08) inset,
+			0 18px 52px oklch(0 0 0 / 0.26);
 	}
 </style>

@@ -27,7 +27,7 @@
 		{#snippet child({ props })}
 			<button
 				{...props}
-				class="size-9 rounded-full bg-card shadow-sm border border-border flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+				class="flex size-9 items-center justify-center rounded-full border border-black/10 bg-white/55 text-stone-500 shadow-sm transition-colors hover:bg-white/80 hover:text-stone-900 dark:border-white/10 dark:bg-white/10 dark:text-stone-400 dark:hover:bg-white/15 dark:hover:text-stone-50"
 				aria-label="Settings"
 			>
 				<SettingsIcon class="size-4" />
