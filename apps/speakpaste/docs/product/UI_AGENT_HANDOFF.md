@@ -44,6 +44,25 @@ Do not switch the project to npm, pnpm, or yarn. Do not generate a new lockfile 
 
 ## Correct Dev Commands
 
+Most reliable form:
+
+```bash
+cd /Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste
+bun run dev:web -- --host 127.0.0.1 --port 5173
+```
+
+If the agent tool supports a `cwd` / working-directory field, set it to:
+
+```text
+/Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste
+```
+
+Then run:
+
+```bash
+bun run dev:web -- --host 127.0.0.1 --port 5173
+```
+
 From workspace root, web-only Vite dev:
 
 ```bash
@@ -56,6 +75,8 @@ Equivalent from workspace root without `cd`:
 ```bash
 bun --cwd apps/speakpaste run dev:web -- --host 127.0.0.1 --port 5173
 ```
+
+If one form fails in the agent shell, use the explicit `cd` form above. The two commands are intended to be equivalent, but some agent harnesses handle `--cwd`, workspace roots, or shell resolution differently.
 
 Tauri desktop dev:
 
