@@ -271,7 +271,7 @@ const transformation = {
 	'transformation.selectedId': defineKv(type('string | null'), null),
 } as const;
 
-/** Anonymized event logging toggle (Aptabase). */
+/** Device-local diagnostics preference. No off-device analytics are sent. */
 const analytics = {
 	'analytics.enabled': defineKv(type('boolean'), false),
 } as const;

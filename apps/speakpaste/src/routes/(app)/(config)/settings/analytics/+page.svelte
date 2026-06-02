@@ -125,6 +125,19 @@
 					Read the local technology disclosure
 				</span>
 			</a>
+			<a
+				href="/settings/sound"
+				class="group flex items-center gap-2 text-primary hover:text-primary/80 transition-colors"
+			>
+				<span class="text-muted-foreground group-hover:text-primary/60 transition-colors"
+					>&gt;</span
+				>
+				<span
+					class="underline underline-offset-4 decoration-transparent group-hover:decoration-current transition-colors"
+				>
+					Adjust local sound cues
+				</span>
+			</a>
 		</Card.Content>
 	</Card.Root>
 

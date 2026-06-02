@@ -14,9 +14,7 @@
 			href: '/settings/shortcuts/global',
 			activePathPrefix: '/settings/shortcuts',
 		},
-		{ title: 'Sound', href: '/settings/sound' },
-		{ title: 'Privacy', href: '/settings/analytics' },
-		{ title: 'Technology', href: '/settings/local-technology' },
+		{ title: 'Privacy & Tech', href: '/settings/analytics' },
 		{ title: 'Credits', href: '/settings/about' },
 	] satisfies {
 		title: string;

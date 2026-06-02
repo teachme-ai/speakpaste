@@ -354,6 +354,7 @@
 	<div class="flex flex-wrap gap-2">
 		<Button href="/settings/transcription" variant="outline">Manage models</Button>
 		<Button href="/settings/shortcuts/global" variant="outline">Edit shortcut</Button>
+		<Button href="/settings/sound" variant="outline">Sound cues</Button>
 		<Button href="/settings/analytics" variant="outline">Local diagnostics</Button>
 		<Button href="/settings/local-technology" variant="ghost">Technology</Button>
 	</div>
