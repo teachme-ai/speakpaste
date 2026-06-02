@@ -73,6 +73,10 @@ pub async fn write_runtime_config(
 
 #[tauri::command]
 pub async fn read_runtime_config(app: AppHandle) -> Result<Option<RuntimeConfig>, String> {
+    read_runtime_config_from_disk(&app)
+}
+
+pub fn read_runtime_config_from_disk(app: &AppHandle) -> Result<Option<RuntimeConfig>, String> {
     let path = runtime_config_path(&app)?;
     if !path.exists() {
         return Ok(None);

@@ -1,8 +1,8 @@
+use log::{error, info, warn};
 use std::os::raw::c_void;
 use std::ptr;
 use std::thread;
-use tauri::{AppHandle, Emitter};
-use log::{info, error, warn};
+use tauri::AppHandle;
 
 // ==========================================
 // 1. CoreGraphics / CoreFoundation FFI Types
@@ -22,7 +22,7 @@ type CGEventMask = u64;
 // 2. Constants
 // ==========================================
 const K_CG_EVENT_TAP_OPTION_LISTEN_ONLY: i32 = 1; // Listen-only mode avoids blocking other apps
-const K_CG_EVENT_TAP_LOCATION_HID: u32 = 0;      // HID level intercept
+const K_CG_EVENT_TAP_LOCATION_HID: u32 = 0; // HID level intercept
 const K_CG_EVENT_TAP_PLACEMENT_HEAD_INSERT: u32 = 0;
 
 const K_CG_EVENT_FLAGS_CHANGED: u32 = 12;
@@ -52,30 +52,40 @@ unsafe extern "C" fn event_tap_callback(
     if type_ == K_CG_EVENT_FLAGS_CHANGED {
         // Extract the keycode of the modifier key that changed
         let keycode = CGEventGetIntegerValueField(event, K_CG_KEYBOARD_EVENT_KEYCODE) as CGKeyCode;
-        
+
         if keycode == VK_FN {
             let flags = CGEventGetFlags(event);
             let is_pressed = (flags & K_CG_EVENT_FLAG_MASK_SECONDARY_FN) != 0;
-            
+
             // Cast the context pointer back to our Rust state struct
             let state = &mut *(refcon as *mut KeyListenerState);
-            
+
             // Only fire on state transition (press down vs release up)
             if is_pressed != state.fn_pressed {
                 state.fn_pressed = is_pressed;
-                
+
                 if is_pressed {
                     info!("[FnKeyListener] Standalone Fn key pressed down");
-                    // Emit event to Svelte frontend (Tauri v2 requires the Emitter trait)
-                    let _ = state.app_handle.emit("fn-key-down", ());
+                    if let Err(error) =
+                        crate::dictation_manager::start_native_dictation_for_app(&state.app_handle)
+                    {
+                        error!(
+                            "[FnKeyListener] failed to start native dictation: {}",
+                            error
+                        );
+                    }
                 } else {
                     info!("[FnKeyListener] Standalone Fn key released");
-                    let _ = state.app_handle.emit("fn-key-up", ());
+                    if let Err(error) =
+                        crate::dictation_manager::stop_native_dictation_for_app(&state.app_handle)
+                    {
+                        error!("[FnKeyListener] failed to stop native dictation: {}", error);
+                    }
                 }
             }
         }
     }
-    
+
     // Return the unmodified event so other system apps process it normally
     event
 }
@@ -154,10 +164,10 @@ pub fn start_fn_key_listener(app_handle: AppHandle) -> Result<(), &'static str> 
                 app_handle,
                 fn_pressed: false,
             }));
-            
+
             // Mask for FlagsChanged events: (1 << 12)
             let event_mask = 1 << K_CG_EVENT_FLAGS_CHANGED;
-            
+
             // Create the tap
             let tap = CGEventTapCreate(
                 K_CG_EVENT_TAP_LOCATION_HID,
@@ -167,14 +177,14 @@ pub fn start_fn_key_listener(app_handle: AppHandle) -> Result<(), &'static str> 
                 event_tap_callback,
                 state as *mut c_void,
             );
-            
+
             if tap.is_null() {
                 error!("[FnKeyListener] Failed to create CGEventTap. Ensure Accessibility permissions are active.");
                 LISTENER_RUNNING.store(false, Ordering::Relaxed);
                 let _ = Box::from_raw(state); // Free state to prevent leak
                 return;
             }
-            
+
             // Create the CFRunLoopSource from the MachPort
             let source = CFMachPortCreateRunLoopSource(ptr::null_mut(), tap, 0);
             if source.is_null() {
@@ -184,19 +194,19 @@ pub fn start_fn_key_listener(app_handle: AppHandle) -> Result<(), &'static str> 
                 let _ = Box::from_raw(state);
                 return;
             }
-            
+
             // Add the run loop source to the background thread's run loop
             let run_loop = CFRunLoopGetCurrent();
             CFRunLoopAddSource(run_loop, source, kCFRunLoopCommonModes);
-            
+
             // Enable the event tap
             CGEventTapEnable(tap, true);
-            
+
             info!("[FnKeyListener] Background global Fn key event tap initialized successfully.");
-            
+
             // Blocks and processes events on this thread
             CFRunLoopRun();
-            
+
             // Cleanup (only reached if the run loop is programmatically terminated)
             LISTENER_RUNNING.store(false, Ordering::Relaxed);
             CFRelease(source);
@@ -204,7 +214,7 @@ pub fn start_fn_key_listener(app_handle: AppHandle) -> Result<(), &'static str> 
             let _ = Box::from_raw(state);
         }
     });
-    
+
     Ok(())
 }
 
@@ -215,4 +225,3 @@ pub async fn initialize_fn_key_listener(app: tauri::AppHandle) -> Result<bool, S
         Err(e) => Err(e.to_string()),
     }
 }
-

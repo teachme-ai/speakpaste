@@ -5,6 +5,7 @@ import { rpc } from '$lib/query';
 import { defineMutation } from '$lib/query/client';
 import { WhisperingErr } from '$lib/result';
 import { services } from '$lib/services';
+import { FsServiceLive } from '$lib/services/desktop/fs';
 import { deviceConfig } from '$lib/state/device-config.svelte';
 import { dictationRuntime } from '$lib/state/dictation-runtime.svelte';
 import { recordings } from '$lib/state/recordings.svelte';
@@ -363,6 +364,38 @@ export const actions = {
 	stopManualRecording,
 	startVadRecording,
 	stopVadRecording,
+
+	processNativeRecording: defineMutation({
+		mutationKey: ['commands', 'processNativeRecording'] as const,
+		mutationFn: async ({
+			recordingId,
+			filePath,
+		}: {
+			recordingId: string;
+			filePath: string;
+		}) => {
+			const toastId = nanoid();
+			const { data: blob, error } = await FsServiceLive.pathToBlob(filePath);
+			if (error) {
+				notify.error({
+					id: toastId,
+					title: 'Failed to read background recording',
+					description: error.message,
+					action: { type: 'more-details', error },
+				});
+				return Ok(undefined);
+			}
+
+			await processRecordingPipeline({
+				blob,
+				recordingId,
+				toastId,
+				completionTitle: 'Background recording complete',
+				completionDescription: 'Recording captured by the native runtime',
+			});
+			return Ok(undefined);
+		},
+	}),
 
 	// Toggle manual recording
 	toggleManualRecording: defineMutation({

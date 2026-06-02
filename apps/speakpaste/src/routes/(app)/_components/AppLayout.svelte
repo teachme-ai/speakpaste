@@ -38,6 +38,7 @@
 	let cleanupDictationRuntime: (() => void) | undefined;
 	let unlistenFnKeyDown: (() => void) | undefined;
 	let unlistenFnKeyUp: (() => void) | undefined;
+	let unlistenAudioReady: (() => void) | undefined;
 
 	onMount(() => {
 		window.commands = commandCallbacks;
@@ -76,6 +77,18 @@
 
 			// Standalone Fn Key Global Listener
 			import('@tauri-apps/api/event').then(({ listen }) => {
+				listen<{
+					recordingId: string;
+					filePath: string;
+				}>('dictation:audio-ready', (event) => {
+					void rpc.actions.processNativeRecording({
+						recordingId: event.payload.recordingId,
+						filePath: event.payload.filePath,
+					});
+				}).then((unlisten) => {
+					unlistenAudioReady = unlisten;
+				});
+
 				listen('fn-key-down', () => {
 					console.log('[FnKeyListener] fn-key-down event received from backend');
 					commandCallbacks.pushToTalk('Pressed');
@@ -99,6 +112,7 @@
 		cleanupDictationRuntime?.();
 		unlistenFnKeyDown?.();
 		unlistenFnKeyUp?.();
+		unlistenAudioReady?.();
 	});
 
 	if (window.__TAURI_INTERNALS__) {

@@ -69,6 +69,11 @@ use dictation_runtime::{
 pub mod runtime_config;
 use runtime_config::{read_runtime_config, write_runtime_config};
 
+pub mod dictation_manager;
+use dictation_manager::{
+    start_native_dictation, stop_native_dictation, toggle_native_dictation, DictationManager,
+};
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 #[tokio::main]
 pub async fn run() {
@@ -167,6 +172,7 @@ pub async fn run() {
         })
         .manage(AppData::new())
         .manage(DictationRuntime::new())
+        .manage(DictationManager::new())
         .manage(ModelManager::new())
         .setup(|app| {
             install_application_menu(app)?;
@@ -223,6 +229,9 @@ pub async fn run() {
         set_dictation_runtime_state,
         write_runtime_config,
         read_runtime_config,
+        start_native_dictation,
+        stop_native_dictation,
+        toggle_native_dictation,
         // Filesystem utilities
         read_markdown_files,
         count_markdown_files,

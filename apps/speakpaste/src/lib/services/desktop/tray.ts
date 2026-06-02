@@ -1,4 +1,5 @@
 import { Menu, MenuItem } from '@tauri-apps/api/menu';
+import { invoke } from '@tauri-apps/api/core';
 import { resolveResource } from '@tauri-apps/api/path';
 import { TrayIcon } from '@tauri-apps/api/tray';
 import { getCurrentWindow } from '@tauri-apps/api/window';
@@ -174,13 +175,13 @@ async function buildMenu() {
 				id: 'dictate',
 				text: 'Start Dictation',
 				action: () => {
-					// commandCallbacks.toggleManualRecording() — wired via window.commands
-					if (typeof window !== 'undefined' && (window as any).commands) {
-						(window as any).commands.toggleManualRecording();
-					} else {
+					void invoke('toggle_native_dictation').catch(() => {
 						void getCurrentWindow().show();
 						void getCurrentWindow().setFocus();
-					}
+						if (typeof window !== 'undefined' && (window as any).commands) {
+							(window as any).commands.toggleManualRecording();
+						}
+					});
 				},
 			}),
 

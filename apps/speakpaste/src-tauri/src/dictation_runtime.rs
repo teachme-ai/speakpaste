@@ -35,7 +35,7 @@ impl DictationRuntime {
             .map_err(|e| format!("Failed to lock dictation runtime: {}", e))
     }
 
-    fn transition(
+    pub(crate) fn transition(
         &self,
         app: &AppHandle,
         status: String,
