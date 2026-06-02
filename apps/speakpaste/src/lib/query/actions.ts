@@ -91,6 +91,9 @@ const startManualRecording = defineMutation({
 		void dictationRuntime.setStatus('Recording', 'Preparing microphone');
 
 		settings.set('recording.mode', 'manual');
+		if (isDesktopApp() && deviceConfig.get('recording.method') !== 'cpal') {
+			deviceConfig.set('recording.method', 'cpal');
+		}
 
 		const toastId = nanoid();
 		notify.loading({

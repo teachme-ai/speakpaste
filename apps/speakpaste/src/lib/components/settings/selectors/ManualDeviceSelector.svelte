@@ -13,13 +13,7 @@
 	import { deviceConfig } from '$lib/state/device-config.svelte';
 
 	const combobox = useCombobox();
-
-	const selectedMethod = $derived(deviceConfig.get('recording.method'));
-
-	// Get the device ID for the current method
-	const selectedDeviceId = $derived(
-		deviceConfig.get(`recording.${selectedMethod}.deviceId`),
-	);
+	const selectedDeviceId = $derived(deviceConfig.get('recording.cpal.deviceId'));
 
 	const isDeviceSelected = $derived(!!selectedDeviceId);
 
@@ -78,8 +72,8 @@
 								value={`device-${device.id} ${device.label}`}
 								onSelect={() => {
 									const currentDeviceId = selectedDeviceId;
-						deviceConfig.set(
-										`recording.${selectedMethod}.deviceId`,
+									deviceConfig.set(
+										'recording.cpal.deviceId',
 										currentDeviceId === device.id ? null : device.id,
 									);
 								}}

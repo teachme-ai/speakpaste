@@ -62,6 +62,10 @@
 			console.info('[Shortcuts] removing stale local hands-free shortcut: v');
 			settings.set('shortcut.toggleVadRecording', null);
 		}
+		if (window.__TAURI_INTERNALS__ && deviceConfig.get('recording.method') !== 'cpal') {
+			console.info('[Recording] using Native Mac Capture for desktop');
+			deviceConfig.set('recording.method', 'cpal');
+		}
 
 		syncLocalShortcutsWithSettings();
 		resetLocalShortcutsToDefaultIfDuplicates();
