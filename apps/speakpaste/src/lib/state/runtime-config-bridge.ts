@@ -33,6 +33,18 @@ type RuntimeConfig = {
 	updatedAtMs: number;
 };
 
+type NativeShortcutReloadResult = {
+	registered: Array<{
+		commandId: string;
+		accelerator: string;
+	}>;
+	failed: Array<{
+		commandId: string;
+		accelerator: string;
+		reason: string;
+	}>;
+};
+
 let syncTimer: ReturnType<typeof window.setTimeout> | null = null;
 
 export const runtimeConfigBridge = {
@@ -51,6 +63,27 @@ export const runtimeConfigBridge = {
 		await invoke('write_runtime_config', { config }).catch((error) => {
 			console.warn('[RuntimeConfig] failed to write runtime config', error);
 		});
+	},
+
+	async syncNowAndReloadNativeShortcuts() {
+		await runtimeConfigBridge.syncNow();
+		return runtimeConfigBridge.reloadNativeShortcuts();
+	},
+
+	async reloadNativeShortcuts(): Promise<string[]> {
+		if (typeof window === 'undefined' || !window.__TAURI_INTERNALS__) return [];
+		const result = await invoke<NativeShortcutReloadResult>(
+			'reload_native_global_shortcuts',
+		).catch((error) => {
+			console.warn('[RuntimeConfig] failed to reload native shortcuts', error);
+			return null;
+		});
+
+		if (!result) return [];
+		if (result.failed.length > 0) {
+			console.warn('[RuntimeConfig] native shortcut fallback required', result.failed);
+		}
+		return result.registered.map((item) => item.commandId);
 	},
 };
 

@@ -110,9 +110,16 @@ export async function syncLocalShortcutsWithSettings() {
  * - Unregisters shortcuts that don't have key combinations defined
  * - Shows error toast if any registration/unregistration fails
  */
-export async function syncGlobalShortcutsWithSettings() {
+export async function syncGlobalShortcutsWithSettings(options: {
+	skipCommandIds?: readonly string[];
+} = {}) {
+	const skipCommandIds = new Set(options.skipCommandIds ?? []);
 	const commandsWithAccelerators = commands
 		.map((command) => {
+			if (skipCommandIds.has(command.id)) {
+				console.info(`[Shortcuts] native owner active: ${command.id}`);
+				return null;
+			}
 			const accelerator = deviceConfig.get(
 				getGlobalShortcutKey(command.id),
 			) as Accelerator | null;

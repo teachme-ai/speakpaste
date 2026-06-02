@@ -49,6 +49,10 @@ pub async fn stop_native_dictation(app: AppHandle) -> Result<Option<AudioReadyPa
 
 #[tauri::command]
 pub async fn toggle_native_dictation(app: AppHandle) -> Result<(), String> {
+    toggle_native_dictation_for_app(&app)
+}
+
+pub fn toggle_native_dictation_for_app(app: &AppHandle) -> Result<(), String> {
     let manager = app.state::<DictationManager>();
     let is_recording = matches!(
         *manager
@@ -60,9 +64,9 @@ pub async fn toggle_native_dictation(app: AppHandle) -> Result<(), String> {
     drop(manager);
 
     if is_recording {
-        let _ = stop_native_dictation_for_app(&app)?;
+        let _ = stop_native_dictation_for_app(app)?;
     } else {
-        start_native_dictation_for_app(&app)?;
+        start_native_dictation_for_app(app)?;
     }
 
     Ok(())

@@ -67,7 +67,13 @@
 		migrationDialog.check();
 
 		if (window.__TAURI_INTERNALS__) {
-			syncGlobalShortcutsWithSettings();
+			void runtimeConfigBridge
+				.syncNowAndReloadNativeShortcuts()
+				.then((nativeOwnedCommandIds) => {
+					void syncGlobalShortcutsWithSettings({
+						skipCommandIds: nativeOwnedCommandIds,
+					});
+				});
 			resetGlobalShortcutsToDefaultIfDuplicates();
 
 			Promise.allSettled([

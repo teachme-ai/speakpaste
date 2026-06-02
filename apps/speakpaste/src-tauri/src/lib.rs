@@ -74,6 +74,11 @@ use dictation_manager::{
     start_native_dictation, stop_native_dictation, toggle_native_dictation, DictationManager,
 };
 
+pub mod native_shortcuts;
+use native_shortcuts::{
+    reload_native_global_shortcuts, unregister_native_global_shortcuts, NativeShortcutManager,
+};
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 #[tokio::main]
 pub async fn run() {
@@ -173,6 +178,7 @@ pub async fn run() {
         .manage(AppData::new())
         .manage(DictationRuntime::new())
         .manage(DictationManager::new())
+        .manage(NativeShortcutManager::new())
         .manage(ModelManager::new())
         .setup(|app| {
             install_application_menu(app)?;
@@ -232,6 +238,8 @@ pub async fn run() {
         start_native_dictation,
         stop_native_dictation,
         toggle_native_dictation,
+        reload_native_global_shortcuts,
+        unregister_native_global_shortcuts,
         // Filesystem utilities
         read_markdown_files,
         count_markdown_files,
