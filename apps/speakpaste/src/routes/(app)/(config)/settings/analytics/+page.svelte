@@ -8,7 +8,7 @@
 	<SectionHeader.Root>
 		<div class="flex items-center gap-3">
 			<SectionHeader.Title level={3} class="text-xl tracking-tight">
-				Local Analytics
+				Privacy & Tech
 			</SectionHeader.Title>
 			<Badge
 				variant="outline"
@@ -18,8 +18,8 @@
 			</Badge>
 		</div>
 		<SectionHeader.Description class="max-w-2xl">
-			SpeakPaste keeps analytics on the Mac and limits them to operational
-			signals that help the app stay fast and predictable.
+			SpeakPaste keeps operational insight on the Mac and documents the local
+			technology behind the writing flow.
 		</SectionHeader.Description>
 	</SectionHeader.Root>
 
