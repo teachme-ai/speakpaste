@@ -83,7 +83,6 @@
       ]
     },
     "opener:allow-default-urls",
-    "updater:default",
     "macos-permissions:default",
     "shell:default",
     {

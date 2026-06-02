@@ -80,7 +80,7 @@
 					class="text-sm font-medium text-warning dark:text-warning flex items-center gap-2"
 				>
 					<div class="w-2 h-2 bg-warning rounded-full"></div>
-					What stays out of analytics
+					What stays private
 				</Card.Title>
 			</Card.Header>
 			<Card.Content>
@@ -95,7 +95,7 @@
 					</li>
 					<li class="flex items-start gap-2">
 						<span class="mt-2 size-1.5 rounded-full bg-warning"></span>
-						<span>Remote telemetry or cloud analytics</span>
+						<span>Off-device usage reporting</span>
 					</li>
 				</ul>
 			</Card.Content>
@@ -132,7 +132,7 @@
 		<div class="flex items-center gap-2 text-green-700 dark:text-green-400">
 			<div class="w-2 h-2 bg-green-500 rounded-full"></div>
 			<span class="font-medium">Local analytics only</span>
-			<span class="text-muted-foreground">No remote telemetry</span>
+			<span class="text-muted-foreground">Stored on this Mac</span>
 		</div>
 	</div>
 </div>

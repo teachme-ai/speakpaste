@@ -19,7 +19,6 @@
 	<div class="flex flex-wrap gap-2">
 		<Badge variant="secondary">Local-only</Badge>
 		<Badge variant="secondary">On your Mac</Badge>
-		<Badge variant="secondary">No cloud fallback</Badge>
 		<Badge variant="secondary">Private by design</Badge>
 	</div>
 
@@ -35,12 +34,12 @@
 		</div>
 
 		<div class="space-y-3 rounded-lg border bg-muted/20 p-4">
-			<h3 class="text-sm font-semibold tracking-tight">What settings no longer surface</h3>
+			<h3 class="text-sm font-semibold tracking-tight">Focused settings surface</h3>
 			<ul class="space-y-2 text-sm text-muted-foreground leading-relaxed">
-				<li>Remote API key panels.</li>
-				<li>Cloud transcription provider selection.</li>
-				<li>Remote completion and rewrite providers.</li>
-				<li>Remote analytics or telemetry controls.</li>
+				<li>Voice capture and device permissions.</li>
+				<li>Local engine and model selection.</li>
+				<li>Cursor output, clipboard behavior, shortcuts, and sounds.</li>
+				<li>Device-only diagnostics and usage insight.</li>
 			</ul>
 		</div>
 	</div>

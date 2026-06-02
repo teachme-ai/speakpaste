@@ -21,7 +21,7 @@
 				>Settings</SectionHeader.Title
 			>
 			<SectionHeader.Description>
-				Configure SpeakPaste v0.1.0.
+				Tune local voice typing with device-only settings and diagnostics.
 			</SectionHeader.Description>
 		</SectionHeader.Root>
 		<Button

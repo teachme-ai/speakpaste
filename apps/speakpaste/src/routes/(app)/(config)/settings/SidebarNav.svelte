@@ -6,17 +6,18 @@
 	import { page } from '$app/state';
 
 	const items = [
-		{ title: 'General', href: '/settings' },
-		{ title: 'Recording', href: '/settings/recording' },
-		{ title: 'Transcription', href: '/settings/transcription' },
-		{ title: 'Sound', href: '/settings/sound' },
+		{ title: 'Output', href: '/settings' },
+		{ title: 'Voice Capture', href: '/settings/recording' },
+		{ title: 'Local Engine', href: '/settings/transcription' },
 		{
 			title: 'Shortcuts',
 			href: '/settings/shortcuts/local',
 			activePathPrefix: '/settings/shortcuts',
 		},
-		{ title: 'Local Technology', href: '/settings/local-technology' },
-		{ title: 'About & Credits', href: '/settings/about' },
+		{ title: 'Sound', href: '/settings/sound' },
+		{ title: 'Privacy', href: '/settings/analytics' },
+		{ title: 'Technology', href: '/settings/local-technology' },
+		{ title: 'Credits', href: '/settings/about' },
 	] satisfies {
 		title: string;
 		href: string;

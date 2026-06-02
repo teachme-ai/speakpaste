@@ -1,9 +1,13 @@
 # Transcription Services
 
-This directory organizes transcription providers (service implementations). Since there are many, we further organize them into three folders:
+This directory contains on-device transcription implementations only.
 
-**`/cloud`**: API-based services that send audio to external providers. Require API keys and internet connection.
+The active engines are:
 
-**`/local`**: On-device processing that runs on the user's machine. Require model files but work offline.
+- `whispercpp` for the default local speech-to-text path.
+- `parakeet` for local NVIDIA/NeMo-family experiments when available.
+- `moonshine` for lightweight local model experiments when available.
 
-**`/self-hosted`**: Services that connect to servers you deploy yourself on your own machine. You provide the base URL of your own instance.
+Do not add providers that send audio to external services from this layer. The product baseline is sovereign voice typing: audio, transcripts, settings, and usage intelligence stay on the user's Mac.
+
+Model acquisition should be explicit and visible to the user. If a model needs to be downloaded or manually placed, surface that through local model settings and do not hide the source, format, or framework being used.

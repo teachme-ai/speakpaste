@@ -16,7 +16,6 @@
 		checkCompressionRecommendation,
 		checkFfmpegRecordingMethodCompatibility,
 	} from '../_layout-utils/check-ffmpeg';
-	import { checkForUpdates } from '../_layout-utils/check-for-updates';
 	import {
 		resetGlobalShortcutsToDefaultIfDuplicates,
 		resetLocalShortcutsToDefaultIfDuplicates,
@@ -65,7 +64,6 @@
 			Promise.allSettled([
 				checkFfmpegRecordingMethodCompatibility(),
 				checkCompressionRecommendation(),
-				checkForUpdates(),
 			]);
 
 			// Standalone Fn Key Global Listener

@@ -51,17 +51,17 @@
 	);
 </script>
 
-<svelte:head> <title>Settings - SpeakPaste</title> </svelte:head>
+<svelte:head> <title>Output Settings - SpeakPaste</title> </svelte:head>
 
 <Field.Set>
-	<Field.Legend>General</Field.Legend>
+	<Field.Legend>Output</Field.Legend>
 	<Field.Description>
-		Configure your general SpeakPaste preferences.
+		Choose what happens after SpeakPaste finishes a local transcription.
 	</Field.Description>
 	<Field.Separator />
 	<Field.Group>
 		<Field.Set>
-			<Field.Legend variant="label">Transcription output</Field.Legend>
+			<Field.Legend variant="label">After transcription</Field.Legend>
 			<Field.Description>
 				Applies immediately after an audio transcription finishes.
 			</Field.Description>
@@ -73,7 +73,7 @@
 							(v) => settings.set('output.transcription.clipboard', v)}
 					/>
 					<Field.Label for="transcription.copyToClipboardOnSuccess">
-						Copy transcript to clipboard
+						Copy to clipboard
 					</Field.Label>
 				</Field.Field>
 
@@ -84,7 +84,7 @@
 							(v) => settings.set('output.transcription.cursor', v)}
 					/>
 					<Field.Label for="transcription.writeToCursorOnSuccess">
-						Paste transcript at cursor
+						Paste at cursor
 					</Field.Label>
 				</Field.Field>
 
@@ -96,7 +96,7 @@
 								(v) => settings.set('output.transcription.enter', v)}
 						/>
 						<Field.Label for="transcription.simulateEnterAfterOutput">
-							Press Enter after pasting transcript
+							Press Enter after paste
 						</Field.Label>
 					</Field.Field>
 				{/if}
@@ -108,8 +108,8 @@
 		<Field.Separator />
 
 		<Field.Field>
-			<Field.Label for="recording-retention-strategy"
-				>Auto Delete Recordings</Field.Label
+				<Field.Label for="recording-retention-strategy"
+				>Saved recordings</Field.Label
 			>
 			<Select.Root
 				type="single"
@@ -129,7 +129,7 @@
 
 		{#if settings.get('retention.strategy') === 'limit-count'}
 			<Field.Field>
-				<Field.Label for="max-recording-count">Maximum Recordings</Field.Label>
+				<Field.Label for="max-recording-count">Maximum saved recordings</Field.Label>
 				<Select.Root
 					type="single"
 					bind:value={() => String(settings.get('retention.maxCount')),
@@ -150,7 +150,7 @@
 		{#if window.__TAURI_INTERNALS__}
 			<Field.Field orientation="horizontal">
 				<Field.Content>
-					<Field.Label for="autostart">Launch on Startup</Field.Label>
+					<Field.Label for="autostart">Launch at login</Field.Label>
 					<Field.Description>
 						Automatically open SpeakPaste when you log in
 					</Field.Description>
@@ -158,7 +158,7 @@
 				<Switch
 					id="autostart"
 					checked={autostartQuery.data ?? false}
-					onCheckedChange={(checked) => {
+					onCheckedChange={(checked: boolean) => {
 						if (checked) {
 							enableAutostartMutation.mutate(undefined, {
 								onError: (error) => rpc.notify.error(error),
@@ -175,7 +175,7 @@
 				/>
 			</Field.Field>
 			<Field.Field>
-				<Field.Label for="always-on-top">Always On Top</Field.Label>
+				<Field.Label for="always-on-top">Window priority</Field.Label>
 				<Select.Root
 					type="single"
 					bind:value={() => settings.get('ui.alwaysOnTop'),

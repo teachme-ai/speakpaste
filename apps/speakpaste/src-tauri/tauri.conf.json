@@ -53,14 +53,6 @@
 	"productName": "SpeakPaste",
 	"version": "0.1.1",
 	"identifier": "com.speakpaste.app",
-	"plugins": {
-		"updater": {
-			"pubkey": "dW51c2VkX3BsYWNlaG9sZGVyX2tleV9mb3JfZGV2ZWxvcG1lbnRfcHVycG9zZXMK",
-			"endpoints": [
-				"https://raw.githubusercontent.com/teachme-ai/speakpaste/main/update.json"
-			]
-		}
-	},
 	"app": {
 		"macOSPrivateApi": true,
 		"windows": [
