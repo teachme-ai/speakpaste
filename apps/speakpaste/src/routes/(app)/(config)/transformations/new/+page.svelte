@@ -16,9 +16,9 @@
 
 <Card.Root class="w-full max-w-4xl">
 	<Card.Header>
-		<Card.Title>Create Transformation</Card.Title>
+		<Card.Title>Create Text Rule</Card.Title>
 		<Card.Description>
-			Create a new transformation to transform text.
+			Create a deterministic local cleanup rule for text.
 		</Card.Description>
 	</Card.Header>
 	<Card.Content class="space-y-6">
@@ -32,12 +32,12 @@
 					);
 					goto('/transformations');
 					rpc.notify.success({
-						title: 'Created transformation!',
-						description: 'Your transformation has been created successfully.',
+						title: 'Created text rule',
+						description: 'Your local text rule has been created successfully.',
 					});
 				}}
 			>
-				Create Transformation
+				Create Text Rule
 			</Button>
 		</Card.Footer>
 	</Card.Content>

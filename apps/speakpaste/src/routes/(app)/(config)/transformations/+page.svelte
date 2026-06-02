@@ -188,7 +188,7 @@
 	);
 </script>
 
-<svelte:head> <title>All Transformations</title> </svelte:head>
+<svelte:head> <title>Text Rules - SpeakPaste</title> </svelte:head>
 
 <main class="flex w-full flex-1 flex-col gap-2 px-4 py-4 sm:px-8 mx-auto">
 	<SectionHeader.Root>
@@ -196,39 +196,39 @@
 			level={1}
 			class="scroll-m-20 text-4xl tracking-tight lg:text-5xl"
 		>
-			Transformations
+			Text Rules
 		</SectionHeader.Title>
 		<SectionHeader.Description>
-			Your text transformations, stored locally in IndexedDB.
+			Advanced local cleanup rules for deterministic text edits.
 		</SectionHeader.Description>
 	</SectionHeader.Root>
 
 	<div class="flex items-center justify-between gap-2 w-full">
 		<Input
-			placeholder="Filter transformations..."
+			placeholder="Filter text rules..."
 			type="text"
 			class="w-full"
 			bind:value={globalFilter}
 		/>
 		{#if selectedTransformationRows.length > 0}
 			<Button
-				tooltip="Delete selected transformations"
+				tooltip="Delete selected text rules"
 				variant="outline"
 				size="icon"
 				onclick={() => {
 					confirmationDialog.open({
-						title: 'Delete transformations',
+						title: 'Delete text rules',
 						description:
-							'Are you sure you want to delete these transformations?',
+							'Are you sure you want to delete these text rules?',
 						confirm: { text: 'Delete', variant: 'destructive' },
 						onConfirm: () => {
 							for (const { original } of selectedTransformationRows) {
 								transformations.delete(original.id);
 							}
 							rpc.notify.success({
-								title: 'Deleted transformations!',
+								title: 'Deleted text rules',
 								description:
-									'Your transformations have been deleted successfully.',
+									'Your text rules have been deleted successfully.',
 							});
 						},
 					});
@@ -240,7 +240,7 @@
 
 		<OpenFolderButton
 			getFolderPath={PATHS.DB.TRANSFORMATIONS}
-			tooltipText="Open transformations folder"
+			tooltipText="Open text rules folder"
 		/>
 
 		<CreateTransformationButton />
@@ -296,16 +296,16 @@
 									</Empty.Media>
 									<Empty.Title>
 										{#if globalFilter}
-											No transformations found
+											No text rules found
 										{:else}
-											No transformations yet
+											No text rules yet
 										{/if}
 									</Empty.Title>
 									<Empty.Description>
 										{#if globalFilter}
 											Try adjusting your search or filters.
 										{:else}
-											Click "Create Transformation" to add one.
+											Create a local text rule to add one.
 										{/if}
 									</Empty.Description>
 								</Empty.Header>

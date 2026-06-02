@@ -36,9 +36,9 @@
 		isModalOpen = false;
 		transformation = generateDefaultTransformation();
 		steps = [];
-		rpc.notify.success({
-			title: 'Created transformation!',
-			description: 'Your transformation has been created successfully.',
+	rpc.notify.success({
+			title: 'Created text rule',
+			description: 'Your local text rule has been created successfully.',
 		});
 	}
 </script>
@@ -48,7 +48,7 @@
 		{#snippet child({ props })}
 			<Button {...props}>
 				<PlusIcon class="size-4" />
-				Create Transformation
+				Create Text Rule
 			</Button>
 		{/snippet}
 	</Modal.Trigger>
@@ -69,7 +69,7 @@
 		}}
 	>
 		<Modal.Header>
-			<Modal.Title>Create Transformation</Modal.Title>
+			<Modal.Title>Create Text Rule</Modal.Title>
 			<Separator />
 		</Modal.Header>
 

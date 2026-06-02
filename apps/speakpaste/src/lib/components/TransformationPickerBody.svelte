@@ -28,7 +28,7 @@
 		 */
 		onSelect: (transformation: Transformation) => void;
 		/**
-		 * Called when the "Manage transformations" option is selected.
+		 * Called when the manage option is selected.
 		 * Parent components typically close themselves and navigate to /transformations.
 		 */
 		onSelectManageTransformations: () => void;
@@ -78,7 +78,7 @@
 
 <Command.Root loop class={className}>
 	<Command.Input {placeholder} bind:ref={inputElement} />
-	<Command.Empty>No transformation found.</Command.Empty>
+	<Command.Empty>No text rule found.</Command.Empty>
 	<Command.Group class="overflow-y-auto max-h-[400px]">
 		{#each sortedTransformations as transformation, index (transformation.id)}
 			<Command.Item
@@ -103,11 +103,11 @@
 		{/each}
 	</Command.Group>
 	<Command.Item
-		value="Manage transformations"
+		value="Manage text rules"
 		onSelect={onSelectManageTransformations}
 		class="rounded-none p-2 bg-muted/50 text-muted-foreground"
 	>
 		<LayersIcon class="size-4 mx-2.5" />
-		Manage transformations
+		Manage text rules
 	</Command.Item>
 </Command.Root>

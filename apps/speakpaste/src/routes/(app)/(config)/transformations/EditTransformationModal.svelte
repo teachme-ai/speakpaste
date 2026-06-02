@@ -74,8 +74,8 @@
 		);
 
 		rpc.notify.success({
-			title: 'Updated transformation!',
-			description: 'Your transformation has been updated successfully.',
+			title: 'Updated text rule',
+			description: 'Your local text rule has been updated successfully.',
 		});
 		isDialogOpen = false;
 	}
@@ -86,7 +86,7 @@
 		{#snippet child({ props })}
 			<Button
 				{...props}
-				tooltip="Edit transformation, test transformation, and view run history"
+				tooltip="Edit, test, and view local text rule history"
 				variant="ghost"
 				class={className}
 			>
@@ -113,7 +113,7 @@
 		}}
 	>
 		<Modal.Header>
-			<Modal.Title>Transformation Settings</Modal.Title>
+			<Modal.Title>Text Rule Settings</Modal.Title>
 			<Separator />
 		</Modal.Header>
 
@@ -134,7 +134,7 @@
 			<Button
 				onclick={() => {
 					confirmationDialog.open({
-						title: 'Delete transformation',
+						title: 'Delete text rule',
 						description: 'Are you sure? This action cannot be undone.',
 						confirm: { text: 'Delete', variant: 'destructive' },
 						onConfirm: () => {
@@ -144,9 +144,9 @@
 							transformations.delete(transformation.id);
 							isDialogOpen = false;
 							rpc.notify.success({
-								title: 'Deleted transformation!',
+								title: 'Deleted text rule',
 								description:
-									'Your transformation has been deleted successfully.',
+									'Your local text rule has been deleted successfully.',
 							});
 						},
 					});

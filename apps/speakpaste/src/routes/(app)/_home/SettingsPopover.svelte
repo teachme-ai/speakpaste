@@ -15,7 +15,6 @@
 		CompressionSelector,
 		RecordingModeSelector,
 		TranscriptionSelector,
-		TransformationSelector,
 	} from '$lib/components/settings';
 	import ManualDeviceSelector from '$lib/components/settings/selectors/ManualDeviceSelector.svelte';
 	import { PATHS } from '$lib/constants/paths';
@@ -42,7 +41,6 @@
 				<ManualDeviceSelector />
 				<CompressionSelector />
 				<TranscriptionSelector />
-				<TransformationSelector />
 				<RecordingModeSelector />
 			</div>
 

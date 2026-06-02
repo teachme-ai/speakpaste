@@ -20,17 +20,17 @@
 		<EditTransformationModal {transformation} />
 
 		<Button
-			tooltip="Delete transformation"
+			tooltip="Delete text rule"
 			onclick={() => {
 				confirmationDialog.open({
-					title: 'Delete transformation',
-					description: 'Are you sure you want to delete this transformation?',
+					title: 'Delete text rule',
+					description: 'Are you sure you want to delete this text rule?',
 					confirm: { text: 'Delete', variant: 'destructive' },
 					onConfirm: () => {
 						transformations.delete(transformation.id);
 						rpc.notify.success({
-							title: 'Deleted transformation!',
-							description: 'Your transformation has been deleted successfully.',
+							title: 'Deleted text rule',
+							description: 'Your local text rule has been deleted successfully.',
 						});
 					},
 				});
