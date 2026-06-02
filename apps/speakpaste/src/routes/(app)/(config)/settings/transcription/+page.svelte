@@ -5,6 +5,7 @@
 	import { Input } from '@epicenter/ui/input';
 	import { Link } from '@epicenter/ui/link';
 	import * as Select from '@epicenter/ui/select';
+	import { Switch } from '@epicenter/ui/switch';
 	import { Textarea } from '@epicenter/ui/textarea';
 	import InfoIcon from '@lucide/svelte/icons/info';
 	import { CompressionBody } from '$lib/components/settings';
@@ -21,6 +22,7 @@
 	import { hasNavigatorLocalTranscriptionIssue } from '../../../_layout-utils/check-ffmpeg';
 
 	const { data } = $props();
+	let showAdvancedEngineControls = $state(false);
 
 	/**
 	 * Feature capabilities for the currently selected transcription service.
@@ -381,8 +383,24 @@
 			</div>
 		{/if}
 
-		<!-- Audio Compression Settings -->
-		<CompressionBody />
+		<Field.Field orientation="horizontal">
+			<Switch
+				id="advanced-engine-controls"
+				bind:checked={showAdvancedEngineControls}
+			/>
+			<Field.Content>
+				<Field.Label for="advanced-engine-controls">
+					Advanced engine controls
+				</Field.Label>
+				<Field.Description>
+					Show audio compression and low-level transcription tuning options.
+				</Field.Description>
+			</Field.Content>
+		</Field.Field>
+
+		{#if showAdvancedEngineControls}
+			<CompressionBody />
+		{/if}
 
 		<Field.Field>
 			<Field.Label for="output-language">Output Language</Field.Label>
@@ -411,42 +429,44 @@
 			{/if}
 		</Field.Field>
 
-		<Field.Field>
-			<Field.Label for="temperature">Temperature</Field.Label>
-			<Input
-				id="temperature"
-				type="number"
-				min="0"
-				max="1"
-				step="0.1"
-				placeholder="0"
-				autocomplete="off"
-				disabled={!currentServiceCapabilities.supportsTemperature}
-				bind:value={() => settings.get('transcription.temperature'),
-					(value) =>
-						settings.set('transcription.temperature', Number(value))}
-			/>
-			<Field.Description>
-				{currentServiceCapabilities.supportsTemperature
-					? "Controls randomness in the model's output. 0 is focused and deterministic, 1 is more creative."
-					: 'Temperature is not supported for local models (transcribe-rs)'}
-			</Field.Description>
-		</Field.Field>
+		{#if showAdvancedEngineControls}
+			<Field.Field>
+				<Field.Label for="temperature">Temperature</Field.Label>
+				<Input
+					id="temperature"
+					type="number"
+					min="0"
+					max="1"
+					step="0.1"
+					placeholder="0"
+					autocomplete="off"
+					disabled={!currentServiceCapabilities.supportsTemperature}
+					bind:value={() => settings.get('transcription.temperature'),
+						(value) =>
+							settings.set('transcription.temperature', Number(value))}
+				/>
+				<Field.Description>
+					{currentServiceCapabilities.supportsTemperature
+						? "Controls randomness in the model's output. 0 is focused and deterministic, 1 is more creative."
+						: 'Temperature is not supported for local models'}
+				</Field.Description>
+			</Field.Field>
 
-		<Field.Field>
-			<Field.Label for="transcription-prompt">System Prompt</Field.Label>
-			<Textarea
-				id="transcription-prompt"
-				placeholder="e.g., This is an academic lecture about quantum physics with technical terms like 'eigenvalue' and 'Schrödinger'"
-				disabled={!currentServiceCapabilities.supportsPrompt}
-				bind:value={() => settings.get('transcription.prompt'),
-					(value) => settings.set('transcription.prompt', value)}
-			/>
-			<Field.Description>
-				{currentServiceCapabilities.supportsPrompt
-					? 'Helps the local transcription engine better recognize specific terms, names, or context during initial transcription.'
-					: 'System prompt is not supported for local models (Parakeet, Moonshine)'}
-			</Field.Description>
-		</Field.Field>
+			<Field.Field>
+				<Field.Label for="transcription-prompt">Initial transcription hint</Field.Label>
+				<Textarea
+					id="transcription-prompt"
+					placeholder="e.g., This is an academic lecture about quantum physics with technical terms like eigenvalue"
+					disabled={!currentServiceCapabilities.supportsPrompt}
+					bind:value={() => settings.get('transcription.prompt'),
+						(value) => settings.set('transcription.prompt', value)}
+				/>
+				<Field.Description>
+					{currentServiceCapabilities.supportsPrompt
+						? 'Helps the local engine recognize specific terms during transcription.'
+						: 'Hints are not supported for Parakeet or Moonshine'}
+				</Field.Description>
+			</Field.Field>
+		{/if}
 	</Field.Group>
 </Field.Set>

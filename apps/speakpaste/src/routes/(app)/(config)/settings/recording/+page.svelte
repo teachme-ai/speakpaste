@@ -4,6 +4,7 @@
 	import * as Field from '@epicenter/ui/field';
 	import { Link } from '@epicenter/ui/link';
 	import * as Select from '@epicenter/ui/select';
+	import { Switch } from '@epicenter/ui/switch';
 	import InfoIcon from '@lucide/svelte/icons/info';
 	import {
 		BITRATE_OPTIONS,
@@ -27,6 +28,7 @@
 	import VadSelectRecordingDevice from './VadSelectRecordingDevice.svelte';
 
 	const { data } = $props();
+	let showAdvancedRecordingControls = $state(false);
 
 	// Derived labels for select triggers
 	const recordingModeLabel = $derived(
@@ -94,6 +96,16 @@
 		deviceConfig.get('recording.method') === 'ffmpeg',
 	);
 
+	$effect(() => {
+		if (!window.__TAURI_INTERNALS__) return;
+		if (!IS_MACOS) return;
+		if (settings.get('recording.mode') !== 'manual') return;
+		if (showAdvancedRecordingControls) return;
+		if (deviceConfig.get('recording.method') !== 'cpal') {
+			deviceConfig.set('recording.method', 'cpal');
+		}
+	});
+
 	function getManualDeviceId(method: 'cpal' | 'navigator' | 'ffmpeg') {
 		switch (method) {
 			case 'cpal':
@@ -126,9 +138,9 @@
 <svelte:head> <title>Recording Settings - SpeakPaste</title> </svelte:head>
 
 <Field.Set>
-	<Field.Legend>Recording</Field.Legend>
+	<Field.Legend>Voice Capture</Field.Legend>
 	<Field.Description>
-		Configure your SpeakPaste recording preferences.
+		Choose how SpeakPaste listens before running local transcription.
 	</Field.Description>
 	<Field.Separator />
 	<Field.Group>
@@ -159,8 +171,40 @@
 		</Field.Field>
 
 		{#if window.__TAURI_INTERNALS__ && settings.get('recording.mode') === 'manual'}
-			<Field.Field>
-				<Field.Label for="recording-method">Recording Method</Field.Label>
+			<div class="rounded-lg border bg-muted/20 p-4">
+				<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+					<div class="space-y-1">
+						<p class="text-sm font-medium">Native Mac capture</p>
+						<p class="text-sm text-muted-foreground">
+							SpeakPaste uses CPAL by default for reliable global shortcuts and
+							direct local transcription.
+						</p>
+					</div>
+					<div class="text-sm font-medium text-muted-foreground">
+						{recordingMethodLabel ?? 'CPAL'}
+					</div>
+				</div>
+			</div>
+
+			<Field.Field orientation="horizontal">
+				<Switch
+					id="advanced-recording-controls"
+					bind:checked={showAdvancedRecordingControls}
+				/>
+				<Field.Content>
+					<Field.Label for="advanced-recording-controls">
+						Advanced recording controls
+					</Field.Label>
+					<Field.Description>
+						Show backend selection, FFmpeg options, and browser recording
+						settings for device troubleshooting.
+					</Field.Description>
+				</Field.Content>
+			</Field.Field>
+
+			{#if showAdvancedRecordingControls}
+				<Field.Field>
+					<Field.Label for="recording-method">Recording backend</Field.Label>
 				<Select.Root
 					type="single"
 					bind:value={() => deviceConfig.get('recording.method'),
@@ -190,14 +234,15 @@
 						{/each}
 					</Select.Content>
 				</Select.Root>
-				<Field.Description>
-					{RECORDING_METHOD_OPTIONS.find(
-					(option) => option.value === deviceConfig.get('recording.method'),
-					)?.description}
-				</Field.Description>
-			</Field.Field>
+					<Field.Description>
+						{RECORDING_METHOD_OPTIONS.find(
+						(option) => option.value === deviceConfig.get('recording.method'),
+						)?.description}
+					</Field.Description>
+				</Field.Field>
+			{/if}
 
-			{#if IS_MACOS && deviceConfig.get('recording.method') === 'navigator'}
+			{#if showAdvancedRecordingControls && IS_MACOS && deviceConfig.get('recording.method') === 'navigator'}
 				<Alert.Root class="border-warning/20 bg-warning/5">
 					<InfoIcon class="size-4 text-warning dark:text-warning" />
 					<Alert.Title class="text-warning dark:text-warning">
@@ -211,7 +256,7 @@
 				</Alert.Root>
 			{/if}
 
-			{#if deviceConfig.get('recording.method') === 'ffmpeg' && !data.ffmpegInstalled}
+			{#if showAdvancedRecordingControls && deviceConfig.get('recording.method') === 'ffmpeg' && !data.ffmpegInstalled}
 				<Alert.Root class="border-red-500/20 bg-red-500/5">
 					<InfoIcon class="size-4 text-red-600 dark:text-red-400" />
 					<Alert.Title class="text-red-600 dark:text-red-400">
@@ -230,7 +275,7 @@
 				</Alert.Root>
 			{/if}
 
-			{#if hasNavigatorLocalTranscriptionIssue( { isFFmpegInstalled: data.ffmpegInstalled ?? false }, )}
+			{#if showAdvancedRecordingControls && hasNavigatorLocalTranscriptionIssue( { isFFmpegInstalled: data.ffmpegInstalled ?? false }, )}
 				<Alert.Root class="border-red-500/20 bg-red-500/5">
 					<InfoIcon class="size-4 text-red-600 dark:text-red-400" />
 					<Alert.Title class="text-red-600 dark:text-red-400">
@@ -320,7 +365,7 @@
 		{/if}
 
 		{#if settings.get('recording.mode') === 'manual' || settings.get('recording.mode') === 'vad'}
-			{#if isUsingNavigatorMethod}
+			{#if showAdvancedRecordingControls && isUsingNavigatorMethod}
 				<!-- Browser method settings -->
 				<Field.Field>
 					<Field.Label for="bit-rate">Bitrate</Field.Label>
@@ -349,7 +394,7 @@
 						larger file sizes.
 					</Field.Description>
 				</Field.Field>
-			{:else if isUsingFfmpegMethod}
+			{:else if showAdvancedRecordingControls && isUsingFfmpegMethod}
 				<!-- FFmpeg method settings -->
 				<Field.Field>
 					<Field.Label for="output-folder">Recording Output Folder</Field.Label>
@@ -371,7 +416,7 @@
 			{:else}
 				<!-- CPAL method settings -->
 				<Field.Field>
-					<Field.Label for="sample-rate">Sample Rate</Field.Label>
+					<Field.Label for="sample-rate">Native sample rate</Field.Label>
 					<Select.Root
 						type="single"
 						bind:value={() => deviceConfig.get('recording.cpal.sampleRate'),
@@ -390,7 +435,7 @@
 						</Select.Content>
 					</Select.Root>
 					<Field.Description>
-						Higher sample rates provide better quality but create larger files
+						16 kHz is recommended for fast local speech-to-text.
 					</Field.Description>
 				</Field.Field>
 

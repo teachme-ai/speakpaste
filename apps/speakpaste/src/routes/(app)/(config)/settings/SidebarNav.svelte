@@ -11,7 +11,7 @@
 		{ title: 'Local Engine', href: '/settings/transcription' },
 		{
 			title: 'Shortcuts',
-			href: '/settings/shortcuts/local',
+			href: '/settings/shortcuts/global',
 			activePathPrefix: '/settings/shortcuts',
 		},
 		{ title: 'Sound', href: '/settings/sound' },

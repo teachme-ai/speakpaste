@@ -14,8 +14,8 @@
 	});
 
 	const items = [
-		{ href: '/settings/shortcuts/local', title: 'Local Shortcuts' },
 		{ href: '/settings/shortcuts/global', title: 'Global Shortcuts' },
+		{ href: '/settings/shortcuts/local', title: 'Advanced Local Shortcuts' },
 	] as const;
 </script>
 
@@ -25,7 +25,7 @@
 			Keyboard Shortcuts
 		</SectionHeader.Title>
 		<SectionHeader.Description class="mt-2">
-			Configure keyboard shortcuts to quickly access SpeakPaste features.
+			Configure system-wide shortcuts for speaking from anywhere on your Mac.
 		</SectionHeader.Description>
 	</SectionHeader.Root>
 

@@ -3,6 +3,6 @@
 	import { goto } from '$app/navigation';
 
 	onMount(() => {
-		goto('/settings/shortcuts/local', { replaceState: true });
+		goto('/settings/shortcuts/global', { replaceState: true });
 	});
 </script>
