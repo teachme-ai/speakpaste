@@ -6,16 +6,16 @@
 	import { page } from '$app/state';
 
 	const items = [
-		{ title: 'Output', href: '/settings' },
-		{ title: 'Voice Capture', href: '/settings/recording' },
-		{ title: 'Local Engine', href: '/settings/transcription' },
+		{ title: 'Control', href: '/settings' },
+		{ title: 'Capture', href: '/settings/recording' },
+		{ title: 'Engine', href: '/settings/transcription' },
 		{
 			title: 'Shortcuts',
 			href: '/settings/shortcuts/global',
 			activePathPrefix: '/settings/shortcuts',
 		},
-		{ title: 'Privacy & Tech', href: '/settings/analytics' },
-		{ title: 'Credits', href: '/settings/about' },
+		{ title: 'Privacy', href: '/settings/analytics' },
+		{ title: 'About', href: '/settings/about' },
 	] satisfies {
 		title: string;
 		href: string;

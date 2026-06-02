@@ -29,8 +29,17 @@
 		{ value: 100, label: '100 recordings' },
 	];
 
+	const availableRecordingModes = $derived(
+		RECORDING_MODE_OPTIONS.filter((mode) => {
+			if (window.__TAURI_INTERNALS__ && mode.value === 'vad') return false;
+			return true;
+		}),
+	);
+
 	const selectedRecordingMode = $derived(
-		RECORDING_MODE_OPTIONS.find((mode) => mode.value === settings.get('recording.mode')),
+		availableRecordingModes.find(
+			(mode) => mode.value === settings.get('recording.mode'),
+		),
 	);
 
 	const selectedEngineLabel = $derived(
@@ -152,18 +161,18 @@
 					type="single"
 					bind:value={() => settings.get('recording.mode'),
 						(v) => {
-							const selected = RECORDING_MODE_OPTIONS.find((mode) => mode.value === v);
+							const selected = availableRecordingModes.find((mode) => mode.value === v);
 							if (selected) settings.set('recording.mode', selected.value);
 						}}
 				>
 					<Select.Trigger id="recording-mode" class="w-full">
-						{selectedRecordingMode?.label ?? 'Select recording mode'}
-					</Select.Trigger>
-					<Select.Content>
-						{#each RECORDING_MODE_OPTIONS as mode}
-							<Select.Item value={mode.value} label={`${mode.icon} ${mode.label}`} />
-						{/each}
-					</Select.Content>
+					{selectedRecordingMode?.label ?? 'Select recording mode'}
+				</Select.Trigger>
+				<Select.Content>
+					{#each availableRecordingModes as mode}
+						<Select.Item value={mode.value} label={`${mode.icon} ${mode.label}`} />
+					{/each}
+				</Select.Content>
 				</Select.Root>
 			</Field.Field>
 

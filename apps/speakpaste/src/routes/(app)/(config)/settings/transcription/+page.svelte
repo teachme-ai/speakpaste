@@ -1,14 +1,8 @@
 <script lang="ts">
-	import * as Alert from '@epicenter/ui/alert';
 	import * as Card from '@epicenter/ui/card';
 	import * as Field from '@epicenter/ui/field';
-	import { Input } from '@epicenter/ui/input';
 	import { Link } from '@epicenter/ui/link';
 	import * as Select from '@epicenter/ui/select';
-	import { Switch } from '@epicenter/ui/switch';
-	import { Textarea } from '@epicenter/ui/textarea';
-	import InfoIcon from '@lucide/svelte/icons/info';
-	import { CompressionBody } from '$lib/components/settings';
 	import LocalModelSelector from '$lib/components/settings/LocalModelSelector.svelte';
 	import TranscriptionServiceSelect from '$lib/components/settings/TranscriptionServiceSelect.svelte';
 	import { SUPPORTED_LANGUAGES_OPTIONS } from '$lib/constants/languages';
@@ -19,10 +13,6 @@
 	import { WHISPER_MODELS } from '$lib/services/transcription/local/whispercpp';
 	import { deviceConfig } from '$lib/state/device-config.svelte';
 	import { settings } from '$lib/state/settings.svelte';
-	import { hasNavigatorLocalTranscriptionIssue } from '../../../_layout-utils/check-ffmpeg';
-
-	const { data } = $props();
-	let showAdvancedEngineControls = $state(false);
 
 	/**
 	 * Feature capabilities for the currently selected transcription service.
@@ -125,33 +115,6 @@
 						{/snippet}
 					</LocalModelSelector>
 
-					{#if hasNavigatorLocalTranscriptionIssue( { isFFmpegInstalled: data.ffmpegInstalled ?? false }, )}
-						<Alert.Root class="border-red-500/20 bg-red-500/5">
-							<InfoIcon class="size-4 text-red-600 dark:text-red-400" />
-							<Alert.Title class="text-red-600 dark:text-red-400">
-								Browser API Recording Requires FFmpeg
-							</Alert.Title>
-							<Alert.Description>
-								You're using the Browser API recording method, which produces
-								compressed audio that requires FFmpeg for Whisper C++
-								transcription.
-								<div class="mt-3 space-y-3">
-									<div class="text-sm">
-										<strong>Option 1:</strong>
-										<Link href="/settings/recording"
-											>Switch to CPAL recording</Link
-										>
-										for direct compatibility with local transcription
-									</div>
-									<div class="text-sm">
-										<strong>Option 2:</strong>
-										<Link href="/install-ffmpeg">Install FFmpeg</Link>
-										to keep using Browser API recording
-									</div>
-								</div>
-							</Alert.Description>
-						</Alert.Root>
-					{/if}
 				{/if}
 			</div>
 		{:else if settings.get('transcription.service') === 'parakeet'}
@@ -227,33 +190,6 @@
 						{/snippet}
 					</LocalModelSelector>
 
-					{#if hasNavigatorLocalTranscriptionIssue( { isFFmpegInstalled: data.ffmpegInstalled ?? false }, )}
-						<Alert.Root class="border-red-500/20 bg-red-500/5">
-							<InfoIcon class="size-4 text-red-600 dark:text-red-400" />
-							<Alert.Title class="text-red-600 dark:text-red-400">
-								Browser API Recording Requires FFmpeg
-							</Alert.Title>
-							<Alert.Description>
-								You're using the Browser API recording method, which produces
-								compressed audio that requires FFmpeg for Parakeet
-								transcription.
-								<div class="mt-3 space-y-3">
-									<div class="text-sm">
-										<strong>Option 1:</strong>
-										<Link href="/settings/recording"
-											>Switch to CPAL recording</Link
-										>
-										for direct compatibility with local transcription
-									</div>
-									<div class="text-sm">
-										<strong>Option 2:</strong>
-										<Link href="/install-ffmpeg">Install FFmpeg</Link>
-										to keep using Browser API recording
-									</div>
-								</div>
-							</Alert.Description>
-						</Alert.Root>
-					{/if}
 				{/if}
 			</div>
 		{:else if settings.get('transcription.service') === 'moonshine'}
@@ -352,54 +288,8 @@
 						{/snippet}
 					</LocalModelSelector>
 
-					{#if hasNavigatorLocalTranscriptionIssue( { isFFmpegInstalled: data.ffmpegInstalled ?? false }, )}
-						<Alert.Root class="border-red-500/20 bg-red-500/5">
-							<InfoIcon class="size-4 text-red-600 dark:text-red-400" />
-							<Alert.Title class="text-red-600 dark:text-red-400">
-								Browser API Recording Requires FFmpeg
-							</Alert.Title>
-							<Alert.Description>
-								You're using the Browser API recording method, which produces
-								compressed audio that requires FFmpeg for Moonshine
-								transcription.
-								<div class="mt-3 space-y-3">
-									<div class="text-sm">
-										<strong>Option 1:</strong>
-										<Link href="/settings/recording"
-											>Switch to CPAL recording</Link
-										>
-										for direct compatibility with local transcription
-									</div>
-									<div class="text-sm">
-										<strong>Option 2:</strong>
-										<Link href="/install-ffmpeg">Install FFmpeg</Link>
-										to keep using Browser API recording
-									</div>
-								</div>
-							</Alert.Description>
-						</Alert.Root>
-					{/if}
 				{/if}
 			</div>
-		{/if}
-
-		<Field.Field orientation="horizontal">
-			<Switch
-				id="advanced-engine-controls"
-				bind:checked={showAdvancedEngineControls}
-			/>
-			<Field.Content>
-				<Field.Label for="advanced-engine-controls">
-					Advanced engine controls
-				</Field.Label>
-				<Field.Description>
-					Show audio compression and low-level transcription tuning options.
-				</Field.Description>
-			</Field.Content>
-		</Field.Field>
-
-		{#if showAdvancedEngineControls}
-			<CompressionBody />
 		{/if}
 
 		<Field.Field>
@@ -428,45 +318,5 @@
 				</Field.Description>
 			{/if}
 		</Field.Field>
-
-		{#if showAdvancedEngineControls}
-			<Field.Field>
-				<Field.Label for="temperature">Temperature</Field.Label>
-				<Input
-					id="temperature"
-					type="number"
-					min="0"
-					max="1"
-					step="0.1"
-					placeholder="0"
-					autocomplete="off"
-					disabled={!currentServiceCapabilities.supportsTemperature}
-					bind:value={() => settings.get('transcription.temperature'),
-						(value) =>
-							settings.set('transcription.temperature', Number(value))}
-				/>
-				<Field.Description>
-					{currentServiceCapabilities.supportsTemperature
-						? "Controls randomness in the model's output. 0 is focused and deterministic, 1 is more creative."
-						: 'Temperature is not supported for local models'}
-				</Field.Description>
-			</Field.Field>
-
-			<Field.Field>
-				<Field.Label for="transcription-prompt">Initial transcription hint</Field.Label>
-				<Textarea
-					id="transcription-prompt"
-					placeholder="e.g., This is an academic lecture about quantum physics with technical terms like eigenvalue"
-					disabled={!currentServiceCapabilities.supportsPrompt}
-					bind:value={() => settings.get('transcription.prompt'),
-						(value) => settings.set('transcription.prompt', value)}
-				/>
-				<Field.Description>
-					{currentServiceCapabilities.supportsPrompt
-						? 'Helps the local engine recognize specific terms during transcription.'
-						: 'Hints are not supported for Parakeet or Moonshine'}
-				</Field.Description>
-			</Field.Field>
-		{/if}
 	</Field.Group>
 </Field.Set>

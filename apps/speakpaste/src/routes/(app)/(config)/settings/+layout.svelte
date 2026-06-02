@@ -18,10 +18,10 @@
 	>
 		<SectionHeader.Root class="space-y-0.5">
 			<SectionHeader.Title level={2} class="text-2xl font-bold tracking-tight"
-				>Settings</SectionHeader.Title
+				>Control Center</SectionHeader.Title
 			>
 			<SectionHeader.Description>
-				Tune local voice typing with device-only settings and diagnostics.
+				Keep the Mac voice-to-cursor loop simple, local, and predictable.
 			</SectionHeader.Description>
 		</SectionHeader.Root>
 		<Button
