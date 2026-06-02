@@ -46,6 +46,7 @@ type NativeShortcutReloadResult = {
 };
 
 let syncTimer: ReturnType<typeof window.setTimeout> | null = null;
+let lastNativeShortcutSignature: string | null = null;
 
 export const runtimeConfigBridge = {
 	scheduleSync() {
@@ -57,16 +58,20 @@ export const runtimeConfigBridge = {
 		}, 100);
 	},
 
-	async syncNow() {
+	async syncNow(options: { reloadNativeShortcutsOnChange?: boolean } = {}) {
 		if (typeof window === 'undefined' || !window.__TAURI_INTERNALS__) return;
+		const { reloadNativeShortcutsOnChange = true } = options;
 		const config = buildRuntimeConfig();
 		await invoke('write_runtime_config', { config }).catch((error) => {
 			console.warn('[RuntimeConfig] failed to write runtime config', error);
 		});
+		if (reloadNativeShortcutsOnChange && didNativeShortcutsChange(config)) {
+			void runtimeConfigBridge.reloadNativeShortcuts();
+		}
 	},
 
 	async syncNowAndReloadNativeShortcuts() {
-		await runtimeConfigBridge.syncNow();
+		await runtimeConfigBridge.syncNow({ reloadNativeShortcutsOnChange: false });
 		return runtimeConfigBridge.reloadNativeShortcuts();
 	},
 
@@ -136,6 +141,16 @@ function buildRuntimeConfig(): RuntimeConfig {
 		},
 		updatedAtMs: Date.now(),
 	};
+}
+
+function didNativeShortcutsChange(config: RuntimeConfig) {
+	const signature = JSON.stringify({
+		toggleManualRecording: config.shortcuts.toggleManualRecording,
+		pushToTalk: config.shortcuts.pushToTalk,
+	});
+	if (signature === lastNativeShortcutSignature) return false;
+	lastNativeShortcutSignature = signature;
+	return true;
 }
 
 function getRecordingDeviceId(recordingMethod: RuntimeConfig['recordingMethod']) {
