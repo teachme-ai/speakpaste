@@ -1,6 +1,38 @@
 use log::{info, warn};
+use tauri::menu::{Menu, MenuItem, WINDOW_SUBMENU_ID};
 use tauri::{Manager, WindowEvent};
 use tauri_plugin_log::{Target, TargetKind};
+
+const SHOW_APPLICATION_WINDOW_MENU_ID: &str = "show_application_window";
+
+fn show_application_window(app: &tauri::AppHandle) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.unminimize();
+        let _ = window.show();
+        let _ = window.set_focus();
+    }
+}
+
+fn install_application_menu(app: &tauri::App) -> tauri::Result<()> {
+    let menu = Menu::default(app.handle())?;
+
+    if let Some(window_menu_item) = menu.get(WINDOW_SUBMENU_ID) {
+        if let Some(window_menu) = window_menu_item.as_submenu() {
+            let show_window_item = MenuItem::with_id(
+                app,
+                SHOW_APPLICATION_WINDOW_MENU_ID,
+                "Show Application Window",
+                true,
+                Some("CmdOrCtrl+Shift+0"),
+            )?;
+            window_menu.prepend(&show_window_item)?;
+            window_menu.insert(&tauri::menu::PredefinedMenuItem::separator(app)?, 1)?;
+        }
+    }
+
+    app.set_menu(menu)?;
+    Ok(())
+}
 
 pub mod recorder;
 use recorder::commands::{
@@ -118,9 +150,16 @@ pub async fn run() {
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_opener::init())
+        .on_menu_event(|app, event| {
+            if event.id().as_ref() == SHOW_APPLICATION_WINDOW_MENU_ID {
+                show_application_window(app);
+            }
+        })
         .manage(AppData::new())
         .manage(ModelManager::new())
         .setup(|app| {
+            install_application_menu(app)?;
+
             // Apply macOS vibrancy to main window
             #[cfg(target_os = "macos")]
             if let Some(main_window) = app.get_webview_window("main") {
@@ -144,10 +183,7 @@ pub async fn run() {
                 None,
             ))
             .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-                let _ = app
-                    .get_webview_window("main")
-                    .expect("no main window")
-                    .set_focus();
+                show_application_window(app);
             }));
     }
 
