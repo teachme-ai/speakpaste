@@ -20,7 +20,7 @@ const DEFAULT_LOCAL_SHORTCUTS: Record<string, string | null> = {
 	cancelManualRecording: 'c',
 	startVadRecording: null,
 	stopVadRecording: null,
-	toggleVadRecording: 'v',
+	toggleVadRecording: null,
 	openTransformationPicker: 't',
 	runTransformationOnClipboard: 'r',
 };

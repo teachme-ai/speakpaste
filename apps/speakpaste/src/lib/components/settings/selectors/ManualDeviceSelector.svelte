@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { Badge } from '@epicenter/ui/badge';
 	import { Button } from '@epicenter/ui/button';
 	import * as Command from '@epicenter/ui/command';
 	import { useCombobox } from '@epicenter/ui/hooks';
@@ -24,28 +23,6 @@
 
 	const isDeviceSelected = $derived(!!selectedDeviceId);
 
-	// Recording method options with descriptions
-	const RECORDING_METHODS = {
-		cpal: {
-			label: 'CPAL',
-			description: 'Native audio recording with low latency',
-			badge: 'Recommended',
-			isAvailable: window.__TAURI_INTERNALS__, // Desktop only
-		},
-		ffmpeg: {
-			label: 'FFmpeg',
-			description: 'Customizable command-line recording',
-			badge: 'Advanced',
-			isAvailable: window.__TAURI_INTERNALS__, // Desktop only
-		},
-		navigator: {
-			label: 'Navigator',
-			description: 'Browser MediaRecorder API',
-			badge: 'Universal',
-			isAvailable: true, // Always available
-		},
-	} as const;
-
 	const getDevicesQuery = createQuery(() => ({
 		...rpc.recorder.enumerateDevices.options,
 		enabled: combobox.open,
@@ -64,8 +41,8 @@
 			<Button
 				{...props}
 				tooltip={isDeviceSelected
-					? `Recording via ${RECORDING_METHODS[selectedMethod].label} - Change device or method`
-					: `Select recording device (${RECORDING_METHODS[selectedMethod].label} method)`}
+					? 'Change microphone'
+					: 'Select microphone'}
 				role="combobox"
 				aria-expanded={combobox.open}
 				variant="ghost"
@@ -81,55 +58,12 @@
 	</Popover.Trigger>
 	<Popover.Content class="p-0">
 		<Command.Root loop>
-			<Command.Input placeholder="Search devices and methods..." />
+			<Command.Input placeholder="Search microphones..." />
 			<Command.List class="max-h-[40vh]">
 				<Command.Empty>No recording devices found.</Command.Empty>
 
-				<!-- Recording Method Selection -->
-				<Command.Group heading="Recording Method">
-					{#each Object.entries(RECORDING_METHODS) as [ methodKey, method ]}
-						{@const isSelected = selectedMethod === methodKey}
-						{#if method.isAvailable}
-							<Command.Item
-								value={`method-${methodKey} ${method.label} ${method.description}`}
-								onSelect={() => {
-						deviceConfig.set(
-										'recording.method',
-										methodKey as keyof typeof RECORDING_METHODS,
-									);
-									getDevicesQuery.refetch();
-								}}
-								class="flex items-center gap-3 px-3 py-2"
-							>
-								<CheckIcon
-									class={cn(
-										'size-4 shrink-0',
-										isSelected ? 'opacity-100' : 'opacity-0',
-									)}
-								/>
-								<div class="flex-1 min-w-0">
-									<div class="flex items-center gap-2">
-										<span class="font-medium text-sm">{method.label}</span>
-										<Badge
-											variant={isSelected ? 'default' : 'secondary'}
-											class="text-xs"
-										>
-											{method.badge}
-										</Badge>
-									</div>
-									<p class="text-xs text-muted-foreground mt-1">
-										{method.description}
-									</p>
-								</div>
-							</Command.Item>
-						{/if}
-					{/each}
-				</Command.Group>
-
-				<Command.Separator />
-
 				<!-- Device Selection -->
-				<Command.Group heading="Recording Device">
+				<Command.Group heading="Microphone">
 					{#if getDevicesQuery.isPending}
 						<div class="p-4 text-center text-sm text-muted-foreground">
 							Loading devices...

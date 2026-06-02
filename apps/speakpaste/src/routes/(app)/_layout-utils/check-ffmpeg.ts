@@ -8,10 +8,10 @@ export const COMPRESSION_RECOMMENDED_MESSAGE =
 	'Audio compression is optional for local workflows. Enable it only when you want smaller recording files.';
 
 export const NAVIGATOR_LOCAL_TRANSCRIPTION_MESSAGE =
-	'Browser API recording produces compressed audio that requires FFmpeg for local transcription. Switch to CPAL recording or install FFmpeg.';
+	'Compatibility Capture produces compressed audio that requires FFmpeg for local transcription. Use Native Mac Capture or install FFmpeg.';
 
 export const RECORDING_COMPATIBILITY_MESSAGE =
-	'Browser API recording produces compressed audio that requires FFmpeg for local transcription. Switch to CPAL recording or install FFmpeg.';
+	'Compatibility Capture produces compressed audio that requires FFmpeg for local transcription. Use Native Mac Capture or install FFmpeg.';
 
 /**
  * Checks if the current recording + transcription configuration will work
@@ -57,9 +57,9 @@ export async function checkFfmpegRecordingMethodCompatibility() {
 	if (ffmpegInstalled) return; // FFmpeg is installed, all good
 
 	// FFmpeg recording method selected but not installed
-	toast.warning('FFmpeg Required for FFmpeg Recording Method', {
+	toast.warning('FFmpeg Required for Command-line Capture', {
 		description:
-			'You have selected FFmpeg as your recording method, but FFmpeg is not installed.',
+			'You have selected Command-line Capture, but FFmpeg is not installed.',
 		action: {
 			label: 'Install FFmpeg',
 			onClick: () => goto('/install-ffmpeg'),

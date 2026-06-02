@@ -291,7 +291,7 @@ const shortcuts = {
 	'shortcut.startManualRecording': defineKv(type('string | null'), null),
 	'shortcut.stopManualRecording': defineKv(type('string | null'), null),
 	'shortcut.cancelManualRecording': defineKv(type('string | null'), 'c'),
-	'shortcut.toggleVadRecording': defineKv(type('string | null'), 'v'),
+	'shortcut.toggleVadRecording': defineKv(type('string | null'), null),
 	'shortcut.startVadRecording': defineKv(type('string | null'), null),
 	'shortcut.stopVadRecording': defineKv(type('string | null'), null),
 	'shortcut.pushToTalk': defineKv(type('string | null'), 'p'),

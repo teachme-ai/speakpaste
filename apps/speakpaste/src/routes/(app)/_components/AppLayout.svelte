@@ -54,6 +54,14 @@
 			console.info('[Shortcuts] migrating stale shortcut to Command+Shift+Return:', stored);
 			localStorage.removeItem(staleKey);
 		}
+		if (window.__TAURI_INTERNALS__ && settings.get('recording.mode') === 'vad') {
+			console.info('[Recording] resetting stale hands-free mode to Press to Speak');
+			settings.set('recording.mode', 'manual');
+		}
+		if (settings.get('shortcut.toggleVadRecording') === 'v') {
+			console.info('[Shortcuts] removing stale local hands-free shortcut: v');
+			settings.set('shortcut.toggleVadRecording', null);
+		}
 
 		syncLocalShortcutsWithSettings();
 		resetLocalShortcutsToDefaultIfDuplicates();
@@ -125,6 +133,14 @@
 		syncWindowAlwaysOnTopWithRecorderState();
 		syncIconWithRecorderState();
 	}
+
+	$effect(() => {
+		if (!window.__TAURI_INTERNALS__) return;
+		if (settings.get('recording.mode') !== 'vad') return;
+
+		console.info('[Recording] hands-free mode is paused on desktop; using Press to Speak');
+		settings.set('recording.mode', 'manual');
+	});
 
 	$effect(() => {
 		if (!window.__TAURI_INTERNALS__) return;

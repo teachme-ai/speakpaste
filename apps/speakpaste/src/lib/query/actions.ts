@@ -65,6 +65,10 @@ let isPipelineRunning = false; // true while transcribing/delivering
 isCooldown = false;
 isPipelineRunning = false;
 
+function isDesktopApp() {
+	return typeof window !== 'undefined' && Boolean(window.__TAURI_INTERNALS__);
+}
+
 function enterCooldown() {
 	isCooldown = true;
 	console.info('[Trigger] cooldown started (700ms)');
@@ -233,6 +237,16 @@ const stopManualRecording = defineMutation({
 const startVadRecording = defineMutation({
 	mutationKey: ['commands', 'startVadRecording'] as const,
 	mutationFn: async () => {
+		if (isDesktopApp()) {
+			settings.set('recording.mode', 'manual');
+			notify.warning({
+				title: 'Hands-free mode is paused',
+				description:
+					'Use Press to Speak for now. Hands-free capture needs an explicit arming design before it can paste safely.',
+			});
+			return Ok(undefined);
+		}
+
 		settings.set('recording.mode', 'vad');
 
 		const toastId = nanoid();

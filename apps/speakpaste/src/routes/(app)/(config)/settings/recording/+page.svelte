@@ -30,9 +30,16 @@
 	const { data } = $props();
 	let showAdvancedRecordingControls = $state(false);
 
+	const availableRecordingModes = $derived(
+		RECORDING_MODE_OPTIONS.filter((mode) => {
+			if (window.__TAURI_INTERNALS__ && mode.value === 'vad') return false;
+			return true;
+		}),
+	);
+
 	// Derived labels for select triggers
 	const recordingModeLabel = $derived(
-		RECORDING_MODE_OPTIONS.find(
+		availableRecordingModes.find(
 			(o) => o.value === settings.get('recording.mode'),
 		)?.label,
 	);
@@ -52,32 +59,32 @@
 	const RECORDING_METHOD_OPTIONS = [
 		{
 			value: 'cpal',
-			label: 'CPAL',
+			label: 'Native Mac Capture',
 			description: IS_MACOS
-				? 'Native Rust audio method. Records uncompressed WAV, reliable with shortcuts, and pairs best with local transcription.'
-				: 'Native Rust audio method. Records uncompressed WAV format and pairs best with local transcription.',
+				? 'Recommended for Intel and Apple Silicon Macs. Reliable with global shortcuts and direct local transcription.'
+				: 'Recommended native capture path. Reliable with shortcuts and direct local transcription.',
 		},
 		{
 			value: 'ffmpeg',
-			label: 'FFmpeg',
+			label: 'Command-line Capture',
 			description: {
 				macos:
-					'Supports all audio formats with advanced customization options. Reliable with keyboard shortcuts.',
+					'Troubleshooting path for unusual audio devices and custom capture commands.',
 				linux:
-					'Recommended for Linux. Supports all audio formats with advanced customization options. Helps bypass common audio issues.',
+					'Troubleshooting path for unusual audio devices and custom capture commands.',
 				windows:
-					'Supports all audio formats with advanced customization options.',
+					'Troubleshooting path for unusual audio devices and custom capture commands.',
 				android:
-					'Supports all audio formats with advanced customization options.',
-				ios: 'Supports all audio formats with advanced customization options.',
+					'Troubleshooting path for unusual audio devices and custom capture commands.',
+				ios: 'Troubleshooting path for unusual audio devices and custom capture commands.',
 			}[PLATFORM_TYPE],
 		},
 		{
 			value: 'navigator',
-			label: 'Browser API',
+			label: 'Compatibility Capture',
 			description: IS_MACOS
-				? 'Web MediaRecorder API. Creates compressed files that require FFmpeg conversion for local transcription. May have delays with shortcuts when app is in background (macOS AppNap).'
-				: 'Web MediaRecorder API. Creates compressed files that require FFmpeg conversion for local transcription.',
+				? 'Fallback capture path for web-style environments. Not recommended for background Mac dictation.'
+				: 'Fallback capture path for web-style environments.',
 		},
 	];
 
@@ -157,14 +164,14 @@
 					{recordingModeLabel ?? 'Select a recording mode'}
 				</Select.Trigger>
 				<Select.Content>
-					{#each RECORDING_MODE_OPTIONS as item}
+					{#each availableRecordingModes as item}
 						<Select.Item value={item.value} label={item.label} />
 					{/each}
 				</Select.Content>
 			</Select.Root>
 			<Field.Description>
 				Choose how you want to activate recording:
-				{RECORDING_MODE_OPTIONS.map(
+				{availableRecordingModes.map(
 					(option) => option.label.toLowerCase(),
 				).join(', ')}
 			</Field.Description>
@@ -176,12 +183,12 @@
 					<div class="space-y-1">
 						<p class="text-sm font-medium">Native Mac capture</p>
 						<p class="text-sm text-muted-foreground">
-							SpeakPaste uses CPAL by default for reliable global shortcuts and
-							direct local transcription.
+							SpeakPaste uses its native capture engine by default for reliable
+							global shortcuts and direct local transcription.
 						</p>
 					</div>
 					<div class="text-sm font-medium text-muted-foreground">
-						{recordingMethodLabel ?? 'CPAL'}
+						{recordingMethodLabel ?? 'Native Mac Capture'}
 					</div>
 				</div>
 			</div>
@@ -196,15 +203,15 @@
 						Advanced recording controls
 					</Field.Label>
 					<Field.Description>
-						Show backend selection, FFmpeg options, and browser recording
-						settings for device troubleshooting.
+						Show compatibility capture engines and command-line options for
+						device troubleshooting.
 					</Field.Description>
 				</Field.Content>
 			</Field.Field>
 
 			{#if showAdvancedRecordingControls}
 				<Field.Field>
-					<Field.Label for="recording-method">Recording backend</Field.Label>
+					<Field.Label for="recording-method">Capture engine</Field.Label>
 				<Select.Root
 					type="single"
 					bind:value={() => deviceConfig.get('recording.method'),
@@ -217,7 +224,7 @@
 						}}
 				>
 					<Select.Trigger id="recording-method" class="w-full">
-						{recordingMethodLabel ?? 'Select a recording method'}
+						{recordingMethodLabel ?? 'Select a capture engine'}
 					</Select.Trigger>
 					<Select.Content>
 						{#each RECORDING_METHOD_OPTIONS as item}
@@ -249,9 +256,9 @@
 						Global Shortcuts May Be Unreliable
 					</Alert.Title>
 					<Alert.Description>
-						When using the navigator recorder, macOS App Nap may prevent the
-						browser recording logic from starting when not in focus. Consider
-						using the CPAL method for reliable global shortcut support.
+						When using Compatibility Capture, macOS App Nap may prevent
+						recording from starting when not in focus. Consider using Native
+						Mac Capture for reliable global shortcut support.
 					</Alert.Description>
 				</Alert.Root>
 			{/if}
@@ -263,8 +270,8 @@
 						FFmpeg Not Installed
 					</Alert.Title>
 					<Alert.Description>
-						FFmpeg is required for the FFmpeg recording method. Please install
-						it to use this feature.
+						Command-line Capture requires FFmpeg. Please install it to use this
+						feature.
 						<Link
 							href="/install-ffmpeg"
 							class="font-medium underline underline-offset-4 hover:text-red-700 dark:hover:text-red-300"
@@ -279,10 +286,10 @@
 				<Alert.Root class="border-red-500/20 bg-red-500/5">
 					<InfoIcon class="size-4 text-red-600 dark:text-red-400" />
 					<Alert.Title class="text-red-600 dark:text-red-400">
-						Local Transcription Requires FFmpeg or CPAL Recording
+						Local Transcription Requires FFmpeg or Native Mac Capture
 					</Alert.Title>
 					<Alert.Description>
-						The Browser API recording method produces compressed audio that
+						Compatibility Capture produces compressed audio that
 						requires FFmpeg for local transcription with
 						{TRANSCRIPTION_SERVICE_ID_TO_LABEL[
 							settings.get('transcription.service')
@@ -295,13 +302,13 @@
 									variant="secondary"
 									size="sm"
 								>
-									Switch to CPAL Recording
+									Use Native Mac Capture
 								</Button>
 							</div>
 							<div class="text-sm">
 								<strong>Option 2:</strong>
 								<Link href="/install-ffmpeg">Install FFmpeg</Link>
-								to keep using Browser API recording
+								to keep using Compatibility Capture
 							</div>
 						</div>
 					</Alert.Description>
@@ -326,10 +333,9 @@
 						VAD Mode Not Supported on Linux
 					</Alert.Title>
 					<Alert.Description>
-						Voice Activated Detection (VAD) mode requires the browser's
-						Navigator API, which is not fully supported in Tauri on Linux.
-						Device enumeration and recording will fail. Please use Manual
-						recording mode instead.
+						Hands-free mode requires web-style voice detection, which is not
+						fully supported in Tauri on Linux. Device enumeration and
+						recording will fail. Please use Press to Speak instead.
 						<Link
 							href="https://github.com/teachme-ai/speakpaste/issues/839"
 							target="_blank"
@@ -343,13 +349,12 @@
 				<Alert.Root class="border-blue-500/20 bg-blue-500/5">
 					<InfoIcon class="size-4 text-blue-600 dark:text-blue-400" />
 					<Alert.Title class="text-blue-600 dark:text-blue-400">
-						Voice Activated Detection Mode
+						Hands-free Mode Paused
 					</Alert.Title>
 					<Alert.Description>
-						VAD mode uses the browser's Web Audio API for real-time voice
-						detection and records via the browser's MediaRecorder API. Audio is
-						encoded to uncompressed WAV format. VAD mode has its own recording
-						method and cannot use CPAL or FFmpeg.
+						Hands-free capture has no wake word or explicit arming flow yet, so
+						it is paused on the Mac app to prevent accidental paste. Use Press
+						to Speak for the current launch surface.
 					</Alert.Description>
 				</Alert.Root>
 			{/if}

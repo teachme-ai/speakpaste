@@ -19,6 +19,7 @@
 
 	const availableModes = $derived(
 		RECORDING_MODE_OPTIONS.filter((mode) => {
+			if (window.__TAURI_INTERNALS__ && mode.value === 'vad') return false;
 			if (!mode.desktopOnly) return true;
 			// Desktop only, only show if Tauri is available
 			return window.__TAURI_INTERNALS__;

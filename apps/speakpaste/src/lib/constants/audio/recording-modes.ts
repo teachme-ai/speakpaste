@@ -12,9 +12,9 @@ export const RECORDING_MODES = [
 export type RecordingMode = (typeof RECORDING_MODES)[number];
 
 export const RECORDING_MODE_OPTIONS = [
-	{ label: 'Manual', value: 'manual', icon: '🎙️', desktopOnly: false },
-	{ label: 'Voice Activated', value: 'vad', icon: '🎤', desktopOnly: false },
-	{ label: 'Upload File', value: 'upload', icon: '📁', desktopOnly: false },
+	{ label: 'Press to Speak', value: 'manual', icon: '🎙️', desktopOnly: false },
+	{ label: 'Hands-free', value: 'vad', icon: '🎤', desktopOnly: false },
+	{ label: 'Transcribe File', value: 'upload', icon: '📁', desktopOnly: false },
 	// { label: 'Live', value: 'live', icon: '🎬', desktopOnly: false },
 	// { label: 'CPAL', value: 'cpal', icon: '🔊', desktopOnly: true },
 ] as const satisfies {
