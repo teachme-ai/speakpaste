@@ -701,6 +701,7 @@ async function processRecordingPipeline({
 }) {
 	const now = new Date().toISOString();
 	const newRecordingId = recordingId ?? nanoid();
+	const pipelineStart = performance.now();
 
 	const recording = {
 		id: newRecordingId,
@@ -733,8 +734,13 @@ async function processRecordingPipeline({
 	window.dispatchEvent(new CustomEvent('speakpaste:pipeline-started'));
 
 	// Await transcription first (latency-critical path)
+	const transcriptionStart = performance.now();
 	const { data: transcribedText, error: transcribeError } =
 		await transcribePromise;
+	const transcriptionDuration = performance.now() - transcriptionStart;
+	console.info(
+		`[Telemetry] [Pipeline] Transcription stage took ${transcriptionDuration.toFixed(2)}ms`,
+	);
 
 	if (transcribeError) {
 		isPipelineRunning = false;
@@ -758,10 +764,19 @@ async function processRecordingPipeline({
 	// Transcription succeeded - deliver text immediately
 	sound.playSoundIfEnabled('transcriptionComplete');
 	void dictationRuntime.setStatus('Pasting', 'Writing at cursor');
+	const deliveryStart = performance.now();
 	await delivery.deliverTranscriptionResult({
 		text: transcribedText,
 		toastId: transcribeToastId,
 	});
+	const deliveryDuration = performance.now() - deliveryStart;
+	const pipelineDuration = performance.now() - pipelineStart;
+	console.info(
+		`[Telemetry] [Pipeline] Delivery stage took ${deliveryDuration.toFixed(2)}ms`,
+	);
+	console.info(
+		`[Telemetry] [Pipeline] End-to-end processRecordingPipeline took ${pipelineDuration.toFixed(2)}ms for ${transcribedText.length} chars`,
+	);
 
 	// Pipeline done — enter cooldown before allowing next trigger
 	isPipelineRunning = false;

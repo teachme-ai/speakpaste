@@ -2,26 +2,30 @@ mod error;
 mod model_manager;
 
 use error::TranscriptionError;
-pub use model_manager::ModelManager;
 use log::{debug, error, info, warn};
+pub use model_manager::ModelManager;
 use std::io::Write;
 #[cfg(target_os = "windows")]
 use std::os::windows::process::CommandExt;
 use std::path::PathBuf;
 #[cfg(not(target_os = "windows"))]
 use transcribe_rs::engines::moonshine::MoonshineModelParams;
+#[cfg(not(target_os = "windows"))]
+use transcribe_rs::engines::whisper::WhisperInferenceParams;
 use transcribe_rs::{
     engines::parakeet::{ParakeetInferenceParams, TimestampGranularity},
     TranscriptionEngine,
 };
-#[cfg(not(target_os = "windows"))]
-use transcribe_rs::engines::whisper::WhisperInferenceParams;
 
 #[cfg(target_os = "windows")]
 const CREATE_NO_WINDOW: u32 = 0x08000000;
 use rubato::{
     Resampler, SincFixedIn, SincInterpolationParameters, SincInterpolationType, WindowFunction,
 };
+
+const SILENCE_TRIM_WINDOW_MS: usize = 20;
+const SILENCE_TRIM_PADDING_MS: usize = 80;
+const SILENCE_RMS_THRESHOLD: f32 = 0.004;
 
 /// Check if audio is already in whisper-compatible format (16kHz, mono, 16-bit PCM)
 fn is_valid_wav_format(audio_data: &[u8]) -> bool {
@@ -115,10 +119,7 @@ fn convert_audio_rust(audio_data: Vec<u8>) -> Result<Vec<u8>, TranscriptionError
         }
     };
 
-    debug!(
-        "[Rust Audio Conversion] read {} samples",
-        samples_f32.len()
-    );
+    debug!("[Rust Audio Conversion] read {} samples", samples_f32.len());
 
     // Step 2: Convert channels to mono (if needed)
     let mono_samples: Vec<f32> = if channels == 1 {
@@ -127,9 +128,7 @@ fn convert_audio_rust(audio_data: Vec<u8>) -> Result<Vec<u8>, TranscriptionError
         samples_f32
     } else if channels == 2 {
         // Stereo: average left and right channels
-        debug!(
-            "[Rust Audio Conversion] converting stereo to mono by averaging channels"
-        );
+        debug!("[Rust Audio Conversion] converting stereo to mono by averaging channels");
         samples_f32
             .chunks_exact(2)
             .map(|chunk| (chunk[0] + chunk[1]) / 2.0)
@@ -481,9 +480,70 @@ fn extract_samples_from_wav(wav_data: Vec<u8>) -> Result<Vec<f32>, Transcription
 
     if samples.is_empty() {
         warn!("[Extract Samples] no samples extracted from audio");
+        return Ok(samples);
     }
 
-    Ok(samples)
+    let trimmed = trim_low_energy_edges(samples, spec.sample_rate);
+    if trimmed.is_empty() {
+        warn!("[Extract Samples] audio trimmed to empty after low-energy edge removal");
+    }
+
+    Ok(trimmed)
+}
+
+fn trim_low_energy_edges(samples: Vec<f32>, sample_rate: u32) -> Vec<f32> {
+    if samples.is_empty() {
+        return samples;
+    }
+
+    let window_size = ((sample_rate as usize * SILENCE_TRIM_WINDOW_MS) / 1000).max(64);
+    let padding = ((sample_rate as usize * SILENCE_TRIM_PADDING_MS) / 1000).max(window_size);
+
+    if samples.len() <= window_size * 2 {
+        return samples;
+    }
+
+    let first_active = samples
+        .windows(window_size)
+        .position(|window| window_rms(window) >= SILENCE_RMS_THRESHOLD);
+    let last_active = samples
+        .windows(window_size)
+        .rposition(|window| window_rms(window) >= SILENCE_RMS_THRESHOLD);
+
+    let (Some(first_active), Some(last_active)) = (first_active, last_active) else {
+        debug!(
+            "[Extract Samples] no active speech window found above RMS threshold {:.4}",
+            SILENCE_RMS_THRESHOLD
+        );
+        return Vec::new();
+    };
+
+    let start = first_active.saturating_sub(padding);
+    let end = (last_active + window_size + padding).min(samples.len());
+
+    if start >= end {
+        debug!(
+            "[Extract Samples] invalid trim bounds start={} end={}",
+            start, end
+        );
+        return Vec::new();
+    }
+
+    let trimmed_count = start + (samples.len() - end);
+    if trimmed_count > 0 {
+        debug!(
+            "[Extract Samples] trimmed {} samples ({:.1}ms) of low-energy edges",
+            trimmed_count,
+            (trimmed_count as f32 / sample_rate as f32) * 1000.0
+        );
+    }
+
+    samples[start..end].to_vec()
+}
+
+fn window_rms(window: &[f32]) -> f32 {
+    let energy = window.iter().map(|sample| sample * sample).sum::<f32>();
+    (energy / window.len() as f32).sqrt()
 }
 
 #[cfg(not(target_os = "windows"))]
@@ -586,7 +646,11 @@ pub async fn transcribe_audio_whisper(
         "[Telemetry] Whisper matrix decoding took {:?} for {} characters (approx. {:.1} chars/sec)",
         decode_duration,
         transcript.len(),
-        if decode_duration.as_secs_f32() > 0.0 { transcript.len() as f32 / decode_duration.as_secs_f32() } else { 0.0 }
+        if decode_duration.as_secs_f32() > 0.0 {
+            transcript.len() as f32 / decode_duration.as_secs_f32()
+        } else {
+            0.0
+        }
     );
     info!(
         "[Telemetry] Total transcribe_audio_whisper turnaround took {:?}",
