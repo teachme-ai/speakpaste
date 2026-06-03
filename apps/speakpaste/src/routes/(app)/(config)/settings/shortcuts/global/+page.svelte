@@ -50,7 +50,6 @@
 				</Field.Description>
 				<Field.Separator />
 				<ShortcutTable
-					type="global"
 					commandIds={['toggleManualRecording']}
 					showSearch={false}
 				/>

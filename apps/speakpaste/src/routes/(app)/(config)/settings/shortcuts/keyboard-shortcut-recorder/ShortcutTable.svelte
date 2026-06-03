@@ -2,7 +2,6 @@
 	import { Input } from '@epicenter/ui/input';
 	import * as Table from '@epicenter/ui/table';
 	import Search from '@lucide/svelte/icons/search';
-	import { whisperingKv } from '$lib/workspace';
 	import { commands } from '$lib/commands';
 	import { rpc } from '$lib/query';
 	import {
@@ -11,14 +10,11 @@
 	} from '$lib/state/device-config.svelte';
 	import { createPressedKeys } from '$lib/utils/createPressedKeys.svelte';
 	import GlobalKeyboardShortcutRecorder from './GlobalKeyboardShortcutRecorder.svelte';
-	import LocalKeyboardShortcutRecorder from './LocalKeyboardShortcutRecorder.svelte';
 
 	let {
-		type,
 		commandIds,
 		showSearch = true,
 	}: {
-		type: 'local' | 'global';
 		commandIds?: readonly string[];
 		showSearch?: boolean;
 	} = $props();
@@ -27,15 +23,6 @@
 
 	/** Look up the definition default for a shortcut key from the correct store. */
 	function getDefaultShortcut(commandId: string): string | null {
-		if (type === 'local') {
-			const defs = whisperingKv as Record<
-				string,
-				{ defaultValue: unknown }
-			>;
-			return (
-				(defs[`shortcut.${commandId}`]?.defaultValue as string | null) ?? null
-			);
-		}
 		return deviceConfig.getDefault(
 			`shortcuts.global.${commandId}` as DeviceConfigKey,
 		);
@@ -91,23 +78,13 @@
 							<span class="block truncate pr-2">{command.title}</span>
 						</Table.Cell>
 						<Table.Cell class="text-right">
-							{#if type === 'local'}
-								<LocalKeyboardShortcutRecorder
-									{command}
-									placeholder={defaultShortcut
-										? `Default: ${defaultShortcut}`
-										: 'Set shortcut'}
-									{pressedKeys}
-								/>
-							{:else}
-								<GlobalKeyboardShortcutRecorder
-									{command}
-									placeholder={defaultShortcut
-										? `Default: ${defaultShortcut}`
-										: 'Set shortcut'}
-									{pressedKeys}
-								/>
-							{/if}
+							<GlobalKeyboardShortcutRecorder
+								{command}
+								placeholder={defaultShortcut
+									? `Default: ${defaultShortcut}`
+									: 'Set shortcut'}
+								{pressedKeys}
+							/>
 						</Table.Cell>
 					</Table.Row>
 				{/each}
