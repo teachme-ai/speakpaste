@@ -591,11 +591,11 @@ export const actions = {
 
 			if (!transformationId) {
 				return WhisperingErr({
-					title: '⚠️ No transformation selected',
-					description: 'Please select a transformation in settings first.',
+					title: '⚠️ No text rule selected',
+					description: 'Select a text rule first if you want clipboard shaping.',
 					action: {
 						type: 'link',
-						label: 'Select a transformation',
+						label: 'Manage text rules',
 						href: '/transformations',
 					},
 				});
@@ -607,12 +607,12 @@ export const actions = {
 			if (!transformation) {
 				settings.set('transformation.selectedId', null);
 				return WhisperingErr({
-					title: '⚠️ Transformation not found',
+					title: '⚠️ Text rule not found',
 					description:
-						'The selected transformation no longer exists. Please select a different one.',
+						'The selected text rule no longer exists. Select a different one.',
 					action: {
 						type: 'link',
-						label: 'Select a transformation',
+						label: 'Manage text rules',
 						href: '/transformations',
 					},
 				});
@@ -640,8 +640,8 @@ export const actions = {
 			const toastId = nanoid();
 			notify.loading({
 				id: toastId,
-				title: '🔄 Running transformation...',
-				description: 'Transforming your clipboard text...',
+				title: '🔄 Running text rule...',
+				description: 'Applying the selected text rule to your clipboard text...',
 			});
 
 			const { data: output, error: transformError } =

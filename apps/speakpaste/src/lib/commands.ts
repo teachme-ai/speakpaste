@@ -67,13 +67,13 @@ export const commands = [
 	},
 	{
 		id: 'openTransformationPicker',
-		title: 'Open transformation picker',
+		title: 'Open text rules picker',
 		on: ['Pressed'],
 		callback: () => rpc.actions.openTransformationPicker(undefined),
 	},
 	{
 		id: 'runTransformationOnClipboard',
-		title: 'Run transformation on clipboard',
+		title: 'Run text rule on clipboard',
 		on: ['Pressed'],
 		callback: () => rpc.actions.runTransformationOnClipboard(undefined),
 	},

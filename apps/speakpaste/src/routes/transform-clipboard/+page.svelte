@@ -67,7 +67,7 @@
 		if (clipboardQuery.isSuccess && !clipboardQuery.data?.trim()) {
 			rpc.notify.info({
 				title: 'Empty clipboard',
-				description: 'Please copy some text before running a transformation.',
+				description: 'Please copy some text before running a text rule.',
 			});
 			void transformClipboardWindow.hide();
 		}
@@ -76,9 +76,9 @@
 
 <div class="flex h-screen flex-col p-6 gap-4">
 	<div class="space-y-2">
-		<h2 class="text-2xl font-semibold">Transform Clipboard</h2>
+		<h2 class="text-2xl font-semibold">Clipboard Text Rules</h2>
 		<p class="text-sm text-muted-foreground">
-			Select a transformation to apply to your clipboard text
+			Select a local text rule to apply to your clipboard text
 		</p>
 	</div>
 
@@ -119,8 +119,8 @@
 					const toastId = nanoid();
 					rpc.notify.loading({
 						id: toastId,
-						title: '🔄 Running transformation...',
-						description: 'Transforming your clipboard text...',
+						title: '🔄 Running text rule...',
+						description: 'Applying the selected text rule to your clipboard text...',
 					});
 
 					const { data: output, error: transformError } =
@@ -149,7 +149,7 @@
 					await transformClipboardWindow.hide();
 					await emit('navigate-main-window', { path: '/transformations' });
 				}}
-				placeholder="Search transformations..."
+				placeholder="Search text rules..."
 			/>
 		</Popover.Content>
 	</Popover.Root>

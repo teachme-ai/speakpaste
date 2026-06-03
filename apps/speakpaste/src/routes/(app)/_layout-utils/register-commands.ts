@@ -18,8 +18,8 @@ const DEFAULT_LOCAL_SHORTCUTS: Record<string, string | null> = {
 	startManualRecording: null,
 	stopManualRecording: null,
 	cancelManualRecording: 'c',
-	openTransformationPicker: 't',
-	runTransformationOnClipboard: 'r',
+	openTransformationPicker: null,
+	runTransformationOnClipboard: null,
 };
 
 /** Default values for global OS shortcuts. Keyed by command id string. */

@@ -295,8 +295,8 @@ const shortcuts = {
 	'shortcut.startVadRecording': defineKv(type('string | null'), null),
 	'shortcut.stopVadRecording': defineKv(type('string | null'), null),
 	'shortcut.pushToTalk': defineKv(type('string | null'), 'p'),
-	'shortcut.openTransformationPicker': defineKv(type('string | null'), 't'),
-	'shortcut.runTransformationOnClipboard': defineKv(type('string | null'), 'r'),
+	'shortcut.openTransformationPicker': defineKv(type('string | null'), null),
+	'shortcut.runTransformationOnClipboard': defineKv(type('string | null'), null),
 } as const;
 
 /**

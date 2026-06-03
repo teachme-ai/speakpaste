@@ -78,6 +78,16 @@
 			console.info('[Shortcuts] removing stale local hands-free shortcut: v');
 			settings.set('shortcut.toggleVadRecording', null);
 		}
+		const retiredLocalShortcutKeys = [
+			'shortcut.openTransformationPicker',
+			'shortcut.runTransformationOnClipboard',
+		] as const;
+		for (const key of retiredLocalShortcutKeys) {
+			if (settings.get(key)) {
+				console.info('[Shortcuts] removing retired local text rules shortcut:', key);
+				settings.set(key, null);
+			}
+		}
 		if (window.__TAURI_INTERNALS__ && deviceConfig.get('recording.method') !== 'cpal') {
 			console.info('[Recording] using Native Mac Capture for desktop');
 			deviceConfig.set('recording.method', 'cpal');

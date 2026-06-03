@@ -82,7 +82,7 @@
 						settings.get('transformation.selectedId') ===
 						transformation.id}
 					<Command.Item
-						value="${transformation.id} - ${transformation.title} - ${transformation.description}"
+				value="${transformation.id} - ${transformation.title} - ${transformation.description}"
 						onSelect={() => {
 							settings.set(
 								'transformation.selectedId',
