@@ -1,21 +1,7 @@
 <script lang="ts">
 	import { Button } from '@epicenter/ui/button';
 	import { cn } from '@epicenter/ui/utils';
-	import { createQuery } from '@tanstack/svelte-query';
-	import { commandCallbacks } from '$lib/commands';
-	import {
-		RecordingModeSelector,
-		TranscriptionSelector,
-	} from '$lib/components/settings';
-	import ManualDeviceSelector from '$lib/components/settings/selectors/ManualDeviceSelector.svelte';
-	import { RECORDER_STATE_TO_ICON } from '$lib/constants/audio';
-	import { rpc } from '$lib/query';
-	import { settings } from '$lib/state/settings.svelte';
 	import { viewTransition } from '$lib/utils/viewTransitions';
-
-	const getRecorderStateQuery = createQuery(
-		() => rpc.recorder.getRecorderState.options,
-	);
 
 	let { children } = $props();
 </script>
@@ -30,59 +16,6 @@
 	<Button tooltip="Go home" href="/" variant="ghost" class="-ml-4">
 		<span class="text-lg font-bold">SpeakPaste</span>
 	</Button>
-
-	<div class="flex items-center gap-1.5">
-		<div class="flex items-center gap-1.5">
-			{#if settings.get('recording.mode') === 'manual'}
-				{#if getRecorderStateQuery.data === 'RECORDING'}
-					<Button
-						tooltip="Cancel recording"
-						onclick={() => commandCallbacks.cancelManualRecording()}
-						variant="ghost"
-						size="icon"
-						style="view-transition-name: {viewTransition.global.cancel};"
-					>
-						🚫
-					</Button>
-				{:else}
-					<ManualDeviceSelector />
-					<TranscriptionSelector />
-				{/if}
-				{#if getRecorderStateQuery.data === 'RECORDING'}
-					<Button
-						tooltip="Stop recording"
-						onclick={() => commandCallbacks.toggleManualRecording()}
-						variant="ghost"
-						size="icon"
-						style="view-transition-name: {viewTransition.global.microphone}"
-					>
-						{RECORDER_STATE_TO_ICON[getRecorderStateQuery.data ?? 'IDLE']}
-					</Button>
-				{:else}
-					<div class="flex">
-						<Button
-							tooltip="Start recording"
-							onclick={() => commandCallbacks.toggleManualRecording()}
-							variant="ghost"
-							size="icon"
-							style="view-transition-name: {viewTransition.global.microphone}"
-							class="rounded-r-none border-r-0"
-						>
-							{RECORDER_STATE_TO_ICON[getRecorderStateQuery.data ?? 'IDLE']}
-						</Button>
-						<RecordingModeSelector class="rounded-l-none" />
-					</div>
-				{/if}
-			{:else if settings.get('recording.mode') === 'upload'}
-				<TranscriptionSelector />
-				<RecordingModeSelector />
-			{:else if settings.get('recording.mode') === 'live'}
-				<ManualDeviceSelector />
-				<TranscriptionSelector />
-				<RecordingModeSelector />
-			{/if}
-		</div>
-	</div>
 </header>
 
 <div class="flex-1 overflow-x-auto">{@render children()}</div>

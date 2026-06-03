@@ -175,7 +175,7 @@ export function resetLocalShortcutsToDefaultIfDuplicates(): boolean {
 					action: {
 						type: 'link',
 						label: 'Configure shortcuts',
-						href: '/settings/shortcuts/local',
+						href: '/settings/shortcuts/global',
 					},
 				});
 
