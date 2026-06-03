@@ -1,5 +1,4 @@
 import { Ok } from 'wellcrafted/result';
-import { WHISPERING_RECORDINGS_PATHNAME } from '$lib/constants/app';
 import { rpc } from '$lib/query';
 import { defineMutation } from '$lib/query/client';
 import type { WhisperingError } from '$lib/result';
@@ -45,38 +44,12 @@ export const delivery = {
 			// Track what operations succeeded
 			let copied = false;
 			let written = false;
+			let clipboardChoiceOffered = false;
 
-			// Shows transcription result and offers manual copy action
-			const offerManualCopy = () =>
-				rpc.notify.success({
-					id: toastId,
-					title: '📝 Recording transcribed!',
-					description: text,
-					action: {
-						type: 'button',
-						label: 'Copy to clipboard',
-						onClick: async () => {
-							const { error } = await rpc.text.copyToClipboard({
-								text,
-							});
-							if (error) {
-								// Report that manual copy attempt failed
-								rpc.notify.error({
-									title: 'Error copying transcript to clipboard',
-									description: error.message,
-									action: { type: 'more-details', error },
-								});
-								return;
-							}
-							// Confirm manual copy succeeded
-							rpc.notify.success({
-								id: toastId,
-								title: 'Copied transcript to clipboard!',
-								description: text,
-							});
-						},
-					},
-				});
+			const clipboardBehavior = settings.get(
+				'output.transcription.clipboardBehavior',
+			);
+			const shouldWriteToCursor = settings.get('output.transcription.cursor');
 
 			// Warns that automatic copy failed
 			const warnAutoCopyFailed = (error: TextError) => {
@@ -86,6 +59,39 @@ export const delivery = {
 					action: { type: 'more-details', error },
 				});
 			};
+
+			const copyTranscriptToClipboard = async () => {
+				const { error } = await rpc.text.copyToClipboard({ text });
+				if (error) {
+					warnAutoCopyFailed(error);
+					return false;
+				}
+				copied = true;
+				return true;
+			};
+
+			const copyTranscriptAction = {
+				type: 'button' as const,
+				label: 'Copy transcript',
+				onClick: async () => {
+					const copiedTranscript = await copyTranscriptToClipboard();
+					if (!copiedTranscript) return;
+					rpc.notify.success({
+						id: `${toastId}:copy`,
+						title: 'Copied transcript',
+						description: text,
+					});
+				},
+			};
+
+			// Shows transcription result and offers manual copy action
+			const offerManualCopy = () =>
+				rpc.notify.success({
+					id: toastId,
+					title: 'Recording transcribed',
+					description: text,
+					action: copyTranscriptAction,
+				});
 
 			// Warns that write to cursor failed
 			const warnWriteToCursorFailed = (error: TextError | WhisperingError) => {
@@ -106,38 +112,23 @@ export const delivery = {
 					// Both operations succeeded
 					rpc.notify.success({
 						id: toastId,
-						title:
-							'📝 Recording transcribed, copied to clipboard, and written to cursor!',
+						title: 'Recording transcribed, pasted, and copied',
 						description: text,
-						action: {
-							type: 'link',
-							label: 'Go to recordings',
-							href: WHISPERING_RECORDINGS_PATHNAME,
-						},
 					});
 				} else if (copied) {
 					// Only copy succeeded
 					rpc.notify.success({
 						id: toastId,
-						title: '📝 Recording transcribed and copied to clipboard!',
+						title: 'Recording transcribed and copied',
 						description: text,
-						action: {
-							type: 'link',
-							label: 'Go to recordings',
-							href: WHISPERING_RECORDINGS_PATHNAME,
-						},
 					});
 				} else if (written) {
 					// Only write succeeded
 					rpc.notify.success({
 						id: toastId,
-						title: '📝 Recording transcribed and written to cursor!',
+						title: 'Recording transcribed and pasted',
 						description: text,
-						action: {
-							type: 'link',
-							label: 'Go to recordings',
-							href: WHISPERING_RECORDINGS_PATHNAME,
-						},
+						action: clipboardChoiceOffered ? undefined : copyTranscriptAction,
 					});
 				} else {
 					// Neither succeeded, offer manual copy
@@ -149,25 +140,16 @@ export const delivery = {
 
 			const startDelivery = performance.now();
 
-			// Check if user wants to copy to clipboard
-			if (settings.get('output.transcription.clipboard')) {
-				const startClipboard = performance.now();
-				const { error: copyError } = await rpc.text.copyToClipboard({
-					text,
-				});
-				if (!copyError) {
-					copied = true;
-					const durationClipboard = performance.now() - startClipboard;
-					console.info(
-						`[Telemetry] [Delivery] Copy to clipboard took ${durationClipboard.toFixed(2)}ms`
-					);
-				} else {
-					warnAutoCopyFailed(copyError);
-				}
+			let askBeforeReplacingClipboard = false;
+			if (clipboardBehavior === 'ask') {
+				const { data: currentClipboard } = await rpc.text.readFromClipboard.fetch();
+				askBeforeReplacingClipboard = Boolean(
+					currentClipboard?.trim() && currentClipboard !== text,
+				);
 			}
 
-			// Check if user wants to write to cursor (independent of copy)
-			if (settings.get('output.transcription.cursor')) {
+			// Check if user wants to write to cursor
+			if (shouldWriteToCursor) {
 				const startCursor = performance.now();
 				const { error: writeError } = await rpc.text.writeToCursor({
 					text,
@@ -199,6 +181,30 @@ export const delivery = {
 				} else {
 					warnWriteToCursorFailed(writeError);
 				}
+			}
+
+			const shouldReplaceClipboard =
+				clipboardBehavior === 'replace' ||
+				(clipboardBehavior === 'ask' && !askBeforeReplacingClipboard);
+
+			if (shouldReplaceClipboard) {
+				const startClipboard = performance.now();
+				const copiedTranscript = await copyTranscriptToClipboard();
+				if (copiedTranscript) {
+					const durationClipboard = performance.now() - startClipboard;
+					console.info(
+						`[Telemetry] [Delivery] Copy to clipboard took ${durationClipboard.toFixed(2)}ms`,
+					);
+				}
+			} else if (clipboardBehavior === 'ask' && askBeforeReplacingClipboard) {
+				clipboardChoiceOffered = true;
+				rpc.notify.info({
+					id: `${toastId}:clipboard-choice`,
+					title: 'Clipboard preserved',
+					description:
+						'Your previous clipboard is still available. Copy the transcript only if you want to replace it.',
+					action: copyTranscriptAction,
+				});
 			}
 
 			const durationDelivery = performance.now() - startDelivery;

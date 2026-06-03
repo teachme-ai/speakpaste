@@ -5,6 +5,7 @@
 	import { Switch } from '@epicenter/ui/switch';
 	import { createMutation, createQuery } from '@tanstack/svelte-query';
 	import { LOCAL_PERFORMANCE_PROFILE_OPTIONS } from '$lib/constants/audio';
+	import { TRANSCRIPTION_CLIPBOARD_BEHAVIOR_OPTIONS } from '$lib/constants/output';
 	import {
 		TRANSCRIPTION_SERVICE_ID_TO_LABEL,
 		TRANSCRIPTION_SERVICE_OPTIONS,
@@ -36,6 +37,13 @@
 	const selectedPerformanceProfile = $derived(
 		LOCAL_PERFORMANCE_PROFILE_OPTIONS.find(
 			(profile) => profile.value === deviceConfig.get('local.performanceProfile'),
+		),
+	);
+
+	const selectedClipboardBehavior = $derived(
+		TRANSCRIPTION_CLIPBOARD_BEHAVIOR_OPTIONS.find(
+			(option) =>
+				option.value === settings.get('output.transcription.clipboardBehavior'),
 		),
 	);
 
@@ -230,23 +238,48 @@
 						</Field.Description>
 					</Field.Content>
 				</Field.Field>
-
-				<Field.Field orientation="horizontal">
-					<Switch
-						id="transcription.copyToClipboardOnSuccess"
-						bind:checked={() => settings.get('output.transcription.clipboard'),
-							(v) => settings.set('output.transcription.clipboard', v)}
-					/>
-					<Field.Content>
-						<Field.Label for="transcription.copyToClipboardOnSuccess">
-							Copy to clipboard
-						</Field.Label>
-						<Field.Description>
-							Keep the latest transcript ready to paste.
-						</Field.Description>
-					</Field.Content>
-				</Field.Field>
 			</div>
+
+			<Field.Field>
+				<Field.Label for="transcription-clipboard-behavior">
+					Clipboard after dictation
+				</Field.Label>
+				<Select.Root
+					type="single"
+					bind:value={() => settings.get('output.transcription.clipboardBehavior'),
+						(selected) => {
+							const behavior = TRANSCRIPTION_CLIPBOARD_BEHAVIOR_OPTIONS.find(
+								(option) => option.value === selected,
+							);
+							if (!behavior) return;
+							settings.set('output.transcription.clipboardBehavior', behavior.value);
+							settings.set(
+								'output.transcription.clipboard',
+								behavior.value === 'replace',
+							);
+						}}
+				>
+					<Select.Trigger id="transcription-clipboard-behavior" class="w-full">
+						{selectedClipboardBehavior?.label ?? 'Select clipboard behavior'}
+					</Select.Trigger>
+					<Select.Content>
+						{#each TRANSCRIPTION_CLIPBOARD_BEHAVIOR_OPTIONS as behavior}
+							<Select.Item value={behavior.value} label={behavior.label}>
+								<div class="flex flex-col gap-0.5">
+									<span class="font-medium">{behavior.label}</span>
+									<span class="text-xs text-muted-foreground">
+										{behavior.description}
+									</span>
+								</div>
+							</Select.Item>
+						{/each}
+					</Select.Content>
+				</Select.Root>
+				<Field.Description>
+					Default keeps your existing clipboard safe. You can still copy the
+					transcript from the success message or recent capture.
+				</Field.Description>
+			</Field.Field>
 
 			{#if window.__TAURI_INTERNALS__ && settings.get('output.transcription.cursor')}
 				<Field.Field orientation="horizontal">

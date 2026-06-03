@@ -4,6 +4,7 @@ import { type } from 'arktype';
 // ── Constant imports ─────────────────────────────────────────────────────────
 
 import { RECORDING_MODES } from '$lib/constants/audio/recording-modes';
+import { TRANSCRIPTION_CLIPBOARD_BEHAVIORS } from '$lib/constants/output';
 import { TRANSCRIPTION_SERVICE_IDS } from '$lib/constants/transcription';
 import { ALWAYS_ON_TOP_MODES } from '$lib/constants/ui/always-on-top';
 import { FFMPEG_DEFAULT_COMPRESSION_OPTIONS } from '$lib/services/desktop/recorder/ffmpeg';
@@ -214,6 +215,10 @@ const sound = {
  */
 const output = {
 	'output.transcription.clipboard': defineKv(type('boolean'), true),
+	'output.transcription.clipboardBehavior': defineKv(
+		type.enumerated(...TRANSCRIPTION_CLIPBOARD_BEHAVIORS),
+		'preserve',
+	),
 	'output.transcription.cursor': defineKv(type('boolean'), true),
 	'output.transcription.enter': defineKv(type('boolean'), false),
 	'output.transformation.clipboard': defineKv(type('boolean'), true),

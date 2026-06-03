@@ -121,12 +121,21 @@ describe("🎙️ SpeakPaste LocalStorage Settings 100% Full-Coverage Suite", ()
 
 	test("📋 Clipboard & Cursor Delivery Assertions", () => {
 		const clipKey = "speakpaste.settings.output.transcription.clipboard";
+		const clipboardBehaviorKey =
+			"speakpaste.settings.output.transcription.clipboardBehavior";
 		const cursorKey = "speakpaste.settings.output.transcription.cursor";
 		const enterKey = "speakpaste.settings.output.transcription.enter";
 
 		// copy-to-clipboard settings persistence
 		localStorageMock.setItem(clipKey, "true");
 		expect(localStorageMock.getItem(clipKey)).toBe("true");
+
+		// explicit clipboard behavior policy
+		const allowedClipboardBehaviors = ["preserve", "replace", "ask"];
+		localStorageMock.setItem(clipboardBehaviorKey, "preserve");
+		expect(allowedClipboardBehaviors).toContain(
+			localStorageMock.getItem(clipboardBehaviorKey) || "",
+		);
 
 		// auto-paste at cursor persistence
 		localStorageMock.setItem(cursorKey, "true");
