@@ -116,7 +116,68 @@ Test Suite
     └── Native Text Editors (Apple Notes, TextEdit, VS Code)
 ```
 
+### Hardware Profiling & Cross-Platform Benchmarking Toolchain
+
+To ensure consistent performance across Apple Silicon (basic/Pro/Max) and Intel hardware architectures, engineers should utilize the following macOS-native toolchain to record metrics:
+
+#### A. Memory & CPU Bottleneck Analysis (`xctrace`)
+Use the command-line utility for Xcode Instruments (`xctrace`) to run diagnostic profiling sessions programmatically and record traces:
+* **List available templates**:
+  ```bash
+  xcrun xctrace list templates
+  ```
+* **Profile CPU Bottlenecks (Time Profiler)**:
+  Launch the compiled binary in standard profile mode to record CPU call trees:
+  ```bash
+  xcrun xctrace record --template 'Time Profiler' --launch -- /Applications/SpeakPaste.app
+  ```
+* **Profile Memory Leak & Allocations (Allocations)**:
+  Track heap footprint growth and detect leaks over successive dictation cycles:
+  ```bash
+  xcrun xctrace record --template 'Allocations' --launch -- /Applications/SpeakPaste.app
+  ```
+* **Process Trace Results**:
+  Open the recorded output in the Xcode Instruments app for interactive visualization:
+  ```bash
+  open launch-*.trace
+  ```
+
+#### B. Thermal & Energy Gating (`powermetrics`)
+Different hardware tiers (e.g. fanless M-series MacBook Air vs. actively-cooled Mac Studio or Intel MacBooks) experience differing thermal throttling behaviors during local whisper.cpp matrix calculations. Use the low-level `powermetrics` tool to monitor raw hardware energy impact:
+* **Measure SoC Power Draw and Thermal Headroom** (Requires `sudo`):
+  ```bash
+  sudo powermetrics --samplers cpu_power,gpu_power,thermal -i 1000 -n 60
+  ```
+* **Visual Apple Silicon Monitors**:
+  For readable real-time CPU/GPU core utilization, memory bandwidth, and temperature tracking on Apple Silicon, use tools like `asitop` or `macmon`:
+  ```bash
+  # Install and run terminal-based monitoring dashboards
+  pip install asitop && sudo asitop
+  # Or Rust-based macmon
+  brew install macmon && macmon
+  ```
+
+#### C. Automated Architecture Benchmarking via `XCTest`
+Write Xcode performance tests targeting the application's Swift/Rust FFI layer to enforce system metrics constraints:
+* Set up a test suite using `XCTMetric` to profile operations on target hardware:
+  ```swift
+  func testDictationInferencePerformance() {
+      let options = XCTMeasureOptions()
+      options.iterationCount = 5
+      
+      measure(metrics: [XCTCPUMetric(), XCTMemoryMetric(), XCTClockMetric()], options: options) {
+          // Trigger Rust transcription command via FFI wrapper
+          runInferenceBenchmark()
+      }
+  }
+  ```
+* Execute the target test scheme on connected Intel (`x86_64`) or Apple Silicon (`arm64`) execution destinations:
+  ```bash
+  xcodebuild test -project SpeakPaste.xcodeproj -scheme SpeakPasteTests -destination 'platform=macOS,arch=arm64'
+  ```
+
 ---
+
 
 ## 6. Measurement Methodology
 
