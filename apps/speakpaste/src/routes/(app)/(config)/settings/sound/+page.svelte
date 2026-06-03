@@ -87,7 +87,7 @@
 		<Field.Set>
 			<Field.Legend variant="label">Completion Sounds</Field.Legend>
 			<Field.Description>
-				Configure sounds for transcription and transformation completion.
+				Configure sounds for transcription and local text-rule completion.
 			</Field.Description>
 			<Field.Group>
 				<Field.Field orientation="horizontal">
@@ -108,7 +108,7 @@
 							(v) => settings.set('sound.transformationComplete', v)}
 					/>
 					<Field.Label for="play-sound-transformation">
-						Play sound after transformation
+						Play sound after text rule
 					</Field.Label>
 				</Field.Field>
 			</Field.Group>

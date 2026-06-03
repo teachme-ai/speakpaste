@@ -19,7 +19,7 @@
 				{...props}
 				variant="ghost"
 				size="icon"
-				tooltip="View Transformation Runs"
+				tooltip="View text rule runs"
 			>
 				<HistoryIcon class="size-4" />
 			</Button>
@@ -27,9 +27,9 @@
 	</Modal.Trigger>
 	<Modal.Content class="sm:max-w-4xl">
 		<Modal.Header>
-			<Modal.Title>Transformation Runs</Modal.Title>
+			<Modal.Title>Text Rule Runs</Modal.Title>
 			<Modal.Description>
-				View all transformation runs for this recording
+				View all text rule runs for this recording.
 			</Modal.Description>
 		</Modal.Header>
 		<div class="max-h-[60vh] overflow-y-auto"><Runs {runs} /></div>

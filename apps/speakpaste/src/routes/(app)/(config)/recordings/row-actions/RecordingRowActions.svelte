@@ -114,7 +114,7 @@
 		{#if latestRun?.status === 'completed'}
 			<CopyButton
 				text={latestRun.output}
-				copyFn={createCopyFn('latest transformation run output')}
+				copyFn={createCopyFn('latest text rule output')}
 				style="view-transition-name: {viewTransition.recording(recordingId)
 					.transformationOutput}"
 			>

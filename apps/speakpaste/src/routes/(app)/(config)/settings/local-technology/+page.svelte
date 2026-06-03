@@ -11,8 +11,8 @@
 <Field.Set>
 	<Field.Legend>Local Technology</Field.Legend>
 	<Field.Description>
-		SpeakPaste keeps the core writing surface on your Mac and documents the
-		technology that powers it.
+		SpeakPaste documents the local frameworks and engines used by the app.
+		Nothing here implies cloud processing.
 	</Field.Description>
 	<Field.Separator />
 
@@ -24,22 +24,20 @@
 
 	<div class="grid gap-4 md:grid-cols-2">
 		<div class="space-y-3 rounded-lg border bg-muted/20 p-4">
-			<h3 class="text-sm font-semibold tracking-tight">On-device stack</h3>
+			<h3 class="text-sm font-semibold tracking-tight">In the app today</h3>
 			<ul class="space-y-2 text-sm text-muted-foreground leading-relaxed">
-				<li>Local speech engines already present in the app, including whisper.cpp, Parakeet, and Moonshine.</li>
-				<li>Apple Natural Language for local detection, tokenization, entity extraction, and lightweight classification.</li>
-				<li>Apple Foundation Models only when Apple Intelligence is available at runtime.</li>
+				<li>Local speech engines available in the app, including whisper.cpp, Parakeet, and Moonshine.</li>
 				<li>Tauri, Svelte, Rust, CPAL, and Enigo for the desktop shell and system integration.</li>
+				<li>Local model files and runtime configuration stored on this Mac.</li>
 			</ul>
 		</div>
 
 		<div class="space-y-3 rounded-lg border bg-muted/20 p-4">
-			<h3 class="text-sm font-semibold tracking-tight">Focused settings surface</h3>
+			<h3 class="text-sm font-semibold tracking-tight">Under consideration</h3>
 			<ul class="space-y-2 text-sm text-muted-foreground leading-relaxed">
-				<li>Voice capture and device permissions.</li>
-				<li>Local engine and model selection.</li>
-				<li>Cursor output, clipboard behavior, shortcuts, and sounds.</li>
-				<li>Device-only diagnostics and usage insight.</li>
+				<li>Apple Natural Language for local language signals and lightweight text intelligence.</li>
+				<li>Apple Foundation Models only where Apple Intelligence is available and explicitly disclosed.</li>
+				<li>Personal language insights that stay on the Mac.</li>
 			</ul>
 		</div>
 	</div>
@@ -53,7 +51,7 @@
 			private context to keep that local dashboard useful.
 		</p>
 		<p class="text-sm text-muted-foreground leading-relaxed">
-			When a capability depends on Apple Intelligence or a system permission,
+			When a capability depends on a system permission or Apple framework,
 			SpeakPaste should say so at runtime instead of hiding the requirement.
 		</p>
 		<div class="pt-1">

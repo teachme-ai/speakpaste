@@ -8,7 +8,7 @@
 	<SectionHeader.Root>
 		<div class="flex items-center gap-3">
 			<SectionHeader.Title level={3} class="text-xl tracking-tight">
-				Privacy & Tech
+				Privacy
 			</SectionHeader.Title>
 			<Badge
 				variant="outline"
@@ -18,8 +18,8 @@
 			</Badge>
 		</div>
 		<SectionHeader.Description class="max-w-2xl">
-			SpeakPaste keeps operational insight on the Mac and documents the local
-			technology behind the writing flow.
+			SpeakPaste keeps operational insight on this Mac. Diagnostics are about
+			app health and performance, not the private words you dictate.
 		</SectionHeader.Description>
 	</SectionHeader.Root>
 
@@ -30,13 +30,13 @@
 					<Badge variant="secondary">Session count</Badge>
 					<Badge variant="secondary">Latency</Badge>
 					<Badge variant="secondary">Paste result</Badge>
-					<Badge variant="secondary">Mode used</Badge>
+					<Badge variant="secondary">Engine used</Badge>
 				</div>
 				<p class="text-sm text-muted-foreground leading-relaxed">
 					The app can keep approximate operational metrics like session count,
 					recording duration, transcription latency, paste outcome, and the mode
-					used. It should not store transcript text, raw audio, selected text, or
-					private content in analytics.
+					or engine used. It should not store transcript text, raw audio,
+					selected text, or private content in diagnostics.
 				</p>
 			</div>
 		</Card.Content>
@@ -64,7 +64,7 @@
 					</li>
 					<li class="flex items-start gap-2">
 						<span class="mt-2 size-1.5 rounded-full bg-green-500"></span>
-						<span>Paste result and local mode used</span>
+						<span>Paste result and local engine used</span>
 					</li>
 					<li class="flex items-start gap-2">
 						<span class="mt-2 size-1.5 rounded-full bg-green-500"></span>
@@ -106,9 +106,8 @@
 		<Card.Header>
 			<Card.Title class="text-base font-medium">Local disclosure</Card.Title>
 			<Card.Description>
-				If a feature depends on Apple Intelligence or a system permission,
-				SpeakPaste should say so at runtime rather than pretending it is a cloud
-				service.
+				If a feature depends on a system permission, SpeakPaste should say so at
+				runtime rather than burying the requirement.
 			</Card.Description>
 		</Card.Header>
 		<Card.Content class="space-y-3">

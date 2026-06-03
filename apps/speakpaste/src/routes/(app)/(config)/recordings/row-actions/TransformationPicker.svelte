@@ -23,7 +23,7 @@
 		{#snippet child({ props })}
 			<Button
 				{...props}
-				tooltip="Run a post-processing transformation to run on your recording"
+				tooltip="Run a local text rule on this recording"
 				role="combobox"
 				aria-expanded={combobox.open}
 				variant="ghost"
@@ -41,9 +41,9 @@
 				const toastId = nanoid();
 				rpc.notify.loading({
 					id: toastId,
-					title: '🔄 Running transformation...',
+					title: 'Running text rule...',
 					description:
-						'Applying your selected transformation to the transcribed text...',
+						'Applying your selected local text rule to the transcript.',
 				});
 
 				transformRecording.mutate(
@@ -53,7 +53,7 @@
 						onSuccess: (transformationRun) => {
 							if (transformationRun.status === 'failed') {
 								rpc.notify.error({
-									title: '⚠️ Transformation error',
+									title: 'Text rule error',
 									description: transformationRun.error,
 									action: {
 										type: 'more-details',
@@ -77,7 +77,7 @@
 				combobox.closeAndFocusTrigger();
 				goto('/transformations');
 			}}
-			placeholder="Select transcription post-processing..."
+			placeholder="Select local text rule..."
 		/>
 	</Popover.Content>
 </Popover.Root>

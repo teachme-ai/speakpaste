@@ -28,9 +28,9 @@
 
 <div class="flex flex-col gap-6 overflow-y-auto h-full px-2">
 	<SectionHeader.Root>
-		<SectionHeader.Title>Test Transformation</SectionHeader.Title>
+		<SectionHeader.Title>Test Text Rule</SectionHeader.Title>
 		<SectionHeader.Description>
-			Try out your transformation with sample input
+			Try this local rule with sample input.
 		</SectionHeader.Description>
 	</SectionHeader.Root>
 
@@ -42,7 +42,7 @@
 			<Textarea
 				id="input"
 				bind:value={input}
-				placeholder="Enter text to transform..."
+				placeholder="Enter text to test..."
 				rows={5}
 			/>
 		</Field.Field>
@@ -52,7 +52,7 @@
 			<Textarea
 				id="output"
 				value={output}
-				placeholder="Transformed text will appear here..."
+				placeholder="Edited text will appear here..."
 				rows={5}
 				readonly
 			/>
@@ -80,7 +80,7 @@
 			<PlayIcon class="size-4" />
 		{/if}
 		{transformInput.isPending
-			? 'Running Transformation...'
-			: 'Run Transformation'}
+			? 'Running Text Rule...'
+			: 'Run Text Rule'}
 	</Button>
 </div>

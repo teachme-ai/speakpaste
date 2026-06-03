@@ -63,10 +63,9 @@
 
 <div class="flex flex-col gap-6 overflow-y-auto h-full px-2">
 	<SectionHeader.Root>
-		<SectionHeader.Title>Configuration</SectionHeader.Title>
+		<SectionHeader.Title>Text Rule</SectionHeader.Title>
 		<SectionHeader.Description>
-			Configure the title, description, and steps for how your transformation
-			will process your text
+			Configure the name, purpose, and local edit steps for this rule.
 		</SectionHeader.Description>
 	</SectionHeader.Root>
 
@@ -87,7 +86,7 @@
 				placeholder="e.g., Format Meeting Notes"
 			/>
 			<Field.Description>
-				A clear, concise name that describes what this transformation does
+				A clear, concise name that describes what this rule does.
 			</Field.Description>
 		</Field.Field>
 		<Field.Field>
@@ -104,8 +103,7 @@
 				placeholder="e.g., Converts meeting transcripts into bullet points and highlights action items"
 			/>
 			<Field.Description>
-				Describe what this transformation does, its purpose, and how it will be
-				used
+				Describe when this rule should be used.
 			</Field.Description>
 		</Field.Field>
 	</section>
@@ -113,13 +111,13 @@
 	<Separator />
 
 	<section class="space-y-6">
-		<h3 class="font-medium">Processing Steps</h3>
+		<h3 class="font-medium">Edit Steps</h3>
 		{#if steps.length === 0}
 			<Alert.Root variant="warning">
 				<Alert.Title>Add your first processing step</Alert.Title>
 				<Alert.Description>
 					Each step will process your transcribed text in sequence. Start by
-					adding a step below to define how your text should be transformed.
+					adding a find/replace step below.
 				</Alert.Description>
 			</Alert.Root>
 		{/if}
@@ -235,9 +233,8 @@
 							<Alert.Root variant="warning">
 								<Alert.Title>Prompt steps are retired</Alert.Title>
 								<Alert.Description>
-									This step used a remote rewrite provider in the old build.
-									Replace it with a find/replace step now; local writing modes
-									will be introduced separately.
+									This legacy step is not active in the local-only build.
+									Replace it with a find/replace step now.
 								</Alert.Description>
 							</Alert.Root>
 						{/if}

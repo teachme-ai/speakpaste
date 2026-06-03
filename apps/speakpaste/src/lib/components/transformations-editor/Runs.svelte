@@ -37,7 +37,7 @@
 			<Empty.Media variant="icon"> <PlayIcon /> </Empty.Media>
 			<Empty.Title>No runs yet</Empty.Title>
 			<Empty.Description>
-				When you run a transformation, the results will appear here.
+				When you run a text rule, the results will appear here.
 			</Empty.Description>
 		</Empty.Header>
 	</Empty.Root>
@@ -49,16 +49,16 @@
 				size="sm"
 				onclick={() => {
 					confirmationDialog.open({
-						title: 'Clear all transformation runs?',
+						title: 'Clear all text rule runs?',
 						description: `This will permanently delete all ${runs.length} run${runs.length !== 1 ? 's' : ''} from this history. This action cannot be undone.`,
 						confirm: { text: 'Delete All', variant: 'destructive' },
 						onConfirm: () => {
 							for (const run of runs) {
-						transformationRuns.delete(run.id);
+								transformationRuns.delete(run.id);
 							}
 							rpc.notify.success({
 								title: `${runs.length} run${runs.length !== 1 ? 's' : ''} deleted successfully`,
-								description: 'All transformation runs have been deleted.',
+								description: 'All text rule runs have been deleted.',
 							});
 						},
 					});
@@ -110,17 +110,17 @@
 									tooltip="Delete run"
 									onclick={() => {
 										confirmationDialog.open({
-											title: 'Delete transformation run?',
+											title: 'Delete text rule run?',
 											description: `This will permanently delete the run from ${formatDate(run.startedAt)}. This action cannot be undone.`,
 											confirm: { text: 'Delete', variant: 'destructive' },
-										onConfirm: () => {
-						transformationRuns.delete(run.id);
-											rpc.notify.success({
-												title: 'Run deleted successfully',
-												description:
-													'Your transformation run has been deleted.',
-											});
-										},
+											onConfirm: () => {
+												transformationRuns.delete(run.id);
+												rpc.notify.success({
+													title: 'Run deleted successfully',
+													description:
+														'Your text rule run has been deleted.',
+												});
+											},
 										});
 									}}
 								>

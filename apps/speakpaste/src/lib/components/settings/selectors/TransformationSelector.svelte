@@ -49,8 +49,8 @@
 				{...props}
 				class={cn('relative', className)}
 				tooltip={selectedTransformation
-					? 'Change post-processing transformation to run after your text is transcribed'
-					: 'Select a post-processing transformation to run after your text is transcribed'}
+					? 'Change the local text rule applied after transcription'
+					: 'Select a local text rule to apply after transcription'}
 				role="combobox"
 				aria-expanded={combobox.open}
 				variant="ghost"
@@ -74,8 +74,8 @@
 	</Popover.Trigger>
 	<Popover.Content class="w-80 max-w-xl p-0">
 		<Command.Root loop>
-			<Command.Input placeholder="Select transcription post-processing..." />
-			<Command.Empty>No transformation found.</Command.Empty>
+			<Command.Input placeholder="Select local text rule..." />
+			<Command.Empty>No text rule found.</Command.Empty>
 			<Command.Group class="overflow-y-auto max-h-[400px]">
 				{#each sortedTransformations as transformation (transformation.id)}
 					{@const isSelectedTransformation =
@@ -112,7 +112,7 @@
 				{/each}
 			</Command.Group>
 			<Command.Item
-				value="Manage transformations"
+				value="Manage text rules"
 				onSelect={() => {
 					goto('/transformations');
 					combobox.closeAndFocusTrigger();
@@ -120,7 +120,7 @@
 				class="rounded-none p-2 bg-muted/50 text-muted-foreground"
 			>
 				<LayersIcon class="size-4 mx-2.5" />
-				Manage transformations
+				Manage text rules
 			</Command.Item>
 		</Command.Root>
 	</Popover.Content>

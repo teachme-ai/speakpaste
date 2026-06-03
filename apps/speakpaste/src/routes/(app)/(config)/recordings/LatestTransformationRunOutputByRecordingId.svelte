@@ -21,15 +21,15 @@
 {#if latestRun?.status === 'failed'}
 	<TextPreviewDialog
 		{id}
-		title="Transformation Error"
-		label="transformation error"
+		title="Text Rule Error"
+		label="text rule error"
 		text={latestRun.error}
 	/>
 {:else if latestRun?.status === 'completed'}
 	<TextPreviewDialog
 		{id}
-		title="Transformation Output"
-		label="transformation output"
+		title="Text Rule Output"
+		label="text rule output"
 		text={latestRun.output}
 	/>
 {/if}

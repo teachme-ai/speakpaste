@@ -39,19 +39,19 @@
 		const tableDefs = [
 			{ label: 'Recordings', count: () => whispering.tables.recordings.count() },
 			{
-				label: 'Transformations',
+				label: 'Text Rules',
 				count: () => whispering.tables.transformations.count(),
 			},
 			{
-				label: 'Transformation Steps',
+				label: 'Text Rule Steps',
 				count: () => whispering.tables.transformationSteps.count(),
 			},
 			{
-				label: 'Transformation Runs',
+				label: 'Text Rule Runs',
 				count: () => whispering.tables.transformationRuns.count(),
 			},
 			{
-				label: 'Transformation Step Runs',
+				label: 'Text Rule Step Runs',
 				count: () => whispering.tables.transformationStepRuns.count(),
 			},
 		] as const;
@@ -258,7 +258,7 @@
 		<SectionHeader.Root>
 			<div class="flex items-center gap-3">
 				<SectionHeader.Title level={3} class="text-xl tracking-tight">
-					Debug
+					Developer Diagnostics
 				</SectionHeader.Title>
 			</div>
 			<SectionHeader.Description class="max-w-2xl">

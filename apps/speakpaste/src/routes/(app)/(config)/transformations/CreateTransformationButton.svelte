@@ -36,7 +36,7 @@
 		isModalOpen = false;
 		transformation = generateDefaultTransformation();
 		steps = [];
-	rpc.notify.success({
+		rpc.notify.success({
 			title: 'Created text rule',
 			description: 'Your local text rule has been created successfully.',
 		});

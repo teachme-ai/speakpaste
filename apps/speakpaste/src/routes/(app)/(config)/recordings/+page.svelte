@@ -184,12 +184,12 @@
 		},
 		{
 			id: 'latestTransformationRunOutput',
-			meta: { label: 'Latest Transformation Run Output' },
+			meta: { label: 'Latest Text Rule Output' },
 			accessorFn: ({ id }) => id,
 			header: ({ column }) =>
 				renderComponent(SortableTableHeader, {
 					column,
-					headerText: 'Latest Transformation Run Output',
+					headerText: 'Latest Text Rule Output',
 				}),
 			cell: ({ getValue }) => {
 				const recordingId = getValue<string>();
