@@ -3,68 +3,50 @@ import { nanoid } from 'nanoid/non-secure';
 import { goto } from '$app/navigation';
 import { IS_MACOS } from '$lib/constants/platform';
 import { desktopServices } from '$lib/services/desktop';
-import { asShellCommand } from '$lib/services/desktop/command';
-import { settings } from '$lib/state/settings.svelte';
-import { getVersion } from '@tauri-apps/api/app';
 
 function isMacDesktop() {
 	return IS_MACOS && window.__TAURI_INTERNALS__;
 }
 
+type AccessibilityRepairResult = {
+	trusted: boolean;
+	prompted: boolean;
+	didReset: boolean;
+	installChanged: boolean;
+	needsUserApproval: boolean;
+	recoveryState: string;
+	bundlePath: string | null;
+	buildSignature: string;
+};
+
 async function openMacPrivacyPane(pane: 'Privacy_Accessibility' | 'Privacy_Microphone') {
-    const { invoke } = await import('@tauri-apps/api/core');
-    await invoke('open_mac_privacy_pane', { pane });
+	const { invoke } = await import('@tauri-apps/api/core');
+	await invoke('open_mac_privacy_pane', { pane });
 }
 
 async function runOsLevelPermissionFixes() {
-    const { invoke } = await import('@tauri-apps/api/core');
-    
-    // 1. Check Translocation
-    const isTranslocated = await invoke('check_app_translocation');
-    if (isTranslocated) {
-        goto('/macos-translocation-warning');
-        return false;
-    }
+	const { invoke } = await import('@tauri-apps/api/core');
 
-    // 2. TCC Signature Invalidation (run once per version)
-    const currentVersion = await getVersion();
-    const lastVersion = localStorage.getItem('app.last_version');
+	const isTranslocated = await invoke<boolean>('check_app_translocation');
+	if (isTranslocated) {
+		goto('/macos-translocation-warning');
+		return false;
+	}
 
-    if (currentVersion !== lastVersion) {
-        console.log(`[Permissions] App version changed (${lastVersion} -> ${currentVersion}). Purging ghost TCC signatures.`);
-        try {
-            await invoke('reset_tcc_permissions');
-            localStorage.setItem('app.last_version', currentVersion);
-        } catch (err) {
-            console.error('[Permissions] Failed to reset TCC permissions:', err);
-        }
-    }
-    
-    return true;
+	return true;
 }
 
-async function initializeFnKeyListener(accessibilityToastId: string) {
+async function initializeFnKeyListener() {
 	try {
 		const { invoke } = await import('@tauri-apps/api/core');
 		await invoke('initialize_fn_key_listener');
 		console.log(
 			'[FnKeyListener] Standalone Fn key listener initialized successfully.',
 		);
+		return true;
 	} catch (err) {
 		console.error('[FnKeyListener] Failed to initialize Fn key listener:', err);
-		toast.warning('Fn key listener needs Accessibility access', {
-			id: accessibilityToastId,
-			description:
-				'SpeakPaste needs accessibility permissions to trigger voice typing globally.',
-			duration: Number.POSITIVE_INFINITY,
-			action: {
-				label: 'Enable Access',
-				onClick: () => {
-					goto('/macos-enable-accessibility');
-					toast.dismiss(accessibilityToastId);
-				},
-			},
-		});
+		return false;
 	}
 }
 
@@ -73,12 +55,59 @@ export function registerAccessibilityPermission() {
 	if (!isMacDesktop()) return;
 
 	const accessibilityToastId = nanoid();
+	let pollTimer: ReturnType<typeof window.setInterval> | undefined;
+
+	const showRecoveryToast = (
+		description:
+			| string
+			| {
+					text: string;
+			  },
+	) => {
+		toast.warning('Accessibility access needed', {
+			id: accessibilityToastId,
+			description:
+				typeof description === 'string' ? description : description.text,
+			duration: Number.POSITIVE_INFINITY,
+			action: {
+				label: 'Open Recovery Guide',
+				onClick: () => {
+					goto('/macos-enable-accessibility');
+					toast.dismiss(accessibilityToastId);
+				},
+			},
+		});
+	};
+
+	const startPermissionPoll = () => {
+		if (pollTimer) return;
+		pollTimer = window.setInterval(async () => {
+			const { data: granted, error } =
+				await desktopServices.permissions.accessibility.check();
+			if (error || !granted) return;
+
+			window.clearInterval(pollTimer);
+			pollTimer = undefined;
+			toast.dismiss(accessibilityToastId);
+			const initialized = await initializeFnKeyListener();
+			if (initialized) {
+				toast.success('Accessibility permission granted', {
+					description: 'SpeakPaste is ready to listen for the Fn key again.',
+				});
+				return;
+			}
+
+			showRecoveryToast(
+				'SpeakPaste still needs macOS to refresh its Accessibility entry. Open the recovery guide and approve the current app entry again.',
+			);
+			startPermissionPoll();
+		}, 1000);
+	};
 
 	// Check accessibility permission once on mount
 	(async () => {
-        // Run our automated OS-level fixes first
-        const canProceed = await runOsLevelPermissionFixes();
-        if (!canProceed) return;
+		const canProceed = await runOsLevelPermissionFixes();
+		if (!canProceed) return;
 
 		const { data: isAccessibilityGranted, error } =
 			await desktopServices.permissions.accessibility.check();
@@ -88,14 +117,54 @@ export function registerAccessibilityPermission() {
 			return;
 		}
 
-        // We MUST attempt to initialize the Fn key listener even if check() is false.
-        // Calling the Rust initialization is what actually triggers the native macOS prompt.
-        // If it fails, the catch block inside initializeFnKeyListener will handle the toast.
-        await initializeFnKeyListener(accessibilityToastId);
+		if (isAccessibilityGranted) {
+			const initialized = await initializeFnKeyListener();
+			if (initialized) return;
+		}
+
+		const { invoke } = await import('@tauri-apps/api/core');
+		const repairResult = await invoke<AccessibilityRepairResult>(
+			'repair_accessibility_permissions_if_needed',
+		).catch((repairError) => {
+			console.error('[Permissions] Failed to run accessibility self-repair:', repairError);
+			return null;
+		});
+
+		if (repairResult?.trusted) {
+			const initialized = await initializeFnKeyListener();
+			if (initialized) return;
+		}
+
+		if (repairResult?.didReset) {
+			toast.info('Accessibility entry refreshed', {
+				id: `${accessibilityToastId}-reset`,
+				description:
+					'SpeakPaste detected a replaced or reinstalled app and refreshed its stale Accessibility entry in macOS.',
+			});
+		}
+
+		if (repairResult?.needsUserApproval) {
+			showRecoveryToast(
+				repairResult.didReset
+					? 'macOS needs you to approve the refreshed SpeakPaste entry one more time under Privacy & Security > Accessibility.'
+					: 'SpeakPaste needs accessibility permissions to trigger voice typing globally.',
+			);
+			startPermissionPoll();
+			return;
+		}
+
+		showRecoveryToast(
+			'SpeakPaste needs accessibility permissions to trigger voice typing globally.',
+		);
+		startPermissionPoll();
 	})();
 
 	// Return cleanup function
 	return () => {
+		if (pollTimer) {
+			window.clearInterval(pollTimer);
+			pollTimer = undefined;
+		}
 		toast.dismiss(accessibilityToastId);
 	};
 }

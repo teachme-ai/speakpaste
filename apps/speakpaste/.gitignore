@@ -8,6 +8,9 @@ node_modules
 /.svelte-kit
 /build
 /package
+/src/lib/generated/build-info.ts
+/src-tauri/build-meta.json
+/src-tauri/tauri.macos.conf.json
 
 # OS
 .DS_Store

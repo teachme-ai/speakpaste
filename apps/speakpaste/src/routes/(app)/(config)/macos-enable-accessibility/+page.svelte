@@ -15,6 +15,17 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { invoke } from '@tauri-apps/api/core';
 
+	type AccessibilityRepairResult = {
+		trusted: boolean;
+		prompted: boolean;
+		didReset: boolean;
+		installChanged: boolean;
+		needsUserApproval: boolean;
+		recoveryState: string;
+		bundlePath: string | null;
+		buildSignature: string;
+	};
+
 	let { data } = $props();
 	let isAccessibilityGranted = $state(data.isAccessibilityGranted);
 	let checkInterval: any;
@@ -55,17 +66,18 @@
 	});
 
 	async function requestPermissionOrShowGuidance() {
-		const { error } = await desktopServices.permissions.accessibility.request();
+		const repairResult = await invoke<AccessibilityRepairResult>(
+			'repair_accessibility_permissions_if_needed',
+		).catch((error) => {
+			console.error('Failed to trigger accessibility recovery:', error);
+			return null;
+		});
 
-		if (error) {
-			toast.error('Failed to open accessibility settings', {
-				description: error.message,
-				action: {
-					label: 'Open Accessibility Settings',
-					onClick: () => openSystemSettings(),
-				},
+		if (repairResult?.didReset) {
+			toast.info('Accessibility entry refreshed', {
+				description:
+					'SpeakPaste refreshed its stale macOS Accessibility entry after reinstall or replacement.',
 			});
-			return;
 		}
 
 		await openSystemSettings();
@@ -117,9 +129,9 @@
 		<Card.Header>
 			<Card.Title class="text-xl">MacOS Accessibility</Card.Title>
 			<Card.Description class="leading-7">
-				Follow the steps below to re-enable SpeakPaste in your macOS
-				Accessibility settings. This often is needed after installing new
-				versions of SpeakPaste due to a macOS bug.
+				SpeakPaste will try to refresh stale macOS Accessibility entries
+				automatically after reinstall or replacement. If macOS still needs
+				your approval, follow the steps below.
 			</Card.Description>
 		</Card.Header>
 		<Card.Content>
@@ -127,6 +139,12 @@
 				<ol
 					class="text-muted-foreground list-inside list-decimal space-y-2 text-sm leading-7"
 				>
+					<li>
+						SpeakPaste may automatically refresh a stale entry in the
+						background. If you still do not see a working Fn trigger, continue
+						with the manual re-approval steps below.
+					</li>
+
 					<li>
 						Go to
 						<span class="text-primary font-semibold tracking-tight">

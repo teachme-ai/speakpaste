@@ -60,6 +60,14 @@ use local_analytics::{
     log_local_analytics_event,
 };
 
+pub mod build_info;
+use build_info::{current_build_info, get_build_info};
+
+pub mod accessibility_repair;
+use accessibility_repair::{
+    repair_accessibility_permissions_if_needed, reset_tcc_permissions_for_bundle,
+};
+
 pub mod markdown;
 use markdown::{
     count_markdown_files, delete_files_in_directory, read_markdown_files, write_markdown_files,
@@ -88,6 +96,16 @@ use native_shortcuts::{
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 #[tokio::main]
 pub async fn run() {
+    let build_info = current_build_info();
+    info!(
+        "[Build] version={} bundle={} commit={} dirty={} signature={}",
+        build_info.marketing_version,
+        build_info.bundle_version,
+        build_info.git_commit,
+        build_info.git_dirty,
+        build_info.build_signature
+    );
+
     // Set up panic hook to capture crash information before the app exits.
     // The previous hook is preserved so default panic reporting still occurs.
     let previous_hook = std::panic::take_hook();
@@ -250,12 +268,14 @@ pub async fn run() {
         get_local_analytics_directory_path,
         clear_local_analytics_log,
         log_local_analytics_event,
+        get_build_info,
         // Filesystem utilities
         read_markdown_files,
         count_markdown_files,
         delete_files_in_directory,
         write_markdown_files,
         check_app_translocation,
+        repair_accessibility_permissions_if_needed,
         reset_tcc_permissions,
         open_mac_privacy_pane,
     ]);
@@ -412,13 +432,15 @@ fn check_app_translocation() -> bool {
 }
 
 #[tauri::command]
-async fn reset_tcc_permissions() -> Result<bool, String> {
+async fn reset_tcc_permissions(app: tauri::AppHandle) -> Result<bool, String> {
     #[cfg(target_os = "macos")]
     {
-        info!("[Permissions] Purging old signatures from TCC database using tccutil");
-        let _ = std::process::Command::new("tccutil")
-            .args(["reset", "Accessibility", "com.speakpaste.app"])
-            .status();
+        let bundle_identifier = app.config().identifier.clone();
+        info!(
+            "[Permissions] Purging old signatures from TCC database using tccutil for {}",
+            bundle_identifier
+        );
+        reset_tcc_permissions_for_bundle(&bundle_identifier)?;
     }
     Ok(true)
 }

@@ -38,6 +38,11 @@
 							This native Mac listener works from the menu-bar app after
 							Accessibility permission is granted.
 						</Field.Description>
+						<Field.Description>
+							If SpeakPaste is reinstalled or replaced, it will try to refresh
+							a stale Accessibility entry automatically and guide you back here
+							if macOS still needs approval.
+						</Field.Description>
 					</Field.Field>
 				</Field.Group>
 			</Field.Set>

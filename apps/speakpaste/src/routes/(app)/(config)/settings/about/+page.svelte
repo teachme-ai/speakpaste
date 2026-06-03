@@ -5,6 +5,7 @@
 	import HeartIcon from '@lucide/svelte/icons/heart';
 	import ShieldCheckIcon from '@lucide/svelte/icons/shield-check';
 	import InfoIcon from '@lucide/svelte/icons/info';
+	import { BUILD_INFO } from '$lib/generated/build-info';
 </script>
 
 <svelte:head>
@@ -27,7 +28,9 @@
 					<p class="text-sm text-muted-foreground">Local Voice Typing utility for macOS</p>
 				</div>
 				<div class="flex flex-wrap gap-2">
-					<Badge variant="default" class="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">Version 0.1.0</Badge>
+					<Badge variant="default" class="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">Version {BUILD_INFO.marketingVersion}</Badge>
+					<Badge variant="outline">Build {BUILD_INFO.bundleVersion}</Badge>
+					<Badge variant="outline" class="font-mono">{BUILD_INFO.gitCommit}</Badge>
 					<Badge variant="outline">Mac Only</Badge>
 					<Badge variant="outline" class="text-green-600 dark:text-green-400 border-green-500/20">Local-First</Badge>
 				</div>
@@ -36,6 +39,10 @@
 			<div class="mt-4 flex items-center gap-2 text-xs text-muted-foreground bg-muted/30 rounded-lg p-3">
 				<ShieldCheckIcon class="size-4 text-green-600 dark:text-green-400 shrink-0" />
 				<span><strong>Privacy Promise:</strong> Your voice data, raw audio clips, and transcribed text are stored and processed entirely on your machine. No accounts, no clouds, and absolute data control.</span>
+			</div>
+
+			<div class="mt-4 rounded-lg border border-border bg-background/60 p-3 text-xs text-muted-foreground">
+				<p><strong>Build accountability:</strong> SpeakPaste stamps every local build with a unique bundle build number, commit reference, and build time so reinstalls and support issues can be traced to the exact app instance.</p>
 			</div>
 		</div>
 
@@ -144,6 +151,16 @@
 			<div class="flex gap-4 text-xs font-medium mt-1">
 				<Link href="https://speakpaste.online" target="_blank">SpeakPaste Website ↗</Link>
 			</div>
+		</div>
+
+		<div class="rounded-lg border border-border bg-muted/10 p-5 space-y-2">
+			<h4 class="text-base font-semibold">Permission Recovery</h4>
+			<p class="text-xs text-muted-foreground leading-relaxed">
+				If macOS keeps an old Accessibility entry after you reinstall or replace
+				SpeakPaste, the app now attempts to refresh that stale entry
+				automatically in the background and then asks for approval again only if
+				macOS still requires it.
+			</p>
 		</div>
 	</div>
 </Field.Set>

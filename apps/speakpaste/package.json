@@ -4,13 +4,14 @@
 	"version": "0.1.1",
 	"description": "Mac-only local-first voice typing powered by whisper.cpp.",
 	"scripts": {
-		"dev:web": "vite dev",
-		"dev": "bun tauri dev --config '{\"identifier\": \"com.speakpaste.app.dev\"}'",
-		"build": "NODE_ENV=production bun --bun vite build",
+		"prepare:build-meta": "bun ./scripts/prepare-build-meta.mjs",
+		"dev:web": "bun run prepare:build-meta && vite dev",
+		"dev": "bun run prepare:build-meta && bun tauri dev --config '{\"identifier\": \"com.speakpaste.app.dev\"}'",
+		"build": "bun run prepare:build-meta && NODE_ENV=production bun --bun vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"tauri": "tauri"
+		"tauri": "bun run prepare:build-meta && tauri"
 	},
 	"license": "MIT",
 	"devDependencies": {

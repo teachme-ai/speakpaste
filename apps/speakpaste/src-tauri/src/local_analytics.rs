@@ -2,6 +2,7 @@ use serde_json::{json, Value};
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::time::{SystemTime, UNIX_EPOCH};
+use tauri::Manager;
 
 fn analytics_dir_path(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
     let dir = app
