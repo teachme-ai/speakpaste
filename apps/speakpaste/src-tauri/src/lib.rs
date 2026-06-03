@@ -55,7 +55,10 @@ pub mod command;
 use command::{download_model_file, execute_command, spawn_command};
 
 pub mod local_analytics;
-use local_analytics::log_local_analytics_event;
+use local_analytics::{
+    clear_local_analytics_log, get_local_analytics_directory_path, get_local_analytics_log_path,
+    log_local_analytics_event,
+};
 
 pub mod markdown;
 use markdown::{
@@ -243,6 +246,9 @@ pub async fn run() {
         toggle_native_dictation,
         reload_native_global_shortcuts,
         unregister_native_global_shortcuts,
+        get_local_analytics_log_path,
+        get_local_analytics_directory_path,
+        clear_local_analytics_log,
         log_local_analytics_event,
         // Filesystem utilities
         read_markdown_files,

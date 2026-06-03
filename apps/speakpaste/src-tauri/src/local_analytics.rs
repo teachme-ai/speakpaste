@@ -3,7 +3,7 @@ use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-fn analytics_log_path(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
+fn analytics_dir_path(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
     let dir = app
         .path()
         .app_data_dir()
@@ -13,7 +13,11 @@ fn analytics_log_path(app: &tauri::AppHandle) -> Result<std::path::PathBuf, Stri
     fs::create_dir_all(&dir)
         .map_err(|e| format!("Failed to create diagnostics directory: {}", e))?;
 
-    Ok(dir.join("local-analytics.jsonl"))
+    Ok(dir)
+}
+
+fn analytics_log_path(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
+    Ok(analytics_dir_path(app)?.join("local-analytics.jsonl"))
 }
 
 #[tauri::command]
@@ -36,5 +40,25 @@ pub async fn log_local_analytics_event(app: tauri::AppHandle, event: Value) -> R
     writeln!(file, "{}", record)
         .map_err(|e| format!("Failed to append local analytics event: {}", e))?;
 
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn get_local_analytics_log_path(app: tauri::AppHandle) -> Result<String, String> {
+    Ok(analytics_log_path(&app)?.to_string_lossy().to_string())
+}
+
+#[tauri::command]
+pub async fn get_local_analytics_directory_path(app: tauri::AppHandle) -> Result<String, String> {
+    Ok(analytics_dir_path(&app)?.to_string_lossy().to_string())
+}
+
+#[tauri::command]
+pub async fn clear_local_analytics_log(app: tauri::AppHandle) -> Result<(), String> {
+    let path = analytics_log_path(&app)?;
+    if path.exists() {
+        fs::remove_file(&path)
+            .map_err(|e| format!("Failed to clear local analytics log: {}", e))?;
+    }
     Ok(())
 }
