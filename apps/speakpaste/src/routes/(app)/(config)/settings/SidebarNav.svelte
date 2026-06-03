@@ -8,9 +8,9 @@
 	const items = [
 		{ title: 'Home', href: '/settings' },
 		{ title: 'Voice', href: '/settings/recording' },
-		{ title: 'Models', href: '/settings/transcription' },
+		{ title: 'Engine & Models', href: '/settings/transcription' },
 		{
-			title: 'Trigger',
+			title: 'Trigger & Hotkeys',
 			href: '/settings/shortcuts/global',
 			activePathPrefix: '/settings/shortcuts',
 		},

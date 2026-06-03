@@ -16,17 +16,17 @@
 	import { settings } from '$lib/state/settings.svelte';
 
 	const retentionItems = [
-		{ value: 'keep-forever', label: 'Keep all recordings' },
+		{ value: 'keep-forever', label: 'Keep all captures' },
 		{ value: 'limit-count', label: 'Keep a limited history' },
 	];
 
 	const maxRecordingItems = [
-		{ value: 0, label: 'Do not save recordings' },
-		{ value: 5, label: '5 recordings' },
-		{ value: 10, label: '10 recordings' },
-		{ value: 25, label: '25 recordings' },
-		{ value: 50, label: '50 recordings' },
-		{ value: 100, label: '100 recordings' },
+		{ value: 0, label: 'Keep no history' },
+		{ value: 5, label: 'Last 5 captures' },
+		{ value: 10, label: 'Last 10 captures' },
+		{ value: 25, label: 'Last 25 captures' },
+		{ value: 50, label: 'Last 50 captures' },
+		{ value: 100, label: 'Last 100 captures' },
 	];
 
 	const selectedEngineLabel = $derived(
@@ -103,7 +103,7 @@
 				class="rounded-lg border bg-muted/20 p-4 transition-colors hover:bg-muted/40"
 			>
 				<p class="text-xs font-medium uppercase text-muted-foreground">
-					Voice capture
+					Voice
 				</p>
 				<p class="mt-2 text-base font-semibold">Press to Speak</p>
 				<p class="mt-1 text-sm text-muted-foreground">
@@ -115,7 +115,7 @@
 				class="rounded-lg border bg-muted/20 p-4 transition-colors hover:bg-muted/40"
 			>
 				<p class="text-xs font-medium uppercase text-muted-foreground">
-					Local engine
+					Engine & Models
 				</p>
 				<p class="mt-2 text-base font-semibold">{selectedEngineLabel}</p>
 				<p class="mt-1 text-sm text-muted-foreground">{selectedModelState}</p>
@@ -125,7 +125,7 @@
 				class="rounded-lg border bg-muted/20 p-4 transition-colors hover:bg-muted/40"
 			>
 				<p class="text-xs font-medium uppercase text-muted-foreground">
-					Main shortcut
+					Trigger
 				</p>
 				<p class="mt-2 text-base font-semibold">Fn key</p>
 				<p class="mt-1 text-sm text-muted-foreground">
@@ -153,7 +153,7 @@
 		<Field.Separator />
 		<Field.Group>
 			<Field.Field>
-				<Field.Label for="transcription-service">Local engine</Field.Label>
+				<Field.Label for="transcription-service">Engine & models</Field.Label>
 				<Select.Root
 					type="single"
 					bind:value={() => settings.get('transcription.service'),
@@ -173,7 +173,7 @@
 					</Select.Content>
 				</Select.Root>
 				<Field.Description>
-					{selectedModelState}. Manage model files in Local Engine.
+					{selectedModelState}. Manage model files in Engine & Models.
 				</Field.Description>
 			</Field.Field>
 
@@ -257,7 +257,7 @@
 					/>
 					<Field.Content>
 						<Field.Label for="transcription.simulateEnterAfterOutput">
-							Press Enter after paste
+							Auto-Send (Return key)
 						</Field.Label>
 						<Field.Description>
 							Useful for chat boxes where Enter sends the message.
@@ -269,14 +269,14 @@
 	</Field.Set>
 
 	<Field.Set>
-		<Field.Legend>Local History</Field.Legend>
+		<Field.Legend>Dictation History</Field.Legend>
 		<Field.Description>
-			Control what the app keeps on this Mac after transcription.
+			Control what the app keeps on this Mac after each dictation.
 		</Field.Description>
 		<Field.Separator />
 		<Field.Group>
 			<Field.Field>
-				<Field.Label for="recording-retention-strategy">Saved recordings</Field.Label>
+				<Field.Label for="recording-retention-strategy">Saved captures</Field.Label>
 				<Select.Root
 					type="single"
 					bind:value={() => settings.get('retention.strategy'),
@@ -296,7 +296,7 @@
 			{#if settings.get('retention.strategy') === 'limit-count'}
 				<Field.Field>
 					<Field.Label for="max-recording-count">
-						Maximum saved recordings
+						Maximum saved captures
 					</Field.Label>
 					<Select.Root
 						type="single"
@@ -304,7 +304,7 @@
 							(v) => settings.set('retention.maxCount', Number(v))}
 					>
 						<Select.Trigger id="max-recording-count" class="w-full">
-							{maxRecordingLabel ?? 'Select maximum recordings'}
+							{maxRecordingLabel ?? 'Select maximum captures'}
 						</Select.Trigger>
 						<Select.Content>
 							{#each maxRecordingItems as item}

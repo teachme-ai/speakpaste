@@ -39,12 +39,12 @@
 	});
 </script>
 
-<svelte:head> <title>Transcription Settings - SpeakPaste</title> </svelte:head>
+<svelte:head> <title>Local Engine & Models - SpeakPaste</title> </svelte:head>
 
 <Field.Set>
-	<Field.Legend>Transcription</Field.Legend>
+	<Field.Legend>Local Engine & Models</Field.Legend>
 	<Field.Description>
-		Configure your SpeakPaste transcription preferences.
+		Choose the local engine and model files SpeakPaste uses on this Mac.
 	</Field.Description>
 	<Field.Separator />
 	<Field.Group>

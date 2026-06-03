@@ -7,17 +7,17 @@
 	import ShortcutTable from '../keyboard-shortcut-recorder/ShortcutTable.svelte';
 </script>
 
-<svelte:head> <title>Shortcuts - SpeakPaste</title> </svelte:head>
+<svelte:head> <title>Dictation Trigger - SpeakPaste</title> </svelte:head>
 
 {#if window.__TAURI_INTERNALS__}
 	<section>
 		<SectionHeader.Root>
 			<SectionHeader.Title level={2} class="text-xl tracking-tight sm:text-2xl">
-				Press to Speak
+				Dictation Trigger
 			</SectionHeader.Title>
 			<SectionHeader.Description>
-				Fn is the primary Mac trigger. Keep one fallback keyboard shortcut only
-				if you want an alternative.
+				Press and hold the Fn key to dictate, then release to paste. Keep one
+				fallback keyboard shortcut only if you want an alternative.
 			</SectionHeader.Description>
 		</SectionHeader.Root>
 

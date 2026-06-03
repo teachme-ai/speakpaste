@@ -79,7 +79,7 @@
 	<SectionHeader.Root>
 		<div class="flex items-center gap-3">
 			<SectionHeader.Title level={3} class="text-xl tracking-tight">
-				Privacy
+				Privacy & Support
 			</SectionHeader.Title>
 			<Badge
 				variant="outline"
@@ -268,7 +268,7 @@
 	<div class="flex items-center gap-2 text-xs">
 		<div class="flex items-center gap-2 text-green-700 dark:text-green-400">
 			<div class="w-2 h-2 bg-green-500 rounded-full"></div>
-			<span class="font-medium">Local analytics only</span>
+			<span class="font-medium">Local diagnostics only</span>
 			<span class="text-muted-foreground">Stored on this Mac</span>
 		</div>
 	</div>
