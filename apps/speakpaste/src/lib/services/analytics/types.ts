@@ -64,6 +64,18 @@ export type Event =
 			provider: TranscriptionServiceId;
 			error_message: string;
 	  }
+	| {
+			type: 'dictation_timing';
+			stage: 'transcription' | 'delivery' | 'pipeline';
+			duration_ms: number;
+			chars?: number;
+	  }
+	| {
+			type: 'transcription_cleanup_applied';
+			original_chars: number;
+			cleaned_chars: number;
+			emptied: boolean;
+	  }
 	// Settings events
 	| { type: 'settings_changed'; section: SettingsSection };
 

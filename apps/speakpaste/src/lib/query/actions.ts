@@ -741,6 +741,12 @@ async function processRecordingPipeline({
 	console.info(
 		`[Telemetry] [Pipeline] Transcription stage took ${transcriptionDuration.toFixed(2)}ms`,
 	);
+	rpc.analytics.logEvent({
+		type: 'dictation_timing',
+		stage: 'transcription',
+		duration_ms: Math.round(transcriptionDuration),
+		chars: transcribedText?.length,
+	});
 
 	if (transcribeError) {
 		isPipelineRunning = false;
@@ -777,6 +783,18 @@ async function processRecordingPipeline({
 	console.info(
 		`[Telemetry] [Pipeline] End-to-end processRecordingPipeline took ${pipelineDuration.toFixed(2)}ms for ${transcribedText.length} chars`,
 	);
+	rpc.analytics.logEvent({
+		type: 'dictation_timing',
+		stage: 'delivery',
+		duration_ms: Math.round(deliveryDuration),
+		chars: transcribedText.length,
+	});
+	rpc.analytics.logEvent({
+		type: 'dictation_timing',
+		stage: 'pipeline',
+		duration_ms: Math.round(pipelineDuration),
+		chars: transcribedText.length,
+	});
 
 	// Pipeline done — enter cooldown before allowing next trigger
 	isPipelineRunning = false;

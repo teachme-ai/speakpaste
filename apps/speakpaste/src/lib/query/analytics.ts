@@ -1,4 +1,5 @@
-import { Ok, type Result } from 'wellcrafted/result';
+import { invoke } from '@tauri-apps/api/core';
+import { Ok, type Result, tryAsync } from 'wellcrafted/result';
 import { defineMutation } from '$lib/query/client';
 import type { Event } from '$lib/services/analytics/types';
 
@@ -8,16 +9,30 @@ const analyticsKeys = {
 
 /**
  * Analytics query layer.
- * Local-only builds do not send telemetry. This remains as a stable call site
- * until the local metrics store is implemented.
+ * Events remain fully local and are appended to an on-device JSONL diagnostics log
+ * when the desktop runtime is available.
  */
 export const analytics = {
 	/**
-	 * Accept analytics events without sending them to a remote service.
+	 * Accept analytics events and persist them locally on desktop.
 	 */
 	logEvent: defineMutation({
 		mutationKey: analyticsKeys.logEvent,
-		mutationFn: async (_event: Event): Promise<Result<void, never>> => {
+		mutationFn: async (event: Event): Promise<Result<void, never>> => {
+			if (!window.__TAURI_INTERNALS__) {
+				return Ok(undefined);
+			}
+
+			const { error } = await tryAsync({
+				try: async () => await invoke('log_local_analytics_event', { event }),
+				catch: (cause) => cause,
+			});
+
+			if (error) {
+				console.warn('[Local analytics] Failed to append event', error);
+				return Ok(undefined);
+			}
+
 			return Ok(undefined);
 		},
 	}),

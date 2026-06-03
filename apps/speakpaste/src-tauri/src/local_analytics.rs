@@ -1,0 +1,40 @@
+use serde_json::{json, Value};
+use std::fs::{self, OpenOptions};
+use std::io::Write;
+use std::time::{SystemTime, UNIX_EPOCH};
+
+fn analytics_log_path(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
+    let dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("Failed to resolve app data directory: {}", e))?
+        .join("diagnostics");
+
+    fs::create_dir_all(&dir)
+        .map_err(|e| format!("Failed to create diagnostics directory: {}", e))?;
+
+    Ok(dir.join("local-analytics.jsonl"))
+}
+
+#[tauri::command]
+pub async fn log_local_analytics_event(app: tauri::AppHandle, event: Value) -> Result<(), String> {
+    let path = analytics_log_path(&app)?;
+    let mut file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&path)
+        .map_err(|e| format!("Failed to open local analytics log: {}", e))?;
+
+    let record = json!({
+        "timestamp_ms": SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|duration| duration.as_millis())
+            .unwrap_or(0),
+        "event": event
+    });
+
+    writeln!(file, "{}", record)
+        .map_err(|e| format!("Failed to append local analytics event: {}", e))?;
+
+    Ok(())
+}

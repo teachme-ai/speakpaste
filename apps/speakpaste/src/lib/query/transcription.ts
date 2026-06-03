@@ -231,6 +231,12 @@ export async function transcribeBlob(
 			console.info(
 				`[Telemetry] [Transcription] Cleaned trailing artifact: ${transcriptionResult.data.length} -> ${cleanedText.length} chars`,
 			);
+			rpc.analytics.logEvent({
+				type: 'transcription_cleanup_applied',
+				original_chars: transcriptionResult.data.length,
+				cleaned_chars: cleanedText.length,
+				emptied: cleanedText.length === 0,
+			});
 		}
 		if (!cleanedText && transcriptionResult.data.trim()) {
 			console.warn(

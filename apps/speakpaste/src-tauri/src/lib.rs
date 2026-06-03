@@ -54,6 +54,9 @@ use graceful_shutdown::send_sigint;
 pub mod command;
 use command::{download_model_file, execute_command, spawn_command};
 
+pub mod local_analytics;
+use local_analytics::log_local_analytics_event;
+
 pub mod markdown;
 use markdown::{
     count_markdown_files, delete_files_in_directory, read_markdown_files, write_markdown_files,
@@ -240,6 +243,7 @@ pub async fn run() {
         toggle_native_dictation,
         reload_native_global_shortcuts,
         unregister_native_global_shortcuts,
+        log_local_analytics_event,
         // Filesystem utilities
         read_markdown_files,
         count_markdown_files,
