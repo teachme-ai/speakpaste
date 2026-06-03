@@ -8,10 +8,10 @@ export const COMPRESSION_RECOMMENDED_MESSAGE =
 	'Audio compression is optional for local workflows. Enable it only when you want smaller recording files.';
 
 export const NAVIGATOR_LOCAL_TRANSCRIPTION_MESSAGE =
-	'Compatibility Capture produces compressed audio that requires FFmpeg for local transcription. Use Native Mac Capture or install FFmpeg.';
+	'Compatibility Capture produces compressed audio that needs local conversion. Use Native Mac Capture for local dictation.';
 
 export const RECORDING_COMPATIBILITY_MESSAGE =
-	'Compatibility Capture produces compressed audio that requires FFmpeg for local transcription. Use Native Mac Capture or install FFmpeg.';
+	'Compatibility Capture produces compressed audio that needs local conversion. Use Native Mac Capture for local dictation.';
 
 /**
  * Checks if the current recording + transcription configuration will work
@@ -39,7 +39,7 @@ export function isCompressionRecommended(): boolean {
 
 /**
  * Checks if FFmpeg recording method is selected but FFmpeg is not installed.
- * Shows a warning toast prompting the user to install FFmpeg when this incompatibility is detected.
+ * Shows a warning toast when this developer-only capture method is incompatible.
  *
  * This function is specifically for validating the FFmpeg recording method selection.
  * It ensures users who have explicitly chosen FFmpeg as their recording method have it installed.
@@ -59,10 +59,10 @@ export async function checkFfmpegRecordingMethodCompatibility() {
 	// FFmpeg recording method selected but not installed
 	toast.warning('FFmpeg Required for Command-line Capture', {
 		description:
-			'You have selected Command-line Capture, but FFmpeg is not installed.',
+			'Command-line Capture needs an external local converter. Native Mac Capture does not.',
 		action: {
-			label: 'Install FFmpeg',
-			onClick: () => goto('/install-ffmpeg'),
+			label: 'Review capture settings',
+			onClick: () => goto('/settings/recording'),
 		},
 		duration: 15000,
 	});
@@ -74,7 +74,7 @@ export async function checkFfmpegRecordingMethodCompatibility() {
  *
  * Local transcription models (Whisper C++ and Parakeet) require audio in 16kHz mono WAV format.
  * This function detects when current recording settings won't produce compatible audio and offers
- * two solutions: installing FFmpeg for automatic conversion or switching to CPAL at 16kHz.
+ * the simpler Native Mac Capture path.
  *
  * @returns Promise<void> - Shows toast notification if local transcription has compatibility issues
  */

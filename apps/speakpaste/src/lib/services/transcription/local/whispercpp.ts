@@ -183,13 +183,13 @@ export const WhisperCppTranscriptionServiceLive = {
 
 					case 'FfmpegNotFoundError':
 						return WhisperingErr({
-							title: '🛠️ FFmpeg Required for This Recording Format',
+							title: 'Local Conversion Needed',
 							description:
-								'This recording is in a compressed format (webm/ogg/mp4) that requires FFmpeg. Install FFmpeg or switch to CPAL recording (which produces WAV files that work without FFmpeg).',
+								'This audio format needs local conversion. Use Native Mac Capture for new dictation, or provide a WAV file.',
 							action: {
 								type: 'link',
-								label: 'Install FFmpeg',
-								href: '/install-ffmpeg',
+								label: 'Review capture settings',
+								href: '/settings/recording',
 							},
 						});
 

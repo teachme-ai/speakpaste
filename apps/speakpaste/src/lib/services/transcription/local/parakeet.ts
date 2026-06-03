@@ -145,13 +145,13 @@ export const ParakeetTranscriptionServiceLive = {
 
 					case 'FfmpegNotFoundError':
 						return WhisperingErr({
-							title: '🛠️ FFmpeg Not Installed',
+							title: 'Local Conversion Needed',
 							description:
-								'Parakeet requires FFmpeg to convert audio formats. Please install FFmpeg or switch to CPAL recording at 16kHz.',
+								'This audio format needs local conversion. Use Native Mac Capture for new dictation, or provide a WAV file.',
 							action: {
 								type: 'link',
-								label: 'Install FFmpeg',
-								href: '/install-ffmpeg',
+								label: 'Review capture settings',
+								href: '/settings/recording',
 							},
 						});
 

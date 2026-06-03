@@ -1,8 +1,6 @@
 <script lang="ts">
-	import { buttonVariants } from '@epicenter/ui/button';
 	import * as Empty from '@epicenter/ui/empty';
 	import * as Field from '@epicenter/ui/field';
-	import { Link } from '@epicenter/ui/link';
 	import * as SectionHeader from '@epicenter/ui/section-header';
 	import { Separator } from '@epicenter/ui/separator';
 	import Layers2Icon from '@lucide/svelte/icons/layers-2';
@@ -67,13 +65,8 @@
 			</Empty.Media>
 			<Empty.Title>Shortcuts</Empty.Title>
 			<Empty.Description>
-				System-wide shortcuts are only available in the desktop app.
+				Open the Mac app to configure Fn and fallback keyboard shortcuts.
 			</Empty.Description>
 		</Empty.Header>
-		<Empty.Content>
-			<Link href="/desktop-app" class={buttonVariants()}>
-				Enable Global Shortcuts
-			</Link>
-		</Empty.Content>
 	</Empty.Root>
 {/if}
