@@ -545,12 +545,19 @@ Choose a profile tuned for your Mac, from balanced everyday use to higher-accura
 
 ## 10. Suggested Follow-Up Artifacts
 
-After this brief, the next website docs to create are:
+The follow-up website artifacts now exist and should be used as the working
+materials for the rewrite:
 
-1. a one-page homepage copy deck
-2. a release/download specification
-3. a support/permissions page
-4. a short credits/attribution page
+1. [WEBSITE_HOMEPAGE_COPY_DECK.md](./WEBSITE_HOMEPAGE_COPY_DECK.md)
+   - one-page homepage message, section copy, CTA language, and copy to avoid
+2. [WEBSITE_RELEASE_DOWNLOAD_SPEC.md](./WEBSITE_RELEASE_DOWNLOAD_SPEC.md)
+   - release-number display, download metadata rules, artifact labeling, and acceptance checks
+3. [WEBSITE_SUPPORT_PERMISSIONS_PAGE.md](./WEBSITE_SUPPORT_PERMISSIONS_PAGE.md)
+   - install, microphone, Accessibility, stale permission recovery, menu-bar behavior, and diagnostics support copy
+4. [WEBSITE_CREDITS_ATTRIBUTION_PAGE.md](./WEBSITE_CREDITS_ATTRIBUTION_PAGE.md)
+   - short and full upstream attribution copy for the website
+5. [WEBSITE_SECTION_REWRITE_CHECKLIST.md](./WEBSITE_SECTION_REWRITE_CHECKLIST.md)
+   - section-by-section rewrite checklist for the current `speakpaste.online` page
 
 ---
 
@@ -575,4 +582,3 @@ The rewrite should narrow the story and make the product feel:
 - more trustworthy
 - less experimental
 - less inherited
-
