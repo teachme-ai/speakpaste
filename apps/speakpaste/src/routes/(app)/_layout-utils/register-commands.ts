@@ -18,9 +18,6 @@ const DEFAULT_LOCAL_SHORTCUTS: Record<string, string | null> = {
 	startManualRecording: null,
 	stopManualRecording: null,
 	cancelManualRecording: 'c',
-	startVadRecording: null,
-	stopVadRecording: null,
-	toggleVadRecording: null,
 	openTransformationPicker: 't',
 	runTransformationOnClipboard: 'r',
 };
@@ -32,9 +29,6 @@ const DEFAULT_GLOBAL_SHORTCUTS: Record<string, string | null> = {
 	startManualRecording: null,
 	stopManualRecording: null,
 	cancelManualRecording: null,
-	startVadRecording: null,
-	stopVadRecording: null,
-	toggleVadRecording: null,
 	openTransformationPicker: null,
 	runTransformationOnClipboard: null,
 };
@@ -44,9 +38,6 @@ type LocalShortcutKey =
 	| 'shortcut.startManualRecording'
 	| 'shortcut.stopManualRecording'
 	| 'shortcut.cancelManualRecording'
-	| 'shortcut.toggleVadRecording'
-	| 'shortcut.startVadRecording'
-	| 'shortcut.stopVadRecording'
 	| 'shortcut.pushToTalk'
 	| 'shortcut.openTransformationPicker'
 	| 'shortcut.runTransformationOnClipboard';
@@ -56,9 +47,6 @@ type GlobalShortcutKey =
 	| 'shortcuts.global.startManualRecording'
 	| 'shortcuts.global.stopManualRecording'
 	| 'shortcuts.global.cancelManualRecording'
-	| 'shortcuts.global.toggleVadRecording'
-	| 'shortcuts.global.startVadRecording'
-	| 'shortcuts.global.stopVadRecording'
 	| 'shortcuts.global.pushToTalk'
 	| 'shortcuts.global.openTransformationPicker'
 	| 'shortcuts.global.runTransformationOnClipboard';

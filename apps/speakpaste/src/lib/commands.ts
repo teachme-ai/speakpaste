@@ -66,24 +66,6 @@ export const commands = [
 		callback: () => rpc.actions.cancelManualRecording(undefined),
 	},
 	{
-		id: 'startVadRecording',
-		title: 'Start voice activated recording',
-		on: ['Pressed'],
-		callback: () => rpc.actions.startVadRecording(undefined),
-	},
-	{
-		id: 'stopVadRecording',
-		title: 'Stop voice activated recording',
-		on: ['Pressed'],
-		callback: () => rpc.actions.stopVadRecording(undefined),
-	},
-	{
-		id: 'toggleVadRecording',
-		title: 'Toggle voice activated recording',
-		on: ['Pressed'],
-		callback: () => rpc.actions.toggleVadRecording(undefined),
-	},
-	{
 		id: 'openTransformationPicker',
 		title: 'Open transformation picker',
 		on: ['Pressed'],
