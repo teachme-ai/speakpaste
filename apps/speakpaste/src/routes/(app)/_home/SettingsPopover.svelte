@@ -7,11 +7,6 @@
 	import TrashIcon from '@lucide/svelte/icons/trash-2';
 	import { settings } from '$lib/state/settings.svelte';
 	import { recordings } from '$lib/state/recordings.svelte';
-	import {
-		RecordingModeSelector,
-		TranscriptionSelector,
-	} from '$lib/components/settings';
-	import ManualDeviceSelector from '$lib/components/settings/selectors/ManualDeviceSelector.svelte';
 
 	const autoPaste = $derived(settings.get('output.transcription.cursor'));
 </script>
@@ -30,13 +25,6 @@
 	</Popover.Trigger>
 	<Popover.Content class="w-80 p-0 rounded-2xl shadow-xl border border-border bg-popover overflow-hidden" align="end" sideOffset={8}>
 		<div class="flex flex-col">
-			<!-- Selectors Toolbar -->
-			<div class="flex items-center justify-center gap-1.5 px-4 py-3 border-b border-border bg-muted/30">
-				<ManualDeviceSelector />
-				<TranscriptionSelector />
-				<RecordingModeSelector />
-			</div>
-
 			<!-- Auto-paste -->
 			<div class="flex items-center justify-between px-4 py-3 border-b border-border">
 				<div class="flex items-center gap-2.5">
@@ -70,17 +58,10 @@
 
 			<!-- Navigation -->
 			<div class="flex flex-col border-b border-border py-1">
-				<a href="/recordings" class="flex items-center justify-between px-4 py-2.5 hover:bg-muted transition-colors">
-					<div class="flex items-center gap-2.5">
-						<ListIcon class="size-4 text-primary" />
-						<span class="text-sm font-medium text-foreground">All Recordings</span>
-					</div>
-					<svg class="size-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-				</a>
 				<a href="/settings" class="flex items-center justify-between px-4 py-2.5 hover:bg-muted transition-colors">
 					<div class="flex items-center gap-2.5">
 						<SettingsIcon class="size-4 text-primary" />
-						<span class="text-sm font-medium text-foreground">Full Settings Menu</span>
+						<span class="text-sm font-medium text-foreground">Settings</span>
 					</div>
 					<svg class="size-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
 				</a>
