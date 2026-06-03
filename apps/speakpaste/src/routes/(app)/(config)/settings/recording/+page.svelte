@@ -4,8 +4,8 @@
 	import * as Select from '@epicenter/ui/select';
 	import InfoIcon from '@lucide/svelte/icons/info';
 	import {
+		LOCAL_PERFORMANCE_PROFILE_OPTIONS,
 		RECORDING_MODE_OPTIONS,
-		SAMPLE_RATE_OPTIONS,
 	} from '$lib/constants/audio';
 	import { IS_LINUX } from '$lib/constants/platform';
 	import {
@@ -31,9 +31,9 @@
 		)?.label,
 	);
 
-	const sampleRateLabel = $derived(
-		SAMPLE_RATE_OPTIONS.find(
-			(o) => o.value === deviceConfig.get('recording.cpal.sampleRate'),
+	const selectedPerformanceProfile = $derived(
+		LOCAL_PERFORMANCE_PROFILE_OPTIONS.find(
+			(o) => o.value === deviceConfig.get('local.performanceProfile'),
 		)?.label,
 	);
 
@@ -139,25 +139,40 @@
 
 		{#if settings.get('recording.mode') === 'manual' || settings.get('recording.mode') === 'vad'}
 			<Field.Field>
-				<Field.Label for="sample-rate">Native sample rate</Field.Label>
+				<Field.Label for="local-performance-profile">
+					Local performance profile
+				</Field.Label>
 				<Select.Root
 					type="single"
-					bind:value={() => deviceConfig.get('recording.cpal.sampleRate'),
+					bind:value={() => deviceConfig.get('local.performanceProfile'),
 						(selected) => {
-							if (selected) deviceConfig.set('recording.cpal.sampleRate', selected);
+							const profile = LOCAL_PERFORMANCE_PROFILE_OPTIONS.find(
+								(option) => option.value === selected,
+							);
+							if (!profile) return;
+							deviceConfig.set('local.performanceProfile', profile.value);
+							deviceConfig.set('recording.cpal.sampleRate', profile.sampleRate);
 						}}
 				>
-					<Select.Trigger id="sample-rate" class="w-full">
-						{sampleRateLabel ?? 'Select sample rate'}
+					<Select.Trigger id="local-performance-profile" class="w-full">
+						{selectedPerformanceProfile ?? 'Select profile'}
 					</Select.Trigger>
 					<Select.Content>
-						{#each SAMPLE_RATE_OPTIONS as item}
-							<Select.Item value={item.value} label={item.label} />
+						{#each LOCAL_PERFORMANCE_PROFILE_OPTIONS as item}
+							<Select.Item value={item.value} label={item.label}>
+								<div class="flex flex-col gap-0.5">
+									<span class="font-medium">{item.label}</span>
+									<span class="text-xs text-muted-foreground">
+										{item.description}
+									</span>
+								</div>
+							</Select.Item>
 						{/each}
 					</Select.Content>
 				</Select.Root>
 				<Field.Description>
-					16 kHz is recommended for fast local speech-to-text.
+					Choose how aggressively SpeakPaste should optimize local capture for
+					this Mac.
 				</Field.Description>
 			</Field.Field>
 

@@ -41,6 +41,10 @@ const DEVICE_DEFINITIONS = {
 		type("'16000' | '44100' | '48000'"),
 		'16000',
 	),
+	'local.performanceProfile': defineEntry(
+		type("'balanced' | 'intel-fast' | 'apple-silicon-accuracy'"),
+		'balanced',
+	),
 	'recording.ffmpeg.globalOptions': defineEntry(
 		type('string'),
 		FFMPEG_DEFAULT_GLOBAL_OPTIONS,

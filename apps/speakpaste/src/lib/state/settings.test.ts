@@ -26,6 +26,7 @@ describe("🎙️ SpeakPaste LocalStorage Settings 100% Full-Coverage Suite", ()
 
 	test("🎙️ Recording Constraints & Sample Rate Assertions", () => {
 		const rateKey = "speakpaste.device.recording.cpal.sampleRate";
+		const profileKey = "speakpaste.device.local.performanceProfile";
 		const methodKey = "speakpaste.device.recording.method";
 		const devIdKey = "speakpaste.device.recording.cpal.deviceId";
 		const ffmpegFlagsKey = "speakpaste.device.recording.ffmpeg.globalOptions";
@@ -37,6 +38,11 @@ describe("🎙️ SpeakPaste LocalStorage Settings 100% Full-Coverage Suite", ()
 
 		localStorageMock.setItem(rateKey, "16000");
 		expect(allowedRates).toContain(localStorageMock.getItem(rateKey) || "");
+
+		// User-facing local performance profiles map to native capture settings
+		const allowedProfiles = ["balanced", "intel-fast", "apple-silicon-accuracy"];
+		localStorageMock.setItem(profileKey, "apple-silicon-accuracy");
+		expect(allowedProfiles).toContain(localStorageMock.getItem(profileKey) || "");
 
 		// Supported recording methods
 		const allowedMethods = ["cpal", "navigator", "ffmpeg"];

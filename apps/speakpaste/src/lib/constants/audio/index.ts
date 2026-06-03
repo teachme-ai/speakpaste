@@ -8,6 +8,11 @@ export {
 	WHISPER_RECOMMENDED_MEDIA_TRACK_CONSTRAINTS,
 } from './media-constraints';
 export {
+	LOCAL_PERFORMANCE_PROFILE_OPTIONS,
+	LOCAL_PERFORMANCE_PROFILES,
+	type LocalPerformanceProfile,
+} from './performance-profiles';
+export {
 	RECORDING_MODE_OPTIONS,
 	RECORDING_MODES,
 	type RecordingMode,

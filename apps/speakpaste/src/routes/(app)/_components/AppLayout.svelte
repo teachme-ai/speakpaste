@@ -154,6 +154,7 @@
 		deviceConfig.get('recording.navigator.deviceId');
 		deviceConfig.get('recording.ffmpeg.deviceId');
 		deviceConfig.get('recording.cpal.sampleRate');
+		deviceConfig.get('local.performanceProfile');
 		deviceConfig.get('recording.cpal.outputFolder');
 		deviceConfig.get('transcription.whispercpp.modelPath');
 		deviceConfig.get('transcription.parakeet.modelPath');
