@@ -28,7 +28,7 @@
 		),
 	);
 
-	const outputLanguageLabel = $derived(
+	const dictationLanguageLabel = $derived(
 		SUPPORTED_LANGUAGES_OPTIONS.find(
 			(i) => i.value === settings.get('transcription.language'),
 		)?.label,
@@ -293,15 +293,15 @@
 		{/if}
 
 		<Field.Field>
-			<Field.Label for="output-language">Output Language</Field.Label>
+			<Field.Label for="dictation-language">Dictation Language</Field.Label>
 			<Select.Root
 				type="single"
 				bind:value={() => settings.get('transcription.language'),
 					(v) => settings.set('transcription.language', v)}
 				disabled={!currentServiceCapabilities.supportsLanguage}
 			>
-				<Select.Trigger id="output-language" class="w-full">
-					{outputLanguageLabel ?? 'Select a language'}
+				<Select.Trigger id="dictation-language" class="w-full">
+					{dictationLanguageLabel ?? 'Auto Detect'}
 				</Select.Trigger>
 				<Select.Content>
 					{#each SUPPORTED_LANGUAGES_OPTIONS as item}
@@ -315,6 +315,10 @@
 					'moonshine'
 						? 'Moonshine is English-only'
 						: 'Parakeet automatically detects the language'}
+				</Field.Description>
+			{:else}
+				<Field.Description>
+					Choose the language you speak. This guides local transcription; it does not translate the output.
 				</Field.Description>
 			{/if}
 		</Field.Field>

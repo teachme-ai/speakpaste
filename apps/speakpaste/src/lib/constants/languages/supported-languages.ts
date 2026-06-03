@@ -67,7 +67,7 @@ export const SUPPORTED_LANGUAGES = [
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
 
 const SUPPORTED_LANGUAGES_TO_LABEL = {
-	auto: 'Auto',
+	auto: 'Auto Detect',
 	af: 'Afrikaans',
 	ar: 'Arabic',
 	hy: 'Armenian',

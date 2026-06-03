@@ -15,7 +15,7 @@ The app no longer exposes account credentials or hosted-provider configuration. 
 settings/
 ├── selectors/              # Reusable selector controls
 ├── LocalModelDownloadCard.svelte
-├── CompressionBody.svelte
+├── LocalModelSelector.svelte
 └── README.md
 ```
 
@@ -23,10 +23,10 @@ settings/
 
 ```svelte
 <script lang="ts">
-	import VadDeviceSelector from '$lib/components/settings/selectors/VadDeviceSelector.svelte';
+	import ManualDeviceSelector from '$lib/components/settings/selectors/ManualDeviceSelector.svelte';
 </script>
 
-<VadDeviceSelector settingKey="recording.navigator.deviceId" />
+<ManualDeviceSelector />
 ```
 
 ## Guidelines
@@ -34,4 +34,5 @@ settings/
 - Keep each component focused on one setting or one tightly related setting group.
 - Bind through `settings` or `deviceConfig`; page-only state belongs in the page.
 - Prefer clear labels, validation, and visible local technology attribution.
+- Keep capture-engine internals, FFmpeg command controls, compression controls, and VAD-specific selectors out of the product surface unless a future product decision explicitly reintroduces them.
 - Do not add external account, hosted-provider, or off-device usage-reporting controls here.
