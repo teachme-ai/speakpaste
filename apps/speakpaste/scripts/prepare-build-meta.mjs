@@ -9,31 +9,13 @@ const appRoot = path.resolve(__dirname, '..');
 
 const packageJsonPath = path.join(appRoot, 'package.json');
 const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'));
-
-const now = new Date();
-const builtAtIso = now.toISOString();
-const bundleVersion = formatBundleVersion(now);
-const marketingVersion = packageJson.version;
-const gitCommit = safeExec('git rev-parse --short=12 HEAD', appRoot, 'nogit');
-const gitDirty = safeExec('git status --short --untracked-files=no', appRoot, '')
-	.trim()
-	.length > 0;
-const buildSignature = `${marketingVersion}+${bundleVersion}.${gitCommit}${gitDirty ? '.dirty' : ''}`;
-
-const buildMeta = {
-	marketingVersion,
-	bundleVersion,
-	builtAtIso,
-	gitCommit,
-	gitDirty,
-	buildSignature,
-};
+const buildMeta = readBuildMetaFromEnv() ?? generateBuildMeta(packageJson.version);
 
 writeJson(path.join(appRoot, 'src-tauri', 'build-meta.json'), buildMeta);
 writeJson(path.join(appRoot, 'src-tauri', 'tauri.macos.conf.json'), {
 	bundle: {
 		macOS: {
-			bundleVersion,
+			bundleVersion: buildMeta.bundleVersion,
 		},
 	},
 });
@@ -65,6 +47,56 @@ function safeExec(command, cwd, fallback) {
 	} catch {
 		return fallback;
 	}
+}
+
+function generateBuildMeta(marketingVersion) {
+	const now = new Date();
+	const builtAtIso = now.toISOString();
+	const bundleVersion = formatBundleVersion(now);
+	const gitCommit = safeExec('git rev-parse --short=12 HEAD', appRoot, 'nogit');
+	const gitDirty = safeExec('git status --short --untracked-files=no', appRoot, '')
+		.trim()
+		.length > 0;
+	const buildSignature = `${marketingVersion}+${bundleVersion}.${gitCommit}${gitDirty ? '.dirty' : ''}`;
+
+	return {
+		marketingVersion,
+		bundleVersion,
+		builtAtIso,
+		gitCommit,
+		gitDirty,
+		buildSignature,
+	};
+}
+
+function readBuildMetaFromEnv() {
+	const {
+		SPEAKPASTE_BUILD_MARKETING_VERSION,
+		SPEAKPASTE_BUILD_BUNDLE_VERSION,
+		SPEAKPASTE_BUILD_AT_ISO,
+		SPEAKPASTE_BUILD_GIT_COMMIT,
+		SPEAKPASTE_BUILD_GIT_DIRTY,
+		SPEAKPASTE_BUILD_SIGNATURE,
+	} = process.env;
+
+	if (
+		!SPEAKPASTE_BUILD_MARKETING_VERSION ||
+		!SPEAKPASTE_BUILD_BUNDLE_VERSION ||
+		!SPEAKPASTE_BUILD_AT_ISO ||
+		!SPEAKPASTE_BUILD_GIT_COMMIT ||
+		!SPEAKPASTE_BUILD_SIGNATURE
+	) {
+		return null;
+	}
+
+	return {
+		marketingVersion: SPEAKPASTE_BUILD_MARKETING_VERSION,
+		bundleVersion: SPEAKPASTE_BUILD_BUNDLE_VERSION,
+		builtAtIso: SPEAKPASTE_BUILD_AT_ISO,
+		gitCommit: SPEAKPASTE_BUILD_GIT_COMMIT,
+		gitDirty: SPEAKPASTE_BUILD_GIT_DIRTY === 'true',
+		buildSignature: SPEAKPASTE_BUILD_SIGNATURE,
+	};
 }
 
 function formatBundleVersion(date) {
