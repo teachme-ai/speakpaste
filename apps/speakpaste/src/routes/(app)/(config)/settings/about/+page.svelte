@@ -29,7 +29,8 @@
 				</div>
 				<div class="flex flex-wrap gap-2">
 					<Badge variant="default" class="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">Version {BUILD_INFO.marketingVersion}</Badge>
-					<Badge variant="outline">Build {BUILD_INFO.bundleVersion}</Badge>
+					<Badge variant="outline">Release {BUILD_INFO.gitCommitCount}</Badge>
+					<Badge variant="outline">Bundle {BUILD_INFO.bundleVersion}</Badge>
 					<Badge variant="outline" class="font-mono">{BUILD_INFO.gitCommit}</Badge>
 					<Badge variant="outline">Mac Only</Badge>
 					<Badge variant="outline" class="text-green-600 dark:text-green-400 border-green-500/20">Local-First</Badge>
@@ -42,7 +43,7 @@
 			</div>
 
 			<div class="mt-4 rounded-lg border border-border bg-background/60 p-3 text-xs text-muted-foreground">
-				<p><strong>Build accountability:</strong> SpeakPaste stamps every local build with a unique bundle build number, commit reference, and build time so reinstalls and support issues can be traced to the exact app instance.</p>
+				<p><strong>Build accountability:</strong> SpeakPaste now advances its release number with Git history, while still stamping every build with the exact commit reference and build time for traceability.</p>
 			</div>
 		</div>
 

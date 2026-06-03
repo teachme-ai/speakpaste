@@ -31,6 +31,21 @@ fn main() {
             .unwrap_or(env!("CARGO_PKG_VERSION")),
     );
     set_rustc_env(
+        "SPEAKPASTE_BUILD_GIT_COMMIT_COUNT",
+        build_meta
+            .as_ref()
+            .and_then(|meta| meta.get("gitCommitCount"))
+            .map(|value| {
+                value
+                    .as_u64()
+                    .map(|count| count.to_string())
+                    .or_else(|| value.as_str().map(|count| count.to_string()))
+                    .unwrap_or_else(|| "0".to_string())
+            })
+            .unwrap_or_else(|| "0".to_string())
+            .as_str(),
+    );
+    set_rustc_env(
         "SPEAKPASTE_BUILD_GIT_COMMIT",
         build_meta
             .as_ref()

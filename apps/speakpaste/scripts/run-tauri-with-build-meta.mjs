@@ -30,6 +30,7 @@ const result = spawnSync(
 			...process.env,
 			SPEAKPASTE_BUILD_MARKETING_VERSION: buildMeta.marketingVersion,
 			SPEAKPASTE_BUILD_BUNDLE_VERSION: buildMeta.bundleVersion,
+			SPEAKPASTE_BUILD_GIT_COMMIT_COUNT: String(buildMeta.gitCommitCount),
 			SPEAKPASTE_BUILD_AT_ISO: buildMeta.builtAtIso,
 			SPEAKPASTE_BUILD_GIT_COMMIT: buildMeta.gitCommit,
 			SPEAKPASTE_BUILD_GIT_DIRTY: String(buildMeta.gitDirty),
