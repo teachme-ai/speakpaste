@@ -4,19 +4,13 @@
 	import { createQuery } from '@tanstack/svelte-query';
 	import { commandCallbacks } from '$lib/commands';
 	import {
-		CompressionSelector,
 		RecordingModeSelector,
 		TranscriptionSelector,
 	} from '$lib/components/settings';
 	import ManualDeviceSelector from '$lib/components/settings/selectors/ManualDeviceSelector.svelte';
-	import VadDeviceSelector from '$lib/components/settings/selectors/VadDeviceSelector.svelte';
-	import {
-		RECORDER_STATE_TO_ICON,
-		VAD_STATE_TO_ICON,
-	} from '$lib/constants/audio';
+	import { RECORDER_STATE_TO_ICON } from '$lib/constants/audio';
 	import { rpc } from '$lib/query';
 	import { settings } from '$lib/state/settings.svelte';
-	import { vadRecorder } from '$lib/state/vad-recorder.svelte';
 	import { viewTransition } from '$lib/utils/viewTransitions';
 
 	const getRecorderStateQuery = createQuery(
@@ -52,7 +46,6 @@
 					</Button>
 				{:else}
 					<ManualDeviceSelector />
-					<CompressionSelector />
 					<TranscriptionSelector />
 				{/if}
 				{#if getRecorderStateQuery.data === 'RECORDING'}
@@ -80,44 +73,11 @@
 						<RecordingModeSelector class="rounded-l-none" />
 					</div>
 				{/if}
-			{:else if settings.get('recording.mode') === 'vad'}
-				{#if vadRecorder.state === 'IDLE'}
-					<VadDeviceSelector />
-					<CompressionSelector />
-					<TranscriptionSelector />
-				{/if}
-				{#if vadRecorder.state === 'IDLE'}
-					<div class="flex">
-						<Button
-							tooltip="Start voice activated recording"
-							onclick={() => commandCallbacks.toggleVadRecording()}
-							variant="ghost"
-							size="icon"
-							style="view-transition-name: {viewTransition.global.microphone}"
-							class="rounded-r-none border-r-0"
-						>
-							{VAD_STATE_TO_ICON[vadRecorder.state]}
-						</Button>
-						<RecordingModeSelector class="rounded-l-none" />
-					</div>
-				{:else}
-					<Button
-						tooltip="Stop voice activated recording"
-						onclick={() => commandCallbacks.toggleVadRecording()}
-						variant="ghost"
-						size="icon"
-						style="view-transition-name: {viewTransition.global.microphone}"
-					>
-						{VAD_STATE_TO_ICON[vadRecorder.state]}
-					</Button>
-				{/if}
 			{:else if settings.get('recording.mode') === 'upload'}
-				<CompressionSelector />
 				<TranscriptionSelector />
 				<RecordingModeSelector />
 			{:else if settings.get('recording.mode') === 'live'}
 				<ManualDeviceSelector />
-				<CompressionSelector />
 				<TranscriptionSelector />
 				<RecordingModeSelector />
 			{/if}

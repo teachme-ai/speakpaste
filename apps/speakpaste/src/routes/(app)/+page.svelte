@@ -91,6 +91,7 @@
 	});
 
 	import { PATHS } from '$lib/constants/paths';
+	import { LOCAL_PERFORMANCE_PROFILE_OPTIONS } from '$lib/constants/audio';
 
 	const getRecorderStateQuery = createQuery(
 		() => rpc.recorder.getRecorderState.options,
@@ -243,6 +244,11 @@
 	const modelLabel = $derived(
 		WHISPER_MODELS.find((m) => modelPath.endsWith(m.file.filename))?.id ?? 'tiny.en'
 	);
+	const profileLabel = $derived(
+		LOCAL_PERFORMANCE_PROFILE_OPTIONS.find(
+			(profile) => profile.value === deviceConfig.get('local.performanceProfile'),
+		)?.label ?? 'Balanced'
+	);
 
 	function timeAgo(dateStr: string) {
 		try {
@@ -275,7 +281,7 @@
 			<MicButton {recorderState} {isTranscribing} {justPasted} />
 			<div class="flex flex-col items-center gap-4">
 				<HintText />
-				<EngineBadge {modelLabel} />
+				<EngineBadge {modelLabel} {profileLabel} />
 			</div>
 			<PipelineControlDeck />
 		</div>

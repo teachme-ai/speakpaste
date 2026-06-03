@@ -4,7 +4,10 @@
 	import * as Select from '@epicenter/ui/select';
 	import { Switch } from '@epicenter/ui/switch';
 	import { createMutation, createQuery } from '@tanstack/svelte-query';
-	import { RECORDING_MODE_OPTIONS } from '$lib/constants/audio';
+	import {
+		LOCAL_PERFORMANCE_PROFILE_OPTIONS,
+		RECORDING_MODE_OPTIONS,
+	} from '$lib/constants/audio';
 	import {
 		TRANSCRIPTION_SERVICE_ID_TO_LABEL,
 		TRANSCRIPTION_SERVICE_OPTIONS,
@@ -44,6 +47,12 @@
 
 	const selectedEngineLabel = $derived(
 		TRANSCRIPTION_SERVICE_ID_TO_LABEL[settings.get('transcription.service')],
+	);
+
+	const selectedPerformanceProfile = $derived(
+		LOCAL_PERFORMANCE_PROFILE_OPTIONS.find(
+			(profile) => profile.value === deviceConfig.get('local.performanceProfile'),
+		),
 	);
 
 	const selectedModelPath = $derived.by(() => {
@@ -113,7 +122,9 @@
 					Voice capture
 				</p>
 				<p class="mt-2 text-base font-semibold">{selectedRecordingMode?.label}</p>
-				<p class="mt-1 text-sm text-muted-foreground">Current recording mode</p>
+				<p class="mt-1 text-sm text-muted-foreground">
+					{selectedPerformanceProfile?.label ?? 'Balanced'}
+				</p>
 			</a>
 			<a
 				href="/settings/transcription"
@@ -198,6 +209,43 @@
 				</Select.Root>
 				<Field.Description>
 					{selectedModelState}. Manage model files in Local Engine.
+				</Field.Description>
+			</Field.Field>
+
+			<Field.Field>
+				<Field.Label for="local-performance-profile">
+					Local performance profile
+				</Field.Label>
+				<Select.Root
+					type="single"
+					bind:value={() => deviceConfig.get('local.performanceProfile'),
+						(selected) => {
+							const profile = LOCAL_PERFORMANCE_PROFILE_OPTIONS.find(
+								(option) => option.value === selected,
+							);
+							if (!profile) return;
+							deviceConfig.set('local.performanceProfile', profile.value);
+							deviceConfig.set('recording.cpal.sampleRate', profile.sampleRate);
+						}}
+				>
+					<Select.Trigger id="local-performance-profile" class="w-full">
+						{selectedPerformanceProfile?.label ?? 'Select profile'}
+					</Select.Trigger>
+					<Select.Content>
+						{#each LOCAL_PERFORMANCE_PROFILE_OPTIONS as profile}
+							<Select.Item value={profile.value} label={profile.label}>
+								<div class="flex flex-col gap-0.5">
+									<span class="font-medium">{profile.label}</span>
+									<span class="text-xs text-muted-foreground">
+										{profile.description}
+									</span>
+								</div>
+							</Select.Item>
+						{/each}
+					</Select.Content>
+				</Select.Root>
+				<Field.Description>
+					Profile tuning is local and changes native capture behavior on this Mac.
 				</Field.Description>
 			</Field.Field>
 

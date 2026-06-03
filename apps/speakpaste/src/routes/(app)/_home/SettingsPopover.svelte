@@ -2,22 +2,16 @@
 	import { Switch } from '@epicenter/ui/switch';
 	import * as Popover from '@epicenter/ui/popover';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
-	import HandIcon from '@lucide/svelte/icons/hand';
-	import BoxIcon from '@lucide/svelte/icons/box';
 	import ClipboardIcon from '@lucide/svelte/icons/clipboard';
 	import ListIcon from '@lucide/svelte/icons/list';
 	import TrashIcon from '@lucide/svelte/icons/trash-2';
 	import { settings } from '$lib/state/settings.svelte';
 	import { recordings } from '$lib/state/recordings.svelte';
-	import { deviceConfig } from '$lib/state/device-config.svelte';
-	import { WHISPER_MODELS } from '$lib/services/transcription/local/whispercpp';
 	import {
-		CompressionSelector,
 		RecordingModeSelector,
 		TranscriptionSelector,
 	} from '$lib/components/settings';
 	import ManualDeviceSelector from '$lib/components/settings/selectors/ManualDeviceSelector.svelte';
-	import { PATHS } from '$lib/constants/paths';
 
 	const autoPaste = $derived(settings.get('output.transcription.cursor'));
 </script>
@@ -39,7 +33,6 @@
 			<!-- Selectors Toolbar -->
 			<div class="flex items-center justify-center gap-1.5 px-4 py-3 border-b border-border bg-muted/30">
 				<ManualDeviceSelector />
-				<CompressionSelector />
 				<TranscriptionSelector />
 				<RecordingModeSelector />
 			</div>

@@ -27,6 +27,12 @@ On the Capture settings page:
   - FFmpeg command builder
   - Browser bitrate controls
 
+On the Home and Control Center surfaces:
+
+- The home engine badge should include the selected local performance profile alongside the local engine/model signal.
+- The Control Center voice capture card should summarize the selected profile in user language.
+- Quick settings/header controls should not expose compression, FFmpeg, Navigator, VAD device selection, or capture-engine internals.
+
 ## Validation Tasks
 
 1. Run the app build:
@@ -50,7 +56,14 @@ bun test apps/speakpaste/src/lib/state/settings.test.ts
 - Confirm choosing `Higher accuracy on Apple Silicon` updates the runtime capture sample rate internally.
 - Confirm raw sample-rate wording is not visible in the normal Capture settings page.
 
-4. Runtime smoke, if available:
+4. Inspect the Home and Control Center surfaces:
+
+- Confirm the home engine badge changes when the selected profile changes.
+- Confirm Control Center shows the profile as part of the voice capture summary.
+- Confirm the quick settings popover no longer shows a compression control.
+- Confirm the config header no longer shows compression or VAD-specific controls.
+
+5. Runtime smoke, if available:
 
 - Launch `/Applications/SpeakPaste.app`.
 - Select each profile.
