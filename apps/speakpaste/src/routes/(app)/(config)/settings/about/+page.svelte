@@ -25,11 +25,13 @@
 			<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 				<div class="space-y-1">
 					<h3 class="text-xl font-bold tracking-tight">🎙️ SpeakPaste</h3>
-					<p class="text-sm text-muted-foreground">Local Voice Typing utility for macOS</p>
+					<p class="text-sm text-muted-foreground">
+						Release {BUILD_INFO.gitCommitCount} · Version {BUILD_INFO.marketingVersion}
+					</p>
 				</div>
 				<div class="flex flex-wrap gap-2">
-					<Badge variant="default" class="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">Version {BUILD_INFO.marketingVersion}</Badge>
-					<Badge variant="outline">Release {BUILD_INFO.gitCommitCount}</Badge>
+					<Badge variant="default" class="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">Release {BUILD_INFO.gitCommitCount}</Badge>
+					<Badge variant="outline">Version {BUILD_INFO.marketingVersion}</Badge>
 					<Badge variant="outline">Bundle {BUILD_INFO.bundleVersion}</Badge>
 					<Badge variant="outline" class="font-mono">{BUILD_INFO.gitCommit}</Badge>
 					<Badge variant="outline">Mac Only</Badge>
