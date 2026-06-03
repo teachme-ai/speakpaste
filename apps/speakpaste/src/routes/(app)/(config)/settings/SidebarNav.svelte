@@ -6,11 +6,11 @@
 	import { page } from '$app/state';
 
 	const items = [
-		{ title: 'Control', href: '/settings' },
-		{ title: 'Capture', href: '/settings/recording' },
-		{ title: 'Engine', href: '/settings/transcription' },
+		{ title: 'Home', href: '/settings' },
+		{ title: 'Voice', href: '/settings/recording' },
+		{ title: 'Models', href: '/settings/transcription' },
 		{
-			title: 'Shortcuts',
+			title: 'Trigger',
 			href: '/settings/shortcuts/global',
 			activePathPrefix: '/settings/shortcuts',
 		},

@@ -4,10 +4,7 @@
 	import * as Select from '@epicenter/ui/select';
 	import { Switch } from '@epicenter/ui/switch';
 	import { createMutation, createQuery } from '@tanstack/svelte-query';
-	import {
-		LOCAL_PERFORMANCE_PROFILE_OPTIONS,
-		RECORDING_MODE_OPTIONS,
-	} from '$lib/constants/audio';
+	import { LOCAL_PERFORMANCE_PROFILE_OPTIONS } from '$lib/constants/audio';
 	import {
 		TRANSCRIPTION_SERVICE_ID_TO_LABEL,
 		TRANSCRIPTION_SERVICE_OPTIONS,
@@ -31,19 +28,6 @@
 		{ value: 50, label: '50 recordings' },
 		{ value: 100, label: '100 recordings' },
 	];
-
-	const availableRecordingModes = $derived(
-		RECORDING_MODE_OPTIONS.filter((mode) => {
-			if (window.__TAURI_INTERNALS__ && mode.value === 'vad') return false;
-			return true;
-		}),
-	);
-
-	const selectedRecordingMode = $derived(
-		availableRecordingModes.find(
-			(mode) => mode.value === settings.get('recording.mode'),
-		),
-	);
 
 	const selectedEngineLabel = $derived(
 		TRANSCRIPTION_SERVICE_ID_TO_LABEL[settings.get('transcription.service')],
@@ -121,7 +105,7 @@
 				<p class="text-xs font-medium uppercase text-muted-foreground">
 					Voice capture
 				</p>
-				<p class="mt-2 text-base font-semibold">{selectedRecordingMode?.label}</p>
+				<p class="mt-2 text-base font-semibold">Press to Speak</p>
 				<p class="mt-1 text-sm text-muted-foreground">
 					{selectedPerformanceProfile?.label ?? 'Balanced'}
 				</p>
@@ -168,27 +152,6 @@
 		</Field.Description>
 		<Field.Separator />
 		<Field.Group>
-			<Field.Field>
-				<Field.Label for="recording-mode">Voice capture</Field.Label>
-				<Select.Root
-					type="single"
-					bind:value={() => settings.get('recording.mode'),
-						(v) => {
-							const selected = availableRecordingModes.find((mode) => mode.value === v);
-							if (selected) settings.set('recording.mode', selected.value);
-						}}
-				>
-					<Select.Trigger id="recording-mode" class="w-full">
-					{selectedRecordingMode?.label ?? 'Select recording mode'}
-				</Select.Trigger>
-				<Select.Content>
-					{#each availableRecordingModes as mode}
-						<Select.Item value={mode.value} label={`${mode.icon} ${mode.label}`} />
-					{/each}
-				</Select.Content>
-				</Select.Root>
-			</Field.Field>
-
 			<Field.Field>
 				<Field.Label for="transcription-service">Local engine</Field.Label>
 				<Select.Root
