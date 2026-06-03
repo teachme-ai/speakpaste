@@ -67,7 +67,7 @@ function getTray() {
 
 // Track current state for menu display
 let currentState: SpeakPasteTrayState = 'IDLE';
-let currentShortcut = 'Command+Shift+F8';
+let currentShortcut = 'Fn key';
 let currentModel = 'tiny.en';
 let autoPasteEnabled = true;
 

@@ -54,6 +54,22 @@
 			console.info('[Shortcuts] migrating stale shortcut to Command+Shift+Return:', stored);
 			localStorage.removeItem(staleKey);
 		}
+		const retiredGlobalShortcutKeys = [
+			'shortcuts.global.cancelManualRecording',
+			'shortcuts.global.pushToTalk',
+			'shortcuts.global.openTransformationPicker',
+			'shortcuts.global.runTransformationOnClipboard',
+			'shortcuts.global.toggleVadRecording',
+			'shortcuts.global.startVadRecording',
+			'shortcuts.global.stopVadRecording',
+		];
+		for (const key of retiredGlobalShortcutKeys) {
+			const storageKey = `speakpaste.device.${key}`;
+			if (localStorage.getItem(storageKey)) {
+				console.info('[Shortcuts] removing retired global shortcut:', key);
+				localStorage.removeItem(storageKey);
+			}
+		}
 		if (window.__TAURI_INTERNALS__ && settings.get('recording.mode') === 'vad') {
 			console.info('[Recording] resetting stale hands-free mode to Press to Speak');
 			settings.set('recording.mode', 'manual');

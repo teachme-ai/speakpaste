@@ -1,6 +1,6 @@
 import { partitionResults } from 'wellcrafted/result';
 import { commands } from '$lib/commands';
-import { CommandOrAlt, CommandOrControl } from '$lib/constants/keyboard';
+import { CommandOrControl } from '$lib/constants/keyboard';
 import { rpc } from '$lib/query';
 import { desktopRpc } from '$lib/query/desktop';
 import type { Accelerator } from '$lib/services/desktop/global-shortcut-manager';
@@ -27,16 +27,16 @@ const DEFAULT_LOCAL_SHORTCUTS: Record<string, string | null> = {
 
 /** Default values for global OS shortcuts. Keyed by command id string. */
 const DEFAULT_GLOBAL_SHORTCUTS: Record<string, string | null> = {
-	pushToTalk: `${CommandOrAlt}+Shift+D`,
+	pushToTalk: null,
 	toggleManualRecording: `${CommandOrControl}+Shift+F8`,
 	startManualRecording: null,
 	stopManualRecording: null,
-	cancelManualRecording: `${CommandOrControl}+Shift+'`,
+	cancelManualRecording: null,
 	startVadRecording: null,
 	stopVadRecording: null,
 	toggleVadRecording: null,
-	openTransformationPicker: `${CommandOrControl}+Shift+X`,
-	runTransformationOnClipboard: `${CommandOrControl}+Shift+R`,
+	openTransformationPicker: null,
+	runTransformationOnClipboard: null,
 };
 
 type LocalShortcutKey =

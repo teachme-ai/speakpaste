@@ -70,7 +70,7 @@
 		selectedModelPath ? 'Model configured' : 'Model path needed',
 	);
 
-	const globalShortcut = $derived(
+	const fallbackShortcut = $derived(
 		deviceConfig.get('shortcuts.global.toggleManualRecording') ?? 'Not set',
 	);
 
@@ -143,8 +143,10 @@
 				<p class="text-xs font-medium uppercase text-muted-foreground">
 					Main shortcut
 				</p>
-				<p class="mt-2 text-base font-semibold">{globalShortcut}</p>
-				<p class="mt-1 text-sm text-muted-foreground">Toggle recording</p>
+				<p class="mt-2 text-base font-semibold">Fn key</p>
+				<p class="mt-1 text-sm text-muted-foreground">
+					Fallback: {fallbackShortcut}
+				</p>
 			</a>
 			<a
 				href="/settings/analytics"

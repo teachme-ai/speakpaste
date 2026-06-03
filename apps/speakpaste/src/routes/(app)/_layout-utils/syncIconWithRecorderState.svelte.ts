@@ -13,7 +13,7 @@ export function syncIconWithRecorderState() {
 	let pastedTimer: ReturnType<typeof setTimeout> | undefined;
 
 	function syncContext() {
-		const shortcut = deviceConfig.get('shortcuts.global.toggleManualRecording') ?? 'Command+Shift+F8';
+		const shortcut = 'Fn key';
 		const modelPath = deviceConfig.get('transcription.whispercpp.modelPath');
 		const model = WHISPER_MODELS.find((m) => modelPath.endsWith(m.file.filename))?.id ?? 'tiny.en';
 		const autoPaste = settings.get('output.transcription.cursor');

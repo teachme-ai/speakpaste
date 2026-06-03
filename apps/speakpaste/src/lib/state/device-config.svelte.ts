@@ -6,7 +6,7 @@ import {
 import { type } from 'arktype';
 import { extractErrorMessage } from 'wellcrafted/error';
 import { BITRATES_KBPS, DEFAULT_BITRATE_KBPS } from '$lib/constants/audio';
-import { CommandOrAlt, CommandOrControl } from '$lib/constants/keyboard';
+import { CommandOrControl } from '$lib/constants/keyboard';
 import { rpc } from '$lib/query';
 import {
 	FFMPEG_DEFAULT_GLOBAL_OPTIONS,
@@ -78,7 +78,7 @@ const DEVICE_DEFINITIONS = {
 	),
 	'shortcuts.global.cancelManualRecording': defineEntry(
 		type('string | null'),
-		`${CommandOrControl}+Shift+'` as string | null,
+		null,
 	),
 	'shortcuts.global.toggleVadRecording': defineEntry(
 		type('string | null'),
@@ -91,15 +91,15 @@ const DEVICE_DEFINITIONS = {
 	'shortcuts.global.stopVadRecording': defineEntry(type('string | null'), null),
 	'shortcuts.global.pushToTalk': defineEntry(
 		type('string | null'),
-		`${CommandOrAlt}+Shift+D` as string | null,
+		null,
 	),
 	'shortcuts.global.openTransformationPicker': defineEntry(
 		type('string | null'),
-		`${CommandOrControl}+Shift+X` as string | null,
+		null,
 	),
 	'shortcuts.global.runTransformationOnClipboard': defineEntry(
 		type('string | null'),
-		`${CommandOrControl}+Shift+R` as string | null,
+		null,
 	),
 
 	// ── Appearance ────────────────────────────────────────────────────────────

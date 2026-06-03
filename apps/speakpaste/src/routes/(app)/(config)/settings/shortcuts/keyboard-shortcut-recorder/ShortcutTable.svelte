@@ -13,7 +13,15 @@
 	import GlobalKeyboardShortcutRecorder from './GlobalKeyboardShortcutRecorder.svelte';
 	import LocalKeyboardShortcutRecorder from './LocalKeyboardShortcutRecorder.svelte';
 
-	let { type }: { type: 'local' | 'global' } = $props();
+	let {
+		type,
+		commandIds,
+		showSearch = true,
+	}: {
+		type: 'local' | 'global';
+		commandIds?: readonly string[];
+		showSearch?: boolean;
+	} = $props();
 
 	let searchQuery = $state('');
 
@@ -35,6 +43,7 @@
 
 	const filteredCommands = $derived(
 		commands.filter((command) =>
+			(!commandIds || commandIds.includes(command.id)) &&
 			command.title.toLowerCase().includes(searchQuery.toLowerCase()),
 		),
 	);
@@ -50,18 +59,20 @@
 </script>
 
 <div class="space-y-4">
-	<!-- Search input -->
-	<div class="relative">
-		<Search
-			class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-		/>
-		<Input
-			type="search"
-			placeholder="Search commands..."
-			class="pl-10"
-			bind:value={searchQuery}
-		/>
-	</div>
+	{#if showSearch}
+		<!-- Search input -->
+		<div class="relative">
+			<Search
+				class="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+			/>
+			<Input
+				type="search"
+				placeholder="Search commands..."
+				class="pl-10"
+				bind:value={searchQuery}
+			/>
+		</div>
+	{/if}
 
 	<!-- Command list with shortcuts -->
 	<div class="overflow-x-auto rounded-lg border">
