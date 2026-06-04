@@ -26,6 +26,14 @@
 		buildSignature: string;
 	};
 
+	type FnKeyListenerReadiness = {
+		accessibilityTrusted: boolean;
+		listenerRunning: boolean;
+		listenerReady: boolean;
+		initialized: boolean;
+		message: string | null;
+	};
+
 	let { data } = $props();
 	let isAccessibilityGranted = $state(data.isAccessibilityGranted);
 	let checkInterval: any;
@@ -35,26 +43,16 @@
 	onMount(() => {
 		if (isAccessibilityGranted) {
 			// Ensure it's initialized if already granted
-			invoke('initialize_fn_key_listener').catch((err) => {
-				console.error('[FnKeyListener] Failed to initialize Fn key listener:', err);
-			});
-			return;
+			void checkFnKeyReadiness();
 		}
 
 		checkInterval = setInterval(async () => {
-			const { data: granted, error } = await desktopServices.permissions.accessibility.check();
-			if (error) return;
-			if (granted) {
+			if (await checkFnKeyReadiness()) {
 				isAccessibilityGranted = true;
 				clearInterval(checkInterval);
 				toast.success('Accessibility permission granted!', {
 					description: 'SpeakPaste has successfully registered the global Fn key listener.',
 				});
-				try {
-					await invoke('initialize_fn_key_listener');
-				} catch (err) {
-					console.error('[FnKeyListener] Failed to initialize Fn key listener:', err);
-				}
 			}
 		}, 1000);
 	});
@@ -81,6 +79,24 @@
 		}
 
 		await openSystemSettings();
+	}
+
+	async function checkFnKeyReadiness() {
+		try {
+			const readiness = await invoke<FnKeyListenerReadiness>(
+				'get_fn_key_listener_readiness',
+			);
+			if (readiness.listenerReady) {
+				isAccessibilityGranted = true;
+				return true;
+			}
+			isAccessibilityGranted = false;
+			console.warn('[FnKeyListener] Listener is not ready yet.', readiness);
+			return false;
+		} catch (err) {
+			console.error('[FnKeyListener] Failed to check listener readiness:', err);
+			return false;
+		}
 	}
 
 	async function openSystemSettings() {

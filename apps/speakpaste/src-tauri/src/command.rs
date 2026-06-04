@@ -177,7 +177,11 @@ pub async fn download_model_file(
     file_path: String,
     event_id: String,
 ) -> Result<(), String> {
-    log::info!("[Downloader] Starting download from {} to {}", url, file_path);
+    log::info!(
+        "[Downloader] Starting download from {} to {}",
+        url,
+        file_path
+    );
 
     // Ensure parent directory exists
     let path = Path::new(&file_path);
@@ -194,12 +198,13 @@ pub async fn download_model_file(
         .map_err(|e| format!("Network request failed: {}", e))?;
 
     if !response.status().is_success() {
-        return Err(format!("Download failed with status: {}", response.status()));
+        return Err(format!(
+            "Download failed with status: {}",
+            response.status()
+        ));
     }
 
-    let total_bytes = response
-        .content_length()
-        .unwrap_or(0);
+    let total_bytes = response.content_length().unwrap_or(0);
 
     let mut file = tokio::fs::File::create(&file_path)
         .await
@@ -250,7 +255,9 @@ pub async fn download_model_file(
         .await
         .map_err(|e| format!("Failed to flush file: {}", e))?;
 
-    log::info!("[Downloader] Download completed successfully for {}", file_path);
+    log::info!(
+        "[Downloader] Download completed successfully for {}",
+        file_path
+    );
     Ok(())
 }
-

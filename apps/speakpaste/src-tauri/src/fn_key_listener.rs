@@ -1,6 +1,8 @@
 use log::{error, info, warn};
+use serde::Serialize;
 use std::os::raw::c_void;
 use std::ptr;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
 use tauri::AppHandle;
 
@@ -135,9 +137,21 @@ type CGEventTapCallBack = unsafe extern "C" fn(
 // ==========================================
 // 6. Public Runner
 // ==========================================
-use std::sync::atomic::{AtomicBool, Ordering};
-
 static LISTENER_RUNNING: AtomicBool = AtomicBool::new(false);
+
+#[derive(Clone, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FnKeyListenerReadiness {
+    pub accessibility_trusted: bool,
+    pub listener_running: bool,
+    pub listener_ready: bool,
+    pub initialized: bool,
+    pub message: Option<String>,
+}
+
+fn accessibility_trusted() -> bool {
+    unsafe { accessibility_sys::AXIsProcessTrusted() }
+}
 
 /// Initializes and starts the global Fn key listener in a background thread.
 pub fn start_fn_key_listener(app_handle: AppHandle) -> Result<(), &'static str> {
@@ -147,11 +161,9 @@ pub fn start_fn_key_listener(app_handle: AppHandle) -> Result<(), &'static str> 
     }
 
     // Check for macOS Accessibility permissions using AXIsProcessTrusted
-    unsafe {
-        if !accessibility_sys::AXIsProcessTrusted() {
-            warn!("[FnKeyListener] Accessibility permissions not granted. CGEventTapCreate will return NULL.");
-            return Err("Missing Accessibility permissions");
-        }
+    if !accessibility_trusted() {
+        warn!("[FnKeyListener] Accessibility permissions not granted. CGEventTapCreate will return NULL.");
+        return Err("Missing Accessibility permissions");
     }
 
     LISTENER_RUNNING.store(true, Ordering::Relaxed);
@@ -224,4 +236,40 @@ pub async fn initialize_fn_key_listener(app: tauri::AppHandle) -> Result<bool, S
         Ok(_) => Ok(true),
         Err(e) => Err(e.to_string()),
     }
+}
+
+#[tauri::command]
+pub async fn get_fn_key_listener_readiness(
+    app: tauri::AppHandle,
+) -> Result<FnKeyListenerReadiness, String> {
+    let trusted = accessibility_trusted();
+    let was_running = LISTENER_RUNNING.load(Ordering::Relaxed);
+
+    if !trusted {
+        return Ok(FnKeyListenerReadiness {
+            accessibility_trusted: false,
+            listener_running: was_running,
+            listener_ready: false,
+            initialized: false,
+            message: Some("Accessibility is not trusted by macOS yet".to_string()),
+        });
+    }
+
+    if let Err(error) = start_fn_key_listener(app) {
+        return Ok(FnKeyListenerReadiness {
+            accessibility_trusted: true,
+            listener_running: LISTENER_RUNNING.load(Ordering::Relaxed),
+            listener_ready: false,
+            initialized: false,
+            message: Some(error.to_string()),
+        });
+    }
+
+    Ok(FnKeyListenerReadiness {
+        accessibility_trusted: true,
+        listener_running: LISTENER_RUNNING.load(Ordering::Relaxed),
+        listener_ready: LISTENER_RUNNING.load(Ordering::Relaxed),
+        initialized: !was_running,
+        message: None,
+    })
 }

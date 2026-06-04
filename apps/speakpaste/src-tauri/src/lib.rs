@@ -255,6 +255,7 @@ pub async fn run() {
         spawn_command,
         download_model_file,
         fn_key_listener::initialize_fn_key_listener,
+        fn_key_listener::get_fn_key_listener_readiness,
         get_dictation_runtime_state,
         set_dictation_runtime_state,
         write_runtime_config,

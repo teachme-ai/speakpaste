@@ -198,9 +198,15 @@ fn should_reset_stale_accessibility(
     state: &AccessibilityRecoveryState,
     current: &InstallFingerprint,
 ) -> bool {
-    state.has_seen_accessibility_trusted
-        && state.last_tcc_reset_build_signature.as_deref()
-            != Some(current.build_signature.as_str())
+    let reset_not_attempted_for_build =
+        state.last_tcc_reset_build_signature.as_deref() != Some(current.build_signature.as_str());
+    let install_changed = state
+        .last_install_fingerprint
+        .as_ref()
+        .map(|previous| fingerprint_changed(previous, current))
+        .unwrap_or(false);
+
+    reset_not_attempted_for_build && (state.has_seen_accessibility_trusted || install_changed)
 }
 
 #[cfg(target_os = "macos")]
@@ -246,10 +252,7 @@ fn read_recovery_state(app: &AppHandle) -> Result<AccessibilityRecoveryState, St
     })
 }
 
-fn write_recovery_state(
-    app: &AppHandle,
-    state: &AccessibilityRecoveryState,
-) -> Result<(), String> {
+fn write_recovery_state(app: &AppHandle, state: &AccessibilityRecoveryState) -> Result<(), String> {
     let path = recovery_state_path(app)?;
     if let Some(parent) = path.parent() {
         fs::create_dir_all(parent).map_err(|error| {
@@ -261,8 +264,12 @@ fn write_recovery_state(
         })?;
     }
 
-    let payload = serde_json::to_string_pretty(state)
-        .map_err(|error| format!("Failed to serialize accessibility recovery state: {}", error))?;
+    let payload = serde_json::to_string_pretty(state).map_err(|error| {
+        format!(
+            "Failed to serialize accessibility recovery state: {}",
+            error
+        )
+    })?;
     fs::write(&path, payload)
         .map_err(|error| format!("Failed to write accessibility recovery state: {}", error))
 }
@@ -346,6 +353,9 @@ mod tests {
             repair_state_label(false, false, true),
             "prompted_after_install_change".to_string()
         );
-        assert_eq!(repair_state_label(true, false, false), "trusted".to_string());
+        assert_eq!(
+            repair_state_label(true, false, false),
+            "trusted".to_string()
+        );
     }
 }

@@ -19,6 +19,14 @@ type AccessibilityRepairResult = {
 	buildSignature: string;
 };
 
+type FnKeyListenerReadiness = {
+	accessibilityTrusted: boolean;
+	listenerRunning: boolean;
+	listenerReady: boolean;
+	initialized: boolean;
+	message: string | null;
+};
+
 async function openMacPrivacyPane(pane: 'Privacy_Accessibility' | 'Privacy_Microphone') {
 	const { invoke } = await import('@tauri-apps/api/core');
 	await invoke('open_mac_privacy_pane', { pane });
@@ -39,13 +47,20 @@ async function runOsLevelPermissionFixes() {
 async function initializeFnKeyListener() {
 	try {
 		const { invoke } = await import('@tauri-apps/api/core');
-		await invoke('initialize_fn_key_listener');
-		console.log(
-			'[FnKeyListener] Standalone Fn key listener initialized successfully.',
+		const readiness = await invoke<FnKeyListenerReadiness>(
+			'get_fn_key_listener_readiness',
 		);
-		return true;
+		if (readiness.listenerReady) {
+			console.log(
+				'[FnKeyListener] Standalone Fn key listener is ready.',
+				readiness,
+			);
+			return true;
+		}
+		console.warn('[FnKeyListener] Listener is not ready yet.', readiness);
+		return false;
 	} catch (err) {
-		console.error('[FnKeyListener] Failed to initialize Fn key listener:', err);
+		console.error('[FnKeyListener] Failed to check Fn key listener:', err);
 		return false;
 	}
 }
@@ -82,25 +97,16 @@ export function registerAccessibilityPermission() {
 	const startPermissionPoll = () => {
 		if (pollTimer) return;
 		pollTimer = window.setInterval(async () => {
-			const { data: granted, error } =
-				await desktopServices.permissions.accessibility.check();
-			if (error || !granted) return;
-
-			window.clearInterval(pollTimer);
-			pollTimer = undefined;
-			toast.dismiss(accessibilityToastId);
 			const initialized = await initializeFnKeyListener();
 			if (initialized) {
+				window.clearInterval(pollTimer);
+				pollTimer = undefined;
+				toast.dismiss(accessibilityToastId);
 				toast.success('Accessibility permission granted', {
 					description: 'SpeakPaste is ready to listen for the Fn key again.',
 				});
 				return;
 			}
-
-			showRecoveryToast(
-				'SpeakPaste still needs macOS to refresh its Accessibility entry. Open the recovery guide and approve the current app entry again.',
-			);
-			startPermissionPoll();
 		}, 1000);
 	};
 
@@ -117,10 +123,7 @@ export function registerAccessibilityPermission() {
 			return;
 		}
 
-		if (isAccessibilityGranted) {
-			const initialized = await initializeFnKeyListener();
-			if (initialized) return;
-		}
+		if (isAccessibilityGranted && (await initializeFnKeyListener())) return;
 
 		const { invoke } = await import('@tauri-apps/api/core');
 		const repairResult = await invoke<AccessibilityRepairResult>(
@@ -131,8 +134,7 @@ export function registerAccessibilityPermission() {
 		});
 
 		if (repairResult?.trusted) {
-			const initialized = await initializeFnKeyListener();
-			if (initialized) return;
+			if (await initializeFnKeyListener()) return;
 		}
 
 		if (repairResult?.didReset) {

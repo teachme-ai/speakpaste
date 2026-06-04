@@ -8,6 +8,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::{AppHandle, Emitter, Manager};
 
 const AUDIO_READY_EVENT: &str = "dictation:audio-ready";
+const BLOCKED_START_STATUSES: [&str; 3] = ["Transcribing", "Pasting", "Cooldown"];
 
 #[derive(Debug)]
 enum NativeDictationState {
@@ -73,6 +74,14 @@ pub fn toggle_native_dictation_for_app(app: &AppHandle) -> Result<(), String> {
 }
 
 pub fn start_native_dictation_for_app(app: &AppHandle) -> Result<(), String> {
+    if let Some(status) = current_blocking_runtime_status(app)? {
+        log::info!(
+            "[DictationManager] Ignoring native dictation start while runtime is {}",
+            status
+        );
+        return Ok(());
+    }
+
     let manager = app.state::<DictationManager>();
     let mut state = manager
         .state
@@ -175,6 +184,15 @@ fn emit_runtime_state(app: &AppHandle, status: &str, message: Option<&str>) -> R
         message.map(|value| value.to_string()),
     )?;
     Ok(())
+}
+
+fn current_blocking_runtime_status(app: &AppHandle) -> Result<Option<String>, String> {
+    let runtime = app.state::<DictationRuntime>();
+    let snapshot = runtime.snapshot()?;
+    if BLOCKED_START_STATUSES.contains(&snapshot.status.as_str()) {
+        return Ok(Some(snapshot.status));
+    }
+    Ok(None)
 }
 
 fn now_ms() -> u128 {

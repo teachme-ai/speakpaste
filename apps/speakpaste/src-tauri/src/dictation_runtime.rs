@@ -28,7 +28,7 @@ impl DictationRuntime {
         }
     }
 
-    fn snapshot(&self) -> Result<DictationRuntimeSnapshot, String> {
+    pub(crate) fn snapshot(&self) -> Result<DictationRuntimeSnapshot, String> {
         self.state
             .lock()
             .map(|state| state.clone())
