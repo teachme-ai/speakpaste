@@ -1,6 +1,7 @@
 import { nanoid } from 'nanoid/non-secure';
 import { defineErrors } from 'wellcrafted/error';
 import { Ok } from 'wellcrafted/result';
+import { PIPELINE_EVENTS, TRIGGER_COOLDOWN_MS } from '$lib/constants/app';
 import { rpc } from '$lib/query';
 import { defineMutation } from '$lib/query/client';
 import { WhisperingErr } from '$lib/result';
@@ -55,7 +56,7 @@ let manualRecordingStartTime: number | null = null;
 let isRecordingOperationBusy = false;
 
 /**
- * Cooldown guard — blocks new recordings for 700ms after paste completes.
+ * Cooldown guard — blocks new recordings after paste completes.
  * Prevents accidental double-triggers from held keys or rapid presses.
  */
 let isCooldown = false;
@@ -71,11 +72,11 @@ function isDesktopApp() {
 
 function enterCooldown() {
 	isCooldown = true;
-	console.info('[Trigger] cooldown started (700ms)');
+	console.info(`[Trigger] cooldown started (${TRIGGER_COOLDOWN_MS}ms)`);
 	setTimeout(() => {
 		isCooldown = false;
 		console.info('[Trigger] cooldown ended — ready');
-	}, 700);
+	}, TRIGGER_COOLDOWN_MS);
 }
 
 // Internal mutations for manual recording
@@ -731,7 +732,7 @@ async function processRecordingPipeline({
 	// Mark pipeline as running — blocks new trigger events
 	isPipelineRunning = true;
 	console.info('[Pipeline] started — transcription in progress');
-	window.dispatchEvent(new CustomEvent('speakpaste:pipeline-started'));
+	window.dispatchEvent(new CustomEvent(PIPELINE_EVENTS.STARTED));
 
 	// Await transcription first (latency-critical path)
 	const transcriptionStart = performance.now();
@@ -751,7 +752,7 @@ async function processRecordingPipeline({
 	if (transcribeError) {
 		isPipelineRunning = false;
 		void dictationRuntime.setStatus('Error', 'Transcription failed');
-		window.dispatchEvent(new CustomEvent('speakpaste:pipeline-error'));
+		window.dispatchEvent(new CustomEvent(PIPELINE_EVENTS.ERROR));
 		// Transcription failed - update status
 		recordings.update(recording.id, { transcriptionStatus: 'FAILED' });
 		if (transcribeError.name === 'WhisperingError') {
@@ -803,10 +804,10 @@ async function processRecordingPipeline({
 	console.info('[Pipeline] complete — cooldown started');
 	window.setTimeout(() => {
 		void dictationRuntime.setStatus('Idle', 'Ready');
-	}, 700);
+	}, TRIGGER_COOLDOWN_MS);
 
 	// Signal UI to reload history from filesystem
-	window.dispatchEvent(new CustomEvent('speakpaste:pipeline-complete'));
+	window.dispatchEvent(new CustomEvent(PIPELINE_EVENTS.COMPLETE));
 
 	// Check audio save result (best-effort)
 	const { error: saveAudioError } = await saveAudioPromise;

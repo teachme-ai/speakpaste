@@ -1,4 +1,9 @@
 import { createQuery } from '@tanstack/svelte-query';
+import {
+	PIPELINE_EVENTS,
+	TRAY_ERROR_RESET_MS,
+	TRAY_PASTED_RESET_MS,
+} from '$lib/constants/app';
 import { rpc } from '$lib/query';
 import { desktopRpc } from '$lib/query/desktop';
 import { deviceConfig } from '$lib/state/device-config.svelte';
@@ -33,27 +38,27 @@ export function syncIconWithRecorderState() {
 
 	// TRANSCRIBING / PASTED / ERROR from pipeline events
 	if (typeof window !== 'undefined') {
-		window.addEventListener('speakpaste:pipeline-started', () => {
+		window.addEventListener(PIPELINE_EVENTS.STARTED, () => {
 			console.info('[Tray] → TRANSCRIBING');
 			desktopRpc.tray.setTrayState({ state: 'TRANSCRIBING' });
 		});
 
-		window.addEventListener('speakpaste:pipeline-complete', () => {
+		window.addEventListener(PIPELINE_EVENTS.COMPLETE, () => {
 			console.info('[Tray] → PASTED');
 			desktopRpc.tray.setTrayState({ state: 'PASTED' });
 			clearTimeout(pastedTimer);
 			pastedTimer = setTimeout(() => {
 				desktopRpc.tray.setTrayState({ state: 'IDLE' });
-			}, 1500);
+			}, TRAY_PASTED_RESET_MS);
 		});
 
-		window.addEventListener('speakpaste:pipeline-error', () => {
+		window.addEventListener(PIPELINE_EVENTS.ERROR, () => {
 			console.info('[Tray] → ERROR');
 			desktopRpc.tray.setTrayState({ state: 'ERROR' });
 			clearTimeout(pastedTimer);
 			pastedTimer = setTimeout(() => {
 				desktopRpc.tray.setTrayState({ state: 'IDLE' });
-			}, 3000);
+			}, TRAY_ERROR_RESET_MS);
 		});
 	}
 }

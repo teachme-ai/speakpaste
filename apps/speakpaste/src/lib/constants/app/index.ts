@@ -1,4 +1,11 @@
-export { DEBOUNCE_TIME_MS } from './timing';
+export { PIPELINE_EVENTS, type PipelineEventName } from './events';
+export {
+	DEBOUNCE_TIME_MS,
+	PASTED_INDICATOR_MS,
+	TRAY_ERROR_RESET_MS,
+	TRAY_PASTED_RESET_MS,
+	TRIGGER_COOLDOWN_MS,
+} from './timing';
 export {
 	WHISPERING_RECORDINGS_PATHNAME,
 	WHISPERING_SETTINGS_PATHNAME,

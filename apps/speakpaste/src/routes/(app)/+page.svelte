@@ -17,6 +17,7 @@
 	import MoreHorizontalIcon from '@lucide/svelte/icons/more-horizontal';
 	import { slide } from 'svelte/transition';
 	import { onMount, untrack } from 'svelte';
+	import { PASTED_INDICATOR_MS, PIPELINE_EVENTS } from '$lib/constants/app';
 	import { rpc } from '$lib/query';
 	import { recordings } from '$lib/state/recordings.svelte';
 	import { settings } from '$lib/state/settings.svelte';
@@ -115,7 +116,7 @@
 				lastDoneId = latestId;
 				justPasted = true;
 				clearTimeout(pastedTimer);
-				pastedTimer = setTimeout(() => { justPasted = false; }, 1500);
+				pastedTimer = setTimeout(() => { justPasted = false; }, PASTED_INDICATOR_MS);
 			});
 		}
 	});
@@ -229,14 +230,14 @@
 			isTranscribingLocal = false;
 		};
 
-		window.addEventListener('speakpaste:pipeline-complete', handleComplete);
-		window.addEventListener('speakpaste:pipeline-started', handleStarted);
-		window.addEventListener('speakpaste:pipeline-error', handleError);
+		window.addEventListener(PIPELINE_EVENTS.COMPLETE, handleComplete);
+		window.addEventListener(PIPELINE_EVENTS.STARTED, handleStarted);
+		window.addEventListener(PIPELINE_EVENTS.ERROR, handleError);
 
 		return () => {
-			window.removeEventListener('speakpaste:pipeline-complete', handleComplete);
-			window.removeEventListener('speakpaste:pipeline-started', handleStarted);
-			window.removeEventListener('speakpaste:pipeline-error', handleError);
+			window.removeEventListener(PIPELINE_EVENTS.COMPLETE, handleComplete);
+			window.removeEventListener(PIPELINE_EVENTS.STARTED, handleStarted);
+			window.removeEventListener(PIPELINE_EVENTS.ERROR, handleError);
 		};
 	});
 
