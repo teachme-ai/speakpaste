@@ -26,6 +26,8 @@ Before packaging the production `.app` bundle, the release coordinator (or autom
 ### B. First-Run Permissions
 - [ ] **Onboarding Trigger**: Run the newly installed app. Confirm that macOS prompt dialogs for both **Microphone** and **Accessibility** are correctly triggered on initial launch.
 - [ ] **Accessibility Redirect**: Revoke accessibility permission and verify that clicking the warning redirects the user to the guide screen (`/macos-enable-accessibility`) or System Settings.
+- [ ] **Accessibility Current-App Activation**: Select/check `SpeakPaste` in System Settings and confirm the currently running app reports Accessibility ready only after Rust successfully initializes the Fn listener. If System Settings shows selected but Fn does not work, record as `RB-001`.
+- [ ] **Accessibility Reinstall Recovery**: Replace `/Applications/SpeakPaste.app` with a new build while an old Accessibility row exists. Confirm the app can refresh the stale entry or clearly instruct a quit/reopen recovery path. This is currently blocked by `RB-001`.
 
 ### C. Core Loop Verification
 - [ ] **Foreground Dictation**: Focus Apple Notes, hold `Fn`, say: *"Testing SpeakPaste release readiness."* and release. Confirm text is pasted in under 600ms.

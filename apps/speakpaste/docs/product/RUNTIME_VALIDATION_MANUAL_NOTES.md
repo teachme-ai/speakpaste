@@ -42,4 +42,5 @@ The user has confirmed the primary paste loop. The following checks are still us
 - Repeat with Wi-Fi disabled after the local model is already present.
 - Confirm clipboard fallback contains the transcript after paste.
 - Confirm background/minimized shortcut trigger still starts recording.
-- Confirm microphone and accessibility permission recovery messaging is clear on a fresh Mac or after revoking permissions.
+- Confirm microphone permission recovery messaging is clear on a fresh Mac or after revoking permissions.
+- Release blocker: investigate `RB-001` in `RELEASE_BLOCKING_ISSUES.md` before relying on Accessibility stale-entry self-repair. User observed that SpeakPaste can appear selected in System Settings but remain inactive for the current running app after reinstall/replacement.

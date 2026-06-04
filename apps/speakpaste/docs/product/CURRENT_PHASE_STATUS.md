@@ -6,6 +6,10 @@ Date: 2026-06-02
 
 SpeakPaste is now launch-stable for the core local dictation loop.
 
+Current release blocker:
+
+- `RB-001` in `RELEASE_BLOCKING_ISSUES.md`: macOS Accessibility can appear selected in System Settings but not activate the currently running SpeakPaste app after reinstall/replacement. Treat stale Accessibility self-repair as not release-ready until this is fixed and validated.
+
 Validated:
 
 - local-only product surface cleanup
@@ -134,6 +138,7 @@ Do not start Slice 5 today unless a runtime bug forces it. The validated hybrid 
 
 - product rename
 - DMG/signing/notarization
+- release-blocking Accessibility stale-entry/current-process recovery fix
 - first-run model onboarding polish
 - local intent router
 - local analytics dashboard
