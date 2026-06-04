@@ -1,7 +1,11 @@
 import { nanoid } from 'nanoid/non-secure';
 import { defineErrors } from 'wellcrafted/error';
 import { Ok } from 'wellcrafted/result';
-import { PIPELINE_EVENTS, TRIGGER_COOLDOWN_MS } from '$lib/constants/app';
+import {
+	COMMAND_KEYS,
+	PIPELINE_EVENTS,
+	TRIGGER_COOLDOWN_MS,
+} from '$lib/constants/app';
 import { rpc } from '$lib/query';
 import { defineMutation } from '$lib/query/client';
 import { WhisperingErr } from '$lib/result';
@@ -81,7 +85,7 @@ function enterCooldown() {
 
 // Internal mutations for manual recording
 const startManualRecording = defineMutation({
-	mutationKey: ['commands', 'startManualRecording'] as const,
+	mutationKey: COMMAND_KEYS.START_MANUAL_RECORDING,
 	mutationFn: async () => {
 		// Prevent concurrent recording operations
 		if (isRecordingOperationBusy) {
@@ -171,7 +175,7 @@ const startManualRecording = defineMutation({
 });
 
 const stopManualRecording = defineMutation({
-	mutationKey: ['commands', 'stopManualRecording'] as const,
+	mutationKey: COMMAND_KEYS.STOP_MANUAL_RECORDING,
 	mutationFn: async () => {
 		// Prevent concurrent recording operations
 		if (isRecordingOperationBusy) {
@@ -239,7 +243,7 @@ const stopManualRecording = defineMutation({
 
 // Internal mutations for VAD recording
 const startVadRecording = defineMutation({
-	mutationKey: ['commands', 'startVadRecording'] as const,
+	mutationKey: COMMAND_KEYS.START_VAD_RECORDING,
 	mutationFn: async () => {
 		if (isDesktopApp()) {
 			settings.set('recording.mode', 'manual');
@@ -353,7 +357,7 @@ const startVadRecording = defineMutation({
 });
 
 const stopVadRecording = defineMutation({
-	mutationKey: ['commands', 'stopVadRecording'] as const,
+	mutationKey: COMMAND_KEYS.STOP_VAD_RECORDING,
 	mutationFn: async () => {
 		const toastId = nanoid();
 		console.info('Stopping voice activated capture');
@@ -384,7 +388,7 @@ export const actions = {
 	stopVadRecording,
 
 	processNativeRecording: defineMutation({
-		mutationKey: ['commands', 'processNativeRecording'] as const,
+		mutationKey: COMMAND_KEYS.PROCESS_NATIVE_RECORDING,
 		mutationFn: async ({
 			recordingId,
 			filePath,
@@ -417,7 +421,7 @@ export const actions = {
 
 	// Toggle manual recording
 	toggleManualRecording: defineMutation({
-		mutationKey: ['commands', 'toggleManualRecording'] as const,
+		mutationKey: COMMAND_KEYS.TOGGLE_MANUAL_RECORDING,
 		mutationFn: async () => {
 			// Block during cooldown (post-paste window)
 			if (isCooldown) {
@@ -444,7 +448,7 @@ export const actions = {
 
 	// Cancel manual recording
 	cancelManualRecording: defineMutation({
-		mutationKey: ['commands', 'cancelManualRecording'] as const,
+		mutationKey: COMMAND_KEYS.CANCEL_MANUAL_RECORDING,
 		mutationFn: async () => {
 			// Prevent concurrent recording operations
 			if (isRecordingOperationBusy) {
@@ -502,7 +506,7 @@ export const actions = {
 
 	// Toggle VAD recording
 	toggleVadRecording: defineMutation({
-		mutationKey: ['commands', 'toggleVadRecording'] as const,
+		mutationKey: COMMAND_KEYS.TOGGLE_VAD_RECORDING,
 		mutationFn: async () => {
 			if (
 				vadRecorder.state === 'LISTENING' ||
@@ -516,7 +520,7 @@ export const actions = {
 
 	// Upload recordings (supports multiple files)
 	uploadRecordings: defineMutation({
-		mutationKey: ['recordings', 'uploadRecordings'] as const,
+		mutationKey: COMMAND_KEYS.UPLOAD_RECORDINGS,
 		mutationFn: async ({ files }: { files: File[] }) => {
 			settings.set('recording.mode', 'upload');
 			// Partition files into valid and invalid in a single pass
@@ -576,7 +580,7 @@ export const actions = {
 
 	// Open transformation picker to select a transformation
 	openTransformationPicker: defineMutation({
-		mutationKey: ['commands', 'openTransformationPicker'] as const,
+		mutationKey: COMMAND_KEYS.OPEN_TRANSFORMATION_PICKER,
 		mutationFn: async () => {
 			await transformClipboardWindow.toggle();
 			return Ok(undefined);
@@ -585,7 +589,7 @@ export const actions = {
 
 	// Run selected transformation on clipboard
 	runTransformationOnClipboard: defineMutation({
-		mutationKey: ['commands', 'runTransformationOnClipboard'] as const,
+		mutationKey: COMMAND_KEYS.RUN_TRANSFORMATION_ON_CLIPBOARD,
 		mutationFn: async () => {
 			// Get selected transformation from settings
 			const transformationId = settings.get('transformation.selectedId');

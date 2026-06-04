@@ -1,3 +1,4 @@
+export { COMMAND_KEYS } from './commands';
 export { PIPELINE_EVENTS, type PipelineEventName } from './events';
 export {
 	DEBOUNCE_TIME_MS,
