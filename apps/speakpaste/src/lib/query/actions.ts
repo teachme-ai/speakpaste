@@ -1,11 +1,7 @@
 import { nanoid } from 'nanoid/non-secure';
 import { defineErrors } from 'wellcrafted/error';
 import { Ok } from 'wellcrafted/result';
-import {
-	COMMAND_KEYS,
-	PIPELINE_EVENTS,
-	TRIGGER_COOLDOWN_MS,
-} from '$lib/constants/app';
+import { COMMAND_KEYS, PIPELINE_EVENTS } from '$lib/constants/app';
 import { rpc } from '$lib/query';
 import { defineMutation } from '$lib/query/client';
 import { WhisperingErr } from '$lib/result';
@@ -28,6 +24,20 @@ const ImportError = defineErrors({
 import { delivery } from './delivery';
 import { notify } from './notify';
 import { recorder } from './recorder';
+import {
+	clearManualRecordingStartTime,
+	consumeManualRecordingDuration,
+	enterTriggerCooldown,
+	finishRecordingOperation,
+	isInTriggerCooldown,
+	isPipelineActive,
+	markManualRecordingStarted,
+	markPipelineFinished,
+	markPipelineStarted,
+	TRANSCRIPTION_TIMEOUT_MS,
+	tryBeginRecordingOperation,
+	withTimeout,
+} from './recording-runtime-guards';
 import { sound } from './sound';
 import { text } from './text';
 import { transcribeBlob } from './transcription';
@@ -42,71 +52,18 @@ import { transformer } from './transformer';
  * the end of the operation chain.
  */
 
-// Track manual recording start time for duration calculation
-let manualRecordingStartTime: number | null = null;
-
-/**
- * Mutex flag to prevent concurrent recording operations.
- *
- * This flag guards against a race condition where rapid toggle calls (e.g., push-to-talk)
- * can both see 'IDLE' state before the recorder has fully started. Without this guard:
- * 1. Call 1 checks recorder state → IDLE (during setup, is_recording not yet true)
- * 2. Call 2 checks recorder state → IDLE (Call 1's recording hasn't fully started)
- * 3. Both calls try to start recording, causing state desync
- *
- * The flag is set synchronously at the start of any recording operation and cleared
- * when the core operation completes (after the recorder service call returns).
- */
-let isRecordingOperationBusy = false;
-
-/**
- * Cooldown guard — blocks new recordings after paste completes.
- * Prevents accidental double-triggers from held keys or rapid presses.
- */
-let isCooldown = false;
-let isPipelineRunning = false; // true while transcribing/delivering
-const TRANSCRIPTION_TIMEOUT_MS = 60_000;
-
-// Safety reset on module load — prevents stale state from HMR or previous sessions
-isCooldown = false;
-isPipelineRunning = false;
-
 function isDesktopApp() {
 	return typeof window !== 'undefined' && Boolean(window.__TAURI_INTERNALS__);
-}
-
-function enterCooldown() {
-	isCooldown = true;
-	console.info(`[Trigger] cooldown started (${TRIGGER_COOLDOWN_MS}ms)`);
-	setTimeout(() => {
-		isCooldown = false;
-		console.info('[Trigger] cooldown ended — ready');
-	}, TRIGGER_COOLDOWN_MS);
-}
-
-function withTimeout<T>(
-	promise: Promise<T>,
-	timeoutMs: number,
-	onTimeout: () => T,
-) {
-	return Promise.race([
-		promise,
-		new Promise<T>((resolve) => {
-			window.setTimeout(() => resolve(onTimeout()), timeoutMs);
-		}),
-	]);
 }
 
 // Internal mutations for manual recording
 const startManualRecording = defineMutation({
 	mutationKey: COMMAND_KEYS.START_MANUAL_RECORDING,
 	mutationFn: async () => {
-		// Prevent concurrent recording operations
-		if (isRecordingOperationBusy) {
+		if (!tryBeginRecordingOperation()) {
 			console.info('Recording operation already in progress, ignoring start');
 			return Ok(undefined);
 		}
-		isRecordingOperationBusy = true;
 		void dictationRuntime.setStatus('Recording', 'Preparing microphone');
 
 		settings.set('recording.mode', 'manual');
@@ -124,8 +81,7 @@ const startManualRecording = defineMutation({
 		const { data: deviceAcquisitionOutcome, error: startRecordingError } =
 			await recorder.startRecording({ toastId });
 
-		// Release mutex after the actual start operation completes
-		isRecordingOperationBusy = false;
+		finishRecordingOperation();
 
 		if (startRecordingError) {
 			void dictationRuntime.setStatus('Error', startRecordingError.message);
@@ -181,7 +137,7 @@ const startManualRecording = defineMutation({
 			}
 		}
 		// Track start time for duration calculation
-		manualRecordingStartTime = Date.now();
+		markManualRecordingStarted();
 		void dictationRuntime.setStatus('Recording', 'Listening');
 		console.info('Recording started');
 		return Ok(undefined);
@@ -191,12 +147,10 @@ const startManualRecording = defineMutation({
 const stopManualRecording = defineMutation({
 	mutationKey: COMMAND_KEYS.STOP_MANUAL_RECORDING,
 	mutationFn: async () => {
-		// Prevent concurrent recording operations
-		if (isRecordingOperationBusy) {
+		if (!tryBeginRecordingOperation()) {
 			console.info('Recording operation already in progress, ignoring stop');
 			return Ok(undefined);
 		}
-		isRecordingOperationBusy = true;
 		void dictationRuntime.setStatus('Transcribing', 'Finalizing recording');
 
 		const toastId = nanoid();
@@ -212,7 +166,7 @@ const stopManualRecording = defineMutation({
 
 		// Release mutex after the actual stop operation completes
 		// This allows new recordings to start while pipeline runs
-		isRecordingOperationBusy = false;
+		finishRecordingOperation();
 
 		if (stopRecordingError) {
 			void dictationRuntime.setStatus('Error', stopRecordingError.message);
@@ -230,11 +184,7 @@ const stopManualRecording = defineMutation({
 		console.info('Recording stopped');
 
 		// Log manual recording completion
-		let duration: number | undefined;
-		if (manualRecordingStartTime) {
-			duration = Date.now() - manualRecordingStartTime;
-			manualRecordingStartTime = null; // Reset for next recording
-		}
+		const duration = consumeManualRecordingDuration();
 		rpc.analytics.logEvent({
 			type: 'manual_recording_completed',
 			blob_size: blob.size,
@@ -438,12 +388,12 @@ export const actions = {
 		mutationKey: COMMAND_KEYS.TOGGLE_MANUAL_RECORDING,
 		mutationFn: async () => {
 			// Block during cooldown (post-paste window)
-			if (isCooldown) {
+			if (isInTriggerCooldown()) {
 				console.info('[Trigger] ignored — in cooldown');
 				return Ok(undefined);
 			}
 			// Block during transcription/delivery pipeline
-			if (isPipelineRunning) {
+			if (isPipelineActive()) {
 				console.info('[Trigger] ignored — pipeline running');
 				return Ok(undefined);
 			}
@@ -464,14 +414,12 @@ export const actions = {
 	cancelManualRecording: defineMutation({
 		mutationKey: COMMAND_KEYS.CANCEL_MANUAL_RECORDING,
 		mutationFn: async () => {
-			// Prevent concurrent recording operations
-			if (isRecordingOperationBusy) {
+			if (!tryBeginRecordingOperation()) {
 				console.info(
 					'Recording operation already in progress, ignoring cancel',
 				);
 				return Ok(undefined);
 			}
-			isRecordingOperationBusy = true;
 
 			const toastId = nanoid();
 			notify.loading({
@@ -483,7 +431,7 @@ export const actions = {
 				await recorder.cancelRecording({ toastId });
 
 			// Release mutex after the actual cancel operation completes
-			isRecordingOperationBusy = false;
+			finishRecordingOperation();
 
 			if (cancelRecordingError) {
 				void dictationRuntime.setStatus('Error', cancelRecordingError.message);
@@ -502,7 +450,7 @@ export const actions = {
 				case 'cancelled': {
 					// Session cleanup is now handled internally by the recorder service
 					// Reset start time if recording was cancelled
-					manualRecordingStartTime = null;
+					clearManualRecordingStartTime();
 					notify.success({
 						id: toastId,
 						title: '✅ All Done!',
@@ -748,7 +696,7 @@ async function processRecordingPipeline({
 	const transcribePromise = transcribeBlob(blob);
 
 	// Mark pipeline as running — blocks new trigger events
-	isPipelineRunning = true;
+	markPipelineStarted();
 	console.info('[Pipeline] started — transcription in progress');
 	window.dispatchEvent(new CustomEvent(PIPELINE_EVENTS.STARTED));
 
@@ -777,7 +725,7 @@ async function processRecordingPipeline({
 	});
 
 	if (transcribeError) {
-		isPipelineRunning = false;
+		markPipelineFinished();
 		void dictationRuntime.setStatus('Error', 'Transcription failed');
 		window.dispatchEvent(new CustomEvent(PIPELINE_EVENTS.ERROR));
 		// Transcription failed - update status
@@ -825,9 +773,9 @@ async function processRecordingPipeline({
 	});
 
 	// Pipeline done — enter cooldown before allowing next trigger
-	isPipelineRunning = false;
+	markPipelineFinished();
 	void dictationRuntime.setStatus('Cooldown', 'Ready shortly');
-	enterCooldown();
+	enterTriggerCooldown();
 	console.info('[Pipeline] complete — cooldown started');
 	window.setTimeout(() => {
 		void dictationRuntime.setStatus('Idle', 'Ready');
