@@ -8,13 +8,15 @@
 	const items = [
 		{ title: 'Home', href: '/settings' },
 		{ title: 'Voice', href: '/settings/recording' },
-		{ title: 'Engine & Models', href: '/settings/transcription' },
+		{ title: 'Sound Cues', href: '/settings/sound' },
+		{ title: 'Manage Models', href: '/settings/transcription' },
 		{
-			title: 'Trigger & Hotkeys',
+			title: 'Edit Shortcut',
 			href: '/settings/shortcuts/global',
 			activePathPrefix: '/settings/shortcuts',
 		},
-		{ title: 'Privacy', href: '/settings/analytics' },
+		{ title: 'Local Diagnostics', href: '/settings/analytics' },
+		{ title: 'Technology', href: '/settings/local-technology' },
 		{ title: 'About', href: '/settings/about' },
 	] satisfies {
 		title: string;
