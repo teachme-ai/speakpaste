@@ -3,6 +3,7 @@ use serde::Serialize;
 use std::os::raw::c_void;
 use std::ptr;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::mpsc;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
@@ -222,11 +223,13 @@ type CGEventTapCallBack = unsafe extern "C" fn(
 // 6. Public Runner
 // ==========================================
 static LISTENER_RUNNING: AtomicBool = AtomicBool::new(false);
+static LISTENER_INITIALIZING: AtomicBool = AtomicBool::new(false);
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FnKeyListenerReadiness {
     pub accessibility_trusted: bool,
+    pub listener_initializing: bool,
     pub listener_running: bool,
     pub listener_ready: bool,
     pub initialized: bool,
@@ -238,23 +241,36 @@ fn accessibility_trusted() -> bool {
 }
 
 /// Initializes and starts the global Fn key listener in a background thread.
-pub fn start_fn_key_listener(app_handle: AppHandle) -> Result<(), &'static str> {
+pub fn start_fn_key_listener(app_handle: AppHandle) -> Result<(), String> {
     if LISTENER_RUNNING.load(Ordering::Relaxed) {
         info!("[FnKeyListener] Listener is already running.");
         return Ok(());
     }
 
+    if LISTENER_INITIALIZING
+        .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+        .is_err()
+    {
+        return Err("Fn key listener is still initializing".to_string());
+    }
+
     // Check for macOS Accessibility permissions using AXIsProcessTrusted
     if !accessibility_trusted() {
         warn!("[FnKeyListener] Accessibility permissions not granted. CGEventTapCreate will return NULL.");
-        return Err("Missing Accessibility permissions");
+        LISTENER_INITIALIZING.store(false, Ordering::SeqCst);
+        return Err("Missing Accessibility permissions".to_string());
     }
 
-    LISTENER_RUNNING.store(true, Ordering::Relaxed);
+    let (init_sender, init_receiver) = mpsc::channel::<Result<(), String>>();
 
     // Spawn a background OS thread for the FFI run loop
     thread::spawn(move || {
         unsafe {
+            let finish_initialization = |result: Result<(), String>| {
+                LISTENER_INITIALIZING.store(false, Ordering::SeqCst);
+                let _ = init_sender.send(result);
+            };
+
             // Allocate state on the heap and get raw pointer
             let state = Box::into_raw(Box::new(KeyListenerState {
                 app_handle,
@@ -279,7 +295,10 @@ pub fn start_fn_key_listener(app_handle: AppHandle) -> Result<(), &'static str> 
 
             if tap.is_null() {
                 error!("[FnKeyListener] Failed to create CGEventTap. Ensure Accessibility permissions are active.");
-                LISTENER_RUNNING.store(false, Ordering::Relaxed);
+                LISTENER_RUNNING.store(false, Ordering::SeqCst);
+                finish_initialization(Err(
+                    "Failed to create CGEventTap after Accessibility trust".to_string()
+                ));
                 let _ = Box::from_raw(state); // Free state to prevent leak
                 return;
             }
@@ -289,7 +308,8 @@ pub fn start_fn_key_listener(app_handle: AppHandle) -> Result<(), &'static str> 
             if source.is_null() {
                 error!("[FnKeyListener] Failed to create CFRunLoopSource");
                 CFRelease(tap);
-                LISTENER_RUNNING.store(false, Ordering::Relaxed);
+                LISTENER_RUNNING.store(false, Ordering::SeqCst);
+                finish_initialization(Err("Failed to create CFRunLoopSource".to_string()));
                 let _ = Box::from_raw(state);
                 return;
             }
@@ -300,28 +320,33 @@ pub fn start_fn_key_listener(app_handle: AppHandle) -> Result<(), &'static str> 
 
             // Enable the event tap
             CGEventTapEnable(tap, true);
+            LISTENER_RUNNING.store(true, Ordering::SeqCst);
 
             info!("[FnKeyListener] Background global Fn key event tap initialized successfully.");
+            finish_initialization(Ok(()));
 
             // Blocks and processes events on this thread
             CFRunLoopRun();
 
             // Cleanup (only reached if the run loop is programmatically terminated)
-            LISTENER_RUNNING.store(false, Ordering::Relaxed);
+            LISTENER_RUNNING.store(false, Ordering::SeqCst);
             CFRelease(source);
             CFRelease(tap);
             let _ = Box::from_raw(state);
         }
     });
 
-    Ok(())
+    match init_receiver.recv_timeout(Duration::from_secs(2)) {
+        Ok(result) => result,
+        Err(_) => Err("Timed out while initializing Fn key listener".to_string()),
+    }
 }
 
 #[tauri::command]
 pub async fn initialize_fn_key_listener(app: tauri::AppHandle) -> Result<bool, String> {
     match start_fn_key_listener(app) {
         Ok(_) => Ok(true),
-        Err(e) => Err(e.to_string()),
+        Err(e) => Err(e),
     }
 }
 
@@ -330,11 +355,12 @@ pub async fn get_fn_key_listener_readiness(
     app: tauri::AppHandle,
 ) -> Result<FnKeyListenerReadiness, String> {
     let trusted = accessibility_trusted();
-    let was_running = LISTENER_RUNNING.load(Ordering::Relaxed);
+    let was_running = LISTENER_RUNNING.load(Ordering::SeqCst);
 
     if !trusted {
         return Ok(FnKeyListenerReadiness {
             accessibility_trusted: false,
+            listener_initializing: LISTENER_INITIALIZING.load(Ordering::SeqCst),
             listener_running: was_running,
             listener_ready: false,
             initialized: false,
@@ -345,17 +371,19 @@ pub async fn get_fn_key_listener_readiness(
     if let Err(error) = start_fn_key_listener(app) {
         return Ok(FnKeyListenerReadiness {
             accessibility_trusted: true,
-            listener_running: LISTENER_RUNNING.load(Ordering::Relaxed),
+            listener_initializing: LISTENER_INITIALIZING.load(Ordering::SeqCst),
+            listener_running: LISTENER_RUNNING.load(Ordering::SeqCst),
             listener_ready: false,
             initialized: false,
-            message: Some(error.to_string()),
+            message: Some(error),
         });
     }
 
     Ok(FnKeyListenerReadiness {
         accessibility_trusted: true,
-        listener_running: LISTENER_RUNNING.load(Ordering::Relaxed),
-        listener_ready: LISTENER_RUNNING.load(Ordering::Relaxed),
+        listener_initializing: LISTENER_INITIALIZING.load(Ordering::SeqCst),
+        listener_running: LISTENER_RUNNING.load(Ordering::SeqCst),
+        listener_ready: LISTENER_RUNNING.load(Ordering::SeqCst),
         initialized: !was_running,
         message: None,
     })

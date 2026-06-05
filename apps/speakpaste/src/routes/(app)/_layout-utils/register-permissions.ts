@@ -21,6 +21,7 @@ type AccessibilityRepairResult = {
 
 type FnKeyListenerReadiness = {
 	accessibilityTrusted: boolean;
+	listenerInitializing: boolean;
 	listenerRunning: boolean;
 	listenerReady: boolean;
 	initialized: boolean;

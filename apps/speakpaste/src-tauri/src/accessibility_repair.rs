@@ -52,6 +52,7 @@ pub struct AccessibilityRepairResult {
 #[tauri::command]
 pub async fn repair_accessibility_permissions_if_needed(
     app: AppHandle,
+    force: Option<bool>,
 ) -> Result<AccessibilityRepairResult, String> {
     #[cfg(not(target_os = "macos"))]
     {
@@ -97,7 +98,8 @@ pub async fn repair_accessibility_permissions_if_needed(
             });
         }
 
-        let should_reset = should_reset_stale_accessibility(&state, &current);
+        let should_reset =
+            force.unwrap_or(false) || should_reset_stale_accessibility(&state, &current);
         let did_reset = if should_reset {
             info!(
                 "[Permissions] resetting stale Accessibility entry for {}",

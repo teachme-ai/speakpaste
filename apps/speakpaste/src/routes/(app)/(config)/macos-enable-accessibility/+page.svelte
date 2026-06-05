@@ -28,6 +28,7 @@
 
 	type FnKeyListenerReadiness = {
 		accessibilityTrusted: boolean;
+		listenerInitializing: boolean;
 		listenerRunning: boolean;
 		listenerReady: boolean;
 		initialized: boolean;
@@ -66,6 +67,7 @@
 	async function requestPermissionOrShowGuidance() {
 		const repairResult = await invoke<AccessibilityRepairResult>(
 			'repair_accessibility_permissions_if_needed',
+			{ force: true },
 		).catch((error) => {
 			console.error('Failed to trigger accessibility recovery:', error);
 			return null;
