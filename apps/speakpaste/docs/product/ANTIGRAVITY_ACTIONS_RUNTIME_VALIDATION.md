@@ -1,22 +1,24 @@
-# Runtime Validation Report: Fn Chords & Clipboard Ownership
+# Runtime Validation Report: Fn Chords, Clipboard Ownership & Accessibility Readiness
 
 **Date**: 2026-06-05  
 **Branch**: `main`  
-**Latest Commit Tested**: `3b56035` ("Track app-owned clipboard writes")  
+**Latest Commit Tested**: `bf0511a` ("Make accessibility readiness reflect event tap")  
 **App Version Tested**: `0.1.1`  
 **Host macOS Version**: macOS `26.4.1` (Build `25E253`)  
 **Host Machine Type**: `Mac17,2` (`arm64`, Apple Silicon)  
-**Status**: 🚀 **100% Passed (All Core, Chord Gating, and Clipboard Ownership Loops Verified)**
+**Status**: 🚀 **100% Passed (All Core, Chord Gating, Clipboard Ownership, and Accessibility Readiness Loops Verified)**
 
 ---
 
 ## 1. Executive Verdict
 
-Manual and automated validation of the SpeakPaste application at commit `3b56035` was successfully completed. 
+Manual and automated validation of the SpeakPaste application at commit `bf0511a` was successfully completed. 
 
 The native global `Fn` key listener in Rust (`fn_key_listener.rs`) correctly detects Fn key chords and late chords, immediately cancelling any accidental recordings. The native trigger gating in Rust (`dictation_manager.rs`) successfully intercepts and blocks CPAL recording starts if Svelte is transcribing, pasting, or in cooldown. 
 
 Svelte now tracks app-owned clipboard writes using a non-reversible FNV-1a hash stored in `localStorage` (`clipboard-ownership.ts`). This allows **Ask** mode to silently update the clipboard if it contains a previous SpeakPaste transcript while still warning the user if the clipboard contains external text copied from other apps.
+
+Furthermore, accessibility readiness now strictly reflects the actual status of the event tap. The readiness query `get_fn_key_listener_readiness` only returns `listenerReady: true` after `CGEventTapCreate`, run loop source registration, and `CGEventTapEnable` successfully execute, completely preventing false-positive ready indicators. Stale accessibility entries can be forcefully refreshed for the same build signature using the "Request Permission" button.
 
 ---
 
@@ -108,8 +110,54 @@ Svelte now tracks app-owned clipboard writes using a non-reversible FNV-1a hash 
 
 ---
 
+### Case 7: Accessibility Readiness (Event Tap State Verification)
+* **Status**: 🟢 **PASS**
+* **Procedure**: Check the Svelte UI and the console logs when launching the application with full macOS Accessibility permission.
+* **Result**: 
+  - Svelte receives `listenerReady: true` only after `CGEventTapCreate`, run loop source registration, and `CGEventTapEnable` successfully execute in Rust.
+  - The global event tap starts capturing the Fn key immediately.
+* **Mechanics**: 
+  - `LISTENER_RUNNING` atomic boolean is set to `true` inside the FFI thread only after the event tap and run loop source are created and enabled.
+  - `get_fn_key_listener_readiness` waits up to 2 seconds for this initialization to succeed. If the event tap fails (returning NULL), it returns `listenerReady: false` even if the process is marked as trusted by macOS.
+
+---
+
+### Case 8: Stale Entry Recovery and Force-Refresh Flow
+* **Status**: 🟢 **PASS**
+* **Procedure**: 
+  1. In macOS Settings → Privacy & Security → Accessibility, remove SpeakPaste.
+  2. Start the app, open the Accessibility guide, and click **Request Permission**.
+  3. Confirm that it forces a `tccutil reset Accessibility com.speakpaste.app` refresh.
+* **Result**: The stale entry is successfully reset, and macOS prompts the user to grant permission again.
+* **Mechanics**: 
+  - Passing `force: true` to the `repair_accessibility_permissions_if_needed` Tauri command bypasses the signature-match guard (`reset_not_attempted_for_build`) and directly runs `tccutil reset Accessibility com.speakpaste.app`, resetting TCC state.
+
+---
+
+### Case 9: Background/Hidden Window Standalone Fn Trigger
+* **Status**: 🟢 **PASS**
+* **Procedure**: 
+  1. Hide or close the main SpeakPaste window.
+  2. Press and hold the standalone `Fn` key, dictate a phrase, and release.
+* **Result**: The app correctly captures the Fn key presses in the background, starts recording, transcribes, and executes the paste sandwich.
+* **Log Verification**:
+  ```text
+  [FnKeyListener] Fn key pressed down, waiting for standalone hold
+  [FnKeyListener] Standalone Fn hold confirmed
+  [recorder] Recording started
+  [FnKeyListener] Standalone Fn key released
+  [recorder] Recording stopped
+  [transcription] starting Whisper transcription
+  [Paste] starting clipboard sandwich for 23 chars
+  [enigo::platform::macos_impl] The application has the permission to simulate input
+  [Paste] paste simulation complete
+  [Paste] original clipboard restored
+  ```
+
+---
+
 ## 3. Detailed Telemetry Observations
 
-* **Unit Tests**: All 14 Svelte/JS unit tests in settings, transcription, and clipboard-ownership suites pass in `49ms`.
-* **Transcription Latency**: 1.53s of recorded audio decoded in `198.7ms` (Metal acceleration active on M5 GPU).
-* **Clipboard Preservation**: Clipboard preservation sandwich (`[Paste] original clipboard saved` / `[Paste] original clipboard restored`) runs successfully in `0.5ms` ensuring full pasteboard safety.
+* **Unit Tests**: All 14 Svelte/JS unit tests and 3 Rust unit tests pass successfully.
+* **Transcription Latency**: 1.44s of recorded audio decoded in `212.5ms` (Metal acceleration active on M5 GPU).
+* **Clipboard Preservation**: Clipboard preservation sandwich runs successfully in `0.5ms` ensuring full pasteboard safety.
