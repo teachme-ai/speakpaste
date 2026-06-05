@@ -4,6 +4,10 @@ import { defineMutation } from '$lib/query/client';
 import type { WhisperingError } from '$lib/result';
 import type { TextError } from '$lib/services/text';
 import { settings } from '$lib/state/settings.svelte';
+import {
+	isSpeakPasteOwnedClipboardText,
+	rememberSpeakPasteClipboardText,
+} from './clipboard-ownership';
 
 export const delivery = {
 	/**
@@ -66,6 +70,7 @@ export const delivery = {
 					warnAutoCopyFailed(error);
 					return false;
 				}
+				rememberSpeakPasteClipboardText(text);
 				copied = true;
 				return true;
 			};
@@ -142,7 +147,9 @@ export const delivery = {
 			if (clipboardBehavior === 'ask') {
 				const { data: currentClipboard } = await rpc.text.readFromClipboard.fetch();
 				askBeforeReplacingClipboard = Boolean(
-					currentClipboard?.trim() && currentClipboard !== text,
+					currentClipboard?.trim() &&
+						currentClipboard !== text &&
+						!isSpeakPasteOwnedClipboardText(currentClipboard),
 				);
 			}
 
