@@ -229,6 +229,10 @@ export const CpalRecorderServiceLive: RecorderService = {
 			// Log but don't fail the stop operation
 			console.error('Failed to close recording session:', closeError);
 		}
+		const { error: syncError } = await invoke<void>('sync_native_dictation_idle');
+		if (syncError) {
+			console.error('Failed to sync native dictation state:', syncError);
+		}
 
 		return Ok(blob);
 	},
@@ -290,6 +294,10 @@ export const CpalRecorderServiceLive: RecorderService = {
 		if (closeError) {
 			// Log but don't fail the cancel operation
 			console.error('Failed to close recording session:', closeError);
+		}
+		const { error: syncError } = await invoke<void>('sync_native_dictation_idle');
+		if (syncError) {
+			console.error('Failed to sync native dictation state:', syncError);
 		}
 
 		return Ok({ status: 'cancelled' });

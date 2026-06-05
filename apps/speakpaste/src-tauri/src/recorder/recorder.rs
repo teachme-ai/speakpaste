@@ -77,6 +77,10 @@ impl RecorderState {
         // Clean up any existing session
         self.close_session()?;
 
+        // Ensure output folder exists recursively
+        std::fs::create_dir_all(&output_folder)
+            .map_err(|e| format!("Failed to create output directory: {}", e))?;
+
         // Create file path
         let file_path = output_folder.join(format!("{}.wav", recording_id));
 

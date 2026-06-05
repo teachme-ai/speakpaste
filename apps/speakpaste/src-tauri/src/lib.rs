@@ -86,7 +86,7 @@ use runtime_config::{read_runtime_config, write_runtime_config};
 pub mod dictation_manager;
 use dictation_manager::{
     cancel_native_dictation, start_native_dictation, stop_native_dictation,
-    toggle_native_dictation, DictationManager,
+    sync_native_dictation_idle, toggle_native_dictation, DictationManager,
 };
 
 pub mod native_shortcuts;
@@ -264,6 +264,7 @@ pub async fn run() {
         start_native_dictation,
         stop_native_dictation,
         cancel_native_dictation,
+        sync_native_dictation_idle,
         toggle_native_dictation,
         reload_native_global_shortcuts,
         unregister_native_global_shortcuts,

@@ -54,6 +54,11 @@ pub async fn cancel_native_dictation(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
+pub async fn sync_native_dictation_idle(app: AppHandle) -> Result<(), String> {
+    sync_native_dictation_idle_for_app(&app)
+}
+
+#[tauri::command]
 pub async fn toggle_native_dictation(app: AppHandle) -> Result<(), String> {
     toggle_native_dictation_for_app(&app)
 }
@@ -165,9 +170,13 @@ pub fn stop_native_dictation_for_app(app: &AppHandle) -> Result<Option<AudioRead
         audio
     };
 
-    let file_path = audio
-        .file_path
-        .ok_or_else(|| "Native recording did not produce a WAV file path".to_string())?;
+    let Some(file_path) = audio.file_path else {
+        log::info!(
+            "[DictationManager] Native recording was already finalized by another stop path"
+        );
+        emit_runtime_state(app, "Idle", Some("Recording already finalized"))?;
+        return Ok(None);
+    };
 
     let payload = AudioReadyPayload {
         recording_id,
@@ -209,6 +218,29 @@ pub fn cancel_native_dictation_for_app(app: &AppHandle) -> Result<(), String> {
     }
 
     emit_runtime_state(app, "Idle", Some("Fn key chord ignored"))?;
+    Ok(())
+}
+
+pub fn sync_native_dictation_idle_for_app(app: &AppHandle) -> Result<(), String> {
+    let manager = app.state::<DictationManager>();
+    let had_native_recording = {
+        let mut state = manager
+            .state
+            .lock()
+            .map_err(|e| format!("Failed to lock dictation manager: {}", e))?;
+
+        matches!(
+            std::mem::replace(&mut *state, NativeDictationState::Idle),
+            NativeDictationState::Recording { .. }
+        )
+    };
+
+    if had_native_recording {
+        log::info!(
+            "[DictationManager] Native recording state synced to Idle by frontend stop path"
+        );
+    }
+
     Ok(())
 }
 

@@ -65,6 +65,7 @@ let isRecordingOperationBusy = false;
  */
 let isCooldown = false;
 let isPipelineRunning = false; // true while transcribing/delivering
+const TRANSCRIPTION_TIMEOUT_MS = 60_000;
 
 // Safety reset on module load — prevents stale state from HMR or previous sessions
 isCooldown = false;
@@ -81,6 +82,19 @@ function enterCooldown() {
 		isCooldown = false;
 		console.info('[Trigger] cooldown ended — ready');
 	}, TRIGGER_COOLDOWN_MS);
+}
+
+function withTimeout<T>(
+	promise: Promise<T>,
+	timeoutMs: number,
+	onTimeout: () => T,
+) {
+	return Promise.race([
+		promise,
+		new Promise<T>((resolve) => {
+			window.setTimeout(() => resolve(onTimeout()), timeoutMs);
+		}),
+	]);
 }
 
 // Internal mutations for manual recording
@@ -741,7 +755,16 @@ async function processRecordingPipeline({
 	// Await transcription first (latency-critical path)
 	const transcriptionStart = performance.now();
 	const { data: transcribedText, error: transcribeError } =
-		await transcribePromise;
+		await withTimeout(
+			transcribePromise,
+			TRANSCRIPTION_TIMEOUT_MS,
+			() =>
+				WhisperingErr({
+					title: 'Transcription timed out',
+					description:
+						'SpeakPaste could not finish local transcription in time. You can try again with a shorter recording.',
+				}),
+		);
 	const transcriptionDuration = performance.now() - transcriptionStart;
 	console.info(
 		`[Telemetry] [Pipeline] Transcription stage took ${transcriptionDuration.toFixed(2)}ms`,
