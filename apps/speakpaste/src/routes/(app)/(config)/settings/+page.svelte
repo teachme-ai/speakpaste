@@ -15,20 +15,6 @@
 	import { deviceConfig } from '$lib/state/device-config.svelte';
 	import { settings } from '$lib/state/settings.svelte';
 
-	const retentionItems = [
-		{ value: 'keep-forever', label: 'Keep all captures' },
-		{ value: 'limit-count', label: 'Keep a limited history' },
-	];
-
-	const maxRecordingItems = [
-		{ value: 0, label: 'Keep no history' },
-		{ value: 5, label: 'Last 5 captures' },
-		{ value: 10, label: 'Last 10 captures' },
-		{ value: 25, label: 'Last 25 captures' },
-		{ value: 50, label: 'Last 50 captures' },
-		{ value: 100, label: 'Last 100 captures' },
-	];
-
 	const selectedEngineLabel = $derived(
 		TRANSCRIPTION_SERVICE_ID_TO_LABEL[settings.get('transcription.service')],
 	);
@@ -63,17 +49,6 @@
 
 	const fallbackShortcut = $derived(
 		deviceConfig.get('shortcuts.global.toggleManualRecording') ?? 'Not set',
-	);
-
-	const retentionLabel = $derived(
-		retentionItems.find((i) => i.value === settings.get('retention.strategy'))
-			?.label,
-	);
-
-	const maxRecordingLabel = $derived(
-		maxRecordingItems.find(
-			(i) => i.value === settings.get('retention.maxCount'),
-		)?.label,
 	);
 
 	const alwaysOnTopLabel = $derived(
@@ -122,7 +97,7 @@
 				class="rounded-lg border bg-muted/20 p-4 transition-colors hover:bg-muted/40"
 			>
 				<p class="text-xs font-medium uppercase text-muted-foreground">
-					Engine & Models
+					Models
 				</p>
 				<p class="mt-2 text-base font-semibold">{selectedEngineLabel}</p>
 				<p class="mt-1 text-sm text-muted-foreground">{selectedModelState}</p>
@@ -140,14 +115,14 @@
 				</p>
 			</a>
 			<a
-				href="/settings/analytics"
+				href="/settings/sound"
 				class="rounded-lg border bg-muted/20 p-4 transition-colors hover:bg-muted/40"
 			>
 				<p class="text-xs font-medium uppercase text-muted-foreground">
-					Privacy
+					Sound
 				</p>
-				<p class="mt-2 text-base font-semibold">Device-only</p>
-				<p class="mt-1 text-sm text-muted-foreground">Local diagnostics</p>
+				<p class="mt-2 text-base font-semibold">Cues</p>
+				<p class="mt-1 text-sm text-muted-foreground">Theme and toggles</p>
 			</a>
 		</div>
 	</Field.Set>
@@ -180,7 +155,7 @@
 					</Select.Content>
 				</Select.Root>
 				<Field.Description>
-					{selectedModelState}. Manage model files in Engine & Models.
+					{selectedModelState}. Manage model files in Models.
 				</Field.Description>
 			</Field.Field>
 
@@ -295,55 +270,6 @@
 							Useful for chat boxes where Enter sends the message.
 						</Field.Description>
 					</Field.Content>
-				</Field.Field>
-			{/if}
-		</Field.Group>
-	</Field.Set>
-
-	<Field.Set>
-		<Field.Legend>Dictation History</Field.Legend>
-		<Field.Description>
-			Control what the app keeps on this Mac after each dictation.
-		</Field.Description>
-		<Field.Separator />
-		<Field.Group>
-			<Field.Field>
-				<Field.Label for="recording-retention-strategy">Saved captures</Field.Label>
-				<Select.Root
-					type="single"
-					bind:value={() => settings.get('retention.strategy'),
-						(v) => settings.set('retention.strategy', v)}
-				>
-					<Select.Trigger id="recording-retention-strategy" class="w-full">
-						{retentionLabel ?? 'Select retention strategy'}
-					</Select.Trigger>
-					<Select.Content>
-						{#each retentionItems as item}
-							<Select.Item value={item.value} label={item.label} />
-						{/each}
-					</Select.Content>
-				</Select.Root>
-			</Field.Field>
-
-			{#if settings.get('retention.strategy') === 'limit-count'}
-				<Field.Field>
-					<Field.Label for="max-recording-count">
-						Maximum saved captures
-					</Field.Label>
-					<Select.Root
-						type="single"
-						bind:value={() => String(settings.get('retention.maxCount')),
-							(v) => settings.set('retention.maxCount', Number(v))}
-					>
-						<Select.Trigger id="max-recording-count" class="w-full">
-							{maxRecordingLabel ?? 'Select maximum captures'}
-						</Select.Trigger>
-						<Select.Content>
-							{#each maxRecordingItems as item}
-								<Select.Item value={String(item.value)} label={item.label} />
-							{/each}
-						</Select.Content>
-					</Select.Root>
 				</Field.Field>
 			{/if}
 		</Field.Group>

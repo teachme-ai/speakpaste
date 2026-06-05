@@ -6,18 +6,19 @@
 	import { page } from '$app/state';
 
 	const items = [
-		{ title: 'Home', href: '/settings' },
-		{ title: 'Voice', href: '/settings/recording' },
-		{ title: 'Sound Cues', href: '/settings/sound' },
-		{ title: 'Manage Models', href: '/settings/transcription' },
 		{
-			title: 'Edit Shortcut',
-			href: '/settings/shortcuts/global',
+			title: 'Control Center',
+			href: '/settings',
 			activePathPrefix: '/settings/shortcuts',
 		},
-		{ title: 'Local Diagnostics', href: '/settings/analytics' },
-		{ title: 'Technology', href: '/settings/local-technology' },
-		{ title: 'About', href: '/settings/about' },
+		{ title: 'Voice Capture', href: '/settings/recording' },
+		{ title: 'Models', href: '/settings/transcription' },
+		{ title: 'Captures', href: '/settings/captures' },
+		{
+			title: 'System',
+			href: '/settings/system',
+			activePathPrefix: '/settings/system',
+		},
 	] satisfies {
 		title: string;
 		href: string;
@@ -37,6 +38,7 @@
 	{#each items as item (item.href)}
 		{@const isActive = item.activePathPrefix
 			? page.url.pathname.startsWith(item.activePathPrefix)
+				|| page.url.pathname === item.href
 			: page.url.pathname === item.href}
 
 		<Button

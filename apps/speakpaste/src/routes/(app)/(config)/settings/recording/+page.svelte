@@ -14,7 +14,6 @@
 	} from '$lib/services/recorder/types';
 	import { deviceConfig } from '$lib/state/device-config.svelte';
 	import { settings } from '$lib/state/settings.svelte';
-	import DesktopOutputFolder from './DesktopOutputFolder.svelte';
 	import ManualSelectRecordingDevice from './ManualSelectRecordingDevice.svelte';
 
 	const availableRecordingModes = $derived(
@@ -176,14 +175,6 @@
 				</Field.Description>
 			</Field.Field>
 
-			<Field.Field>
-				<Field.Label for="output-folder">Recording Output Folder</Field.Label>
-				<DesktopOutputFolder></DesktopOutputFolder>
-				<Field.Description>
-					Choose where to save your recordings. Default location is secure and
-					managed by the app.
-				</Field.Description>
-			</Field.Field>
 		{/if}
 	</Field.Group>
 </Field.Set>

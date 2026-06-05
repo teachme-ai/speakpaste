@@ -53,6 +53,7 @@
 	import { PATHS } from '$lib/constants/paths';
 	import { rpc } from '$lib/query';
 	import { services } from '$lib/services';
+	import { deviceConfig } from '$lib/state/device-config.svelte';
 	import { type Recording, recordings } from '$lib/state/recordings.svelte';
 	import { createCopyFn } from '$lib/utils/createCopyFn';
 	import { recordingActions } from '$lib/utils/recording-actions';
@@ -350,6 +351,10 @@
 			);
 		return transcriptions.join(delimiter);
 	});
+
+	async function getCapturesFolder() {
+		return deviceConfig.get('recording.cpal.outputFolder') ?? PATHS.DB.RECORDINGS();
+	}
 </script>
 
 <svelte:head> <title>All Recordings</title> </svelte:head>
@@ -526,8 +531,8 @@
 				{/if}
 
 				<OpenFolderButton
-					getFolderPath={PATHS.DB.RECORDINGS}
-					tooltipText="Open recordings folder"
+					getFolderPath={getCapturesFolder}
+					tooltipText="Open captures folder"
 				/>
 
 				<DropdownMenu.Root>
