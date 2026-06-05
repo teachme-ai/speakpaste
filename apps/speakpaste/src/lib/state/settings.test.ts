@@ -79,8 +79,8 @@ describe("🎙️ SpeakPaste LocalStorage Settings 100% Full-Coverage Suite", ()
 		const manualStartSoundKey = "speakpaste.settings.sound.manualStart";
 		const completeSoundKey = "speakpaste.settings.sound.transcriptionComplete";
 
-		// sound themes (classic, modern, scifi)
-		const allowedThemes = ["classic", "modern", "scifi"];
+		// sound themes (ambient, classic, modern, scifi)
+		const allowedThemes = ["ambient", "classic", "modern", "scifi"];
 		localStorageMock.setItem(soundThemeKey, "modern");
 		expect(allowedThemes).toContain(localStorageMock.getItem(soundThemeKey) || "");
 

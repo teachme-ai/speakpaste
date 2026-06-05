@@ -49,6 +49,11 @@ pub async fn stop_native_dictation(app: AppHandle) -> Result<Option<AudioReadyPa
 }
 
 #[tauri::command]
+pub async fn cancel_native_dictation(app: AppHandle) -> Result<(), String> {
+    cancel_native_dictation_for_app(&app)
+}
+
+#[tauri::command]
 pub async fn toggle_native_dictation(app: AppHandle) -> Result<(), String> {
     toggle_native_dictation_for_app(&app)
 }
@@ -174,6 +179,37 @@ pub fn stop_native_dictation_for_app(app: &AppHandle) -> Result<Option<AudioRead
 
     let _ = app.emit(AUDIO_READY_EVENT, payload.clone());
     Ok(Some(payload))
+}
+
+pub fn cancel_native_dictation_for_app(app: &AppHandle) -> Result<(), String> {
+    let manager = app.state::<DictationManager>();
+    let was_recording = {
+        let mut state = manager
+            .state
+            .lock()
+            .map_err(|e| format!("Failed to lock dictation manager: {}", e))?;
+
+        match std::mem::replace(&mut *state, NativeDictationState::Idle) {
+            NativeDictationState::Idle => false,
+            NativeDictationState::Recording { .. } => true,
+        }
+    };
+
+    if !was_recording {
+        return Ok(());
+    }
+
+    {
+        let app_data = app.state::<AppData>();
+        let mut recorder = app_data
+            .recorder
+            .lock()
+            .map_err(|e| format!("Failed to lock recorder: {}", e))?;
+        recorder.cancel_recording()?;
+    }
+
+    emit_runtime_state(app, "Idle", Some("Fn key chord ignored"))?;
+    Ok(())
 }
 
 fn emit_runtime_state(app: &AppHandle, status: &str, message: Option<&str>) -> Result<(), String> {

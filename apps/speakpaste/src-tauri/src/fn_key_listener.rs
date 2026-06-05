@@ -2,8 +2,10 @@ use log::{error, info, warn};
 use serde::Serialize;
 use std::os::raw::c_void;
 use std::ptr;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::Arc;
 use std::thread;
+use std::time::Duration;
 use tauri::AppHandle;
 
 // ==========================================
@@ -28,8 +30,10 @@ const K_CG_EVENT_TAP_LOCATION_HID: u32 = 0; // HID level intercept
 const K_CG_EVENT_TAP_PLACEMENT_HEAD_INSERT: u32 = 0;
 
 const K_CG_EVENT_FLAGS_CHANGED: u32 = 12;
+const K_CG_EVENT_KEY_DOWN: u32 = 10;
 const K_CG_KEYBOARD_EVENT_KEYCODE: u32 = 9;
 const K_CG_EVENT_FLAG_MASK_SECONDARY_FN: CGEventFlags = 0x00800000; // Fn key mask
+const FN_STANDALONE_TRIGGER_DELAY_MS: u64 = 120;
 
 // Standalone Fn Key Virtual Keycode (kVK_Function)
 const VK_FN: CGKeyCode = 63; // 0x3F
@@ -39,7 +43,10 @@ const VK_FN: CGKeyCode = 63; // 0x3F
 // ==========================================
 struct KeyListenerState {
     app_handle: AppHandle,
-    fn_pressed: bool,
+    fn_pressed: Arc<AtomicBool>,
+    fn_chorded: Arc<AtomicBool>,
+    fn_started_recording: Arc<AtomicBool>,
+    fn_generation: Arc<AtomicU64>,
 }
 
 // ==========================================
@@ -51,7 +58,36 @@ unsafe extern "C" fn event_tap_callback(
     event: CGEventRef,
     refcon: *mut c_void,
 ) -> CGEventRef {
-    if type_ == K_CG_EVENT_FLAGS_CHANGED {
+    if type_ == K_CG_EVENT_KEY_DOWN {
+        let state = &mut *(refcon as *mut KeyListenerState);
+        if state.fn_pressed.load(Ordering::SeqCst) {
+            let keycode =
+                CGEventGetIntegerValueField(event, K_CG_KEYBOARD_EVENT_KEYCODE) as CGKeyCode;
+            if keycode != VK_FN {
+                state.fn_chorded.store(true, Ordering::SeqCst);
+                state.fn_generation.fetch_add(1, Ordering::SeqCst);
+                info!(
+                    "[FnKeyListener] Ignoring Fn hold because it was combined with keycode {}",
+                    keycode
+                );
+
+                if state
+                    .fn_started_recording
+                    .compare_exchange(true, false, Ordering::SeqCst, Ordering::SeqCst)
+                    .is_ok()
+                {
+                    if let Err(error) =
+                        crate::dictation_manager::cancel_native_dictation_for_app(&state.app_handle)
+                    {
+                        error!(
+                            "[FnKeyListener] failed to cancel chorded native dictation: {}",
+                            error
+                        );
+                    }
+                }
+            }
+        }
+    } else if type_ == K_CG_EVENT_FLAGS_CHANGED {
         // Extract the keycode of the modifier key that changed
         let keycode = CGEventGetIntegerValueField(event, K_CG_KEYBOARD_EVENT_KEYCODE) as CGKeyCode;
 
@@ -63,25 +99,73 @@ unsafe extern "C" fn event_tap_callback(
             let state = &mut *(refcon as *mut KeyListenerState);
 
             // Only fire on state transition (press down vs release up)
-            if is_pressed != state.fn_pressed {
-                state.fn_pressed = is_pressed;
+            if is_pressed != state.fn_pressed.load(Ordering::SeqCst) {
+                state.fn_pressed.store(is_pressed, Ordering::SeqCst);
 
                 if is_pressed {
-                    info!("[FnKeyListener] Standalone Fn key pressed down");
-                    if let Err(error) =
-                        crate::dictation_manager::start_native_dictation_for_app(&state.app_handle)
-                    {
-                        error!(
-                            "[FnKeyListener] failed to start native dictation: {}",
-                            error
-                        );
-                    }
+                    info!("[FnKeyListener] Fn key pressed down, waiting for standalone hold");
+                    state.fn_chorded.store(false, Ordering::SeqCst);
+                    state.fn_started_recording.store(false, Ordering::SeqCst);
+                    let generation = state.fn_generation.fetch_add(1, Ordering::SeqCst) + 1;
+                    let app_handle = state.app_handle.clone();
+                    let fn_pressed = state.fn_pressed.clone();
+                    let fn_chorded = state.fn_chorded.clone();
+                    let fn_started_recording = state.fn_started_recording.clone();
+                    let fn_generation = state.fn_generation.clone();
+
+                    thread::spawn(move || {
+                        thread::sleep(Duration::from_millis(FN_STANDALONE_TRIGGER_DELAY_MS));
+                        let still_current = fn_generation.load(Ordering::SeqCst) == generation;
+                        if !still_current
+                            || !fn_pressed.load(Ordering::SeqCst)
+                            || fn_chorded.load(Ordering::SeqCst)
+                        {
+                            return;
+                        }
+
+                        info!("[FnKeyListener] Standalone Fn hold confirmed");
+                        match crate::dictation_manager::start_native_dictation_for_app(&app_handle)
+                        {
+                            Ok(()) => {
+                                fn_started_recording.store(true, Ordering::SeqCst);
+                            }
+                            Err(error) => {
+                                error!(
+                                    "[FnKeyListener] failed to start native dictation: {}",
+                                    error
+                                );
+                            }
+                        }
+                    });
                 } else {
                     info!("[FnKeyListener] Standalone Fn key released");
-                    if let Err(error) =
-                        crate::dictation_manager::stop_native_dictation_for_app(&state.app_handle)
-                    {
-                        error!("[FnKeyListener] failed to stop native dictation: {}", error);
+                    state.fn_generation.fetch_add(1, Ordering::SeqCst);
+                    let was_chorded = state.fn_chorded.swap(false, Ordering::SeqCst);
+                    let was_recording = state
+                        .fn_started_recording
+                        .compare_exchange(true, false, Ordering::SeqCst, Ordering::SeqCst)
+                        .is_ok();
+
+                    if was_chorded {
+                        if was_recording {
+                            if let Err(error) =
+                                crate::dictation_manager::cancel_native_dictation_for_app(
+                                    &state.app_handle,
+                                )
+                            {
+                                error!(
+                                    "[FnKeyListener] failed to cancel chorded native dictation: {}",
+                                    error
+                                );
+                            }
+                        }
+                        info!("[FnKeyListener] Fn chord released without dictation trigger");
+                    } else if was_recording {
+                        if let Err(error) = crate::dictation_manager::stop_native_dictation_for_app(
+                            &state.app_handle,
+                        ) {
+                            error!("[FnKeyListener] failed to stop native dictation: {}", error);
+                        }
                     }
                 }
             }
@@ -174,11 +258,14 @@ pub fn start_fn_key_listener(app_handle: AppHandle) -> Result<(), &'static str> 
             // Allocate state on the heap and get raw pointer
             let state = Box::into_raw(Box::new(KeyListenerState {
                 app_handle,
-                fn_pressed: false,
+                fn_pressed: Arc::new(AtomicBool::new(false)),
+                fn_chorded: Arc::new(AtomicBool::new(false)),
+                fn_started_recording: Arc::new(AtomicBool::new(false)),
+                fn_generation: Arc::new(AtomicU64::new(0)),
             }));
 
-            // Mask for FlagsChanged events: (1 << 12)
-            let event_mask = 1 << K_CG_EVENT_FLAGS_CHANGED;
+            // Mask for Fn flag changes plus normal key presses used to detect Fn chords.
+            let event_mask = (1 << K_CG_EVENT_FLAGS_CHANGED) | (1 << K_CG_EVENT_KEY_DOWN);
 
             // Create the tap
             let tap = CGEventTapCreate(

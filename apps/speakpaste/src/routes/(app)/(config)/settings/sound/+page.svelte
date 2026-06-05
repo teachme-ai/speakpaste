@@ -1,6 +1,8 @@
 <script lang="ts">
 	import * as Field from '@epicenter/ui/field';
+	import { Button } from '@epicenter/ui/button';
 	import { Switch } from '@epicenter/ui/switch';
+	import { services } from '$lib/services';
 	import { settings } from '$lib/state/settings.svelte';
 </script>
 
@@ -20,6 +22,7 @@
 			</Field.Description>
 			<div class="grid grid-cols-3 gap-3 mt-2">
 				{#each [
+					{ id: 'ambient', title: 'Ambient Soft', desc: 'Lower-volume mellow cues for everyday use' },
 					{ id: 'classic', title: 'Classic Chime', desc: 'Mechanical alarm clock clicks and beeps' },
 					{ id: 'modern', title: 'Modern Haptic', desc: 'Short, clean mechanical blips and clicks' },
 					{ id: 'scifi', title: 'Futuristic Sci-Fi', desc: 'Bright bell chimes and synth success notes' }
@@ -36,6 +39,22 @@
 						<span class="text-xs text-gray-500 mt-1 leading-normal">{theme.desc}</span>
 					</button>
 				{/each}
+			</div>
+			<div class="mt-3 flex gap-2">
+				<Button
+					variant="outline"
+					size="sm"
+					onclick={() => services.sound.playSound('manual-start')}
+				>
+					Preview start
+				</Button>
+				<Button
+					variant="outline"
+					size="sm"
+					onclick={() => services.sound.playSound('transcriptionComplete')}
+				>
+					Preview done
+				</Button>
 			</div>
 		</Field.Set>
 
