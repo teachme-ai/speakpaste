@@ -1,7 +1,11 @@
 import { nanoid } from 'nanoid/non-secure';
 import { defineErrors } from 'wellcrafted/error';
 import { Ok } from 'wellcrafted/result';
-import { COMMAND_KEYS, PIPELINE_EVENTS } from '$lib/constants/app';
+import {
+	COMMAND_KEYS,
+	PIPELINE_EVENTS,
+	TRIGGER_COOLDOWN_MS,
+} from '$lib/constants/app';
 import { rpc } from '$lib/query';
 import { defineMutation } from '$lib/query/client';
 import { WhisperingErr } from '$lib/result';
@@ -637,180 +641,40 @@ export const actions = {
 	}),
 };
 
-/**
- * Processes a recording through the full pipeline: save → transcribe → transform
- *
- * This function handles the complete flow from recording creation through transcription:
- * 1. Creates recording metadata and saves to database
- * 2. Handles database save errors
- * 3. Shows completion toast
- * 4. Executes transcription flow
- * 5. Applies transformation if one is selected
- *
- * @param recordingId - Optional recording ID. When provided (e.g., from CPAL recorder),
- * the ID was generated earlier in the pipeline and is passed through for consistency.
- * When omitted (e.g., VAD recording, file uploads), a new ID is generated here using nanoid().
- * This flexibility allows different recording methods to control ID generation at the
- * appropriate point in their respective pipelines.
- */
-async function processRecordingPipeline({
-	blob,
-	recordingId,
-	toastId,
-	completionTitle,
-	completionDescription,
-}: {
+type ProcessRecordingPipelineInput = {
 	blob: Blob;
 	recordingId?: string;
 	toastId: string;
 	completionTitle: string;
 	completionDescription: string;
-}) {
-	const now = new Date().toISOString();
-	const newRecordingId = recordingId ?? nanoid();
-	const pipelineStart = performance.now();
+};
 
-	const recording = {
-		id: newRecordingId,
+type PipelineRecording = {
+	id: string;
+	title: string;
+	recordedAt: string;
+	updatedAt: string;
+	transcript: string;
+	duration: undefined;
+	transcriptionStatus: 'UNPROCESSED';
+};
+
+function createRecordingRecord(recordingId?: string): PipelineRecording {
+	const now = new Date().toISOString();
+	return {
+		id: recordingId ?? nanoid(),
 		title: '',
 		recordedAt: now,
 		updatedAt: now,
 		transcript: '',
 		duration: undefined,
 		transcriptionStatus: 'UNPROCESSED',
-	} as const;
+	};
+}
 
-	// Show transcribing toast immediately
-	void dictationRuntime.setStatus('Transcribing', 'Transcribing locally');
-	const transcribeToastId = nanoid();
-	notify.loading({
-		id: transcribeToastId,
-		title: '📋 Transcribing...',
-		description: 'Your recording is being transcribed...',
-	});
-
-	// Save metadata to workspace (instant) and audio blob to BlobStore (async)
-	recordings.set(recording);
-	recordings.update(recording.id, { transcriptionStatus: 'TRANSCRIBING' });
-	const saveAudioPromise = services.blobs.audio.save(recording.id, blob);
-	const transcribePromise = transcribeBlob(blob);
-
-	// Mark pipeline as running — blocks new trigger events
-	markPipelineStarted();
-	console.info('[Pipeline] started — transcription in progress');
-	window.dispatchEvent(new CustomEvent(PIPELINE_EVENTS.STARTED));
-
-	// Await transcription first (latency-critical path)
-	const transcriptionStart = performance.now();
-	const { data: transcribedText, error: transcribeError } =
-		await withTimeout(
-			transcribePromise,
-			TRANSCRIPTION_TIMEOUT_MS,
-			() =>
-				WhisperingErr({
-					title: 'Transcription timed out',
-					description:
-						'SpeakPaste could not finish local transcription in time. You can try again with a shorter recording.',
-				}),
-		);
-	const transcriptionDuration = performance.now() - transcriptionStart;
-	console.info(
-		`[Telemetry] [Pipeline] Transcription stage took ${transcriptionDuration.toFixed(2)}ms`,
-	);
-	rpc.analytics.logEvent({
-		type: 'dictation_timing',
-		stage: 'transcription',
-		duration_ms: Math.round(transcriptionDuration),
-		chars: transcribedText?.length,
-	});
-
-	if (transcribeError) {
-		markPipelineFinished();
-		void dictationRuntime.setStatus('Error', 'Transcription failed');
-		window.dispatchEvent(new CustomEvent(PIPELINE_EVENTS.ERROR));
-		// Transcription failed - update status
-		recordings.update(recording.id, { transcriptionStatus: 'FAILED' });
-		if (transcribeError.name === 'WhisperingError') {
-			notify.error({ id: transcribeToastId, ...transcribeError });
-			return;
-		}
-		notify.error({
-			id: transcribeToastId,
-			title: '\u274C Failed to transcribe recording',
-			description: 'Your recording could not be transcribed.',
-			action: { type: 'more-details', error: transcribeError },
-		});
-		return;
-	}
-
-	// Transcription succeeded - deliver text immediately
-	sound.playSoundIfEnabled('transcriptionComplete');
-	void dictationRuntime.setStatus('Pasting', 'Writing at cursor');
-	const deliveryStart = performance.now();
-	await delivery.deliverTranscriptionResult({
-		text: transcribedText,
-		toastId: transcribeToastId,
-	});
-	const deliveryDuration = performance.now() - deliveryStart;
-	const pipelineDuration = performance.now() - pipelineStart;
-	console.info(
-		`[Telemetry] [Pipeline] Delivery stage took ${deliveryDuration.toFixed(2)}ms`,
-	);
-	console.info(
-		`[Telemetry] [Pipeline] End-to-end processRecordingPipeline took ${pipelineDuration.toFixed(2)}ms for ${transcribedText.length} chars`,
-	);
-	rpc.analytics.logEvent({
-		type: 'dictation_timing',
-		stage: 'delivery',
-		duration_ms: Math.round(deliveryDuration),
-		chars: transcribedText.length,
-	});
-	rpc.analytics.logEvent({
-		type: 'dictation_timing',
-		stage: 'pipeline',
-		duration_ms: Math.round(pipelineDuration),
-		chars: transcribedText.length,
-	});
-
-	// Pipeline done — enter cooldown before allowing next trigger
-	markPipelineFinished();
-	void dictationRuntime.setStatus('Cooldown', 'Ready shortly');
-	enterTriggerCooldown();
-	console.info('[Pipeline] complete — cooldown started');
-	window.setTimeout(() => {
-		void dictationRuntime.setStatus('Idle', 'Ready');
-	}, TRIGGER_COOLDOWN_MS);
-
-	// Signal UI to reload history from filesystem
-	window.dispatchEvent(new CustomEvent(PIPELINE_EVENTS.COMPLETE));
-
-	// Check audio save result (best-effort)
-	const { error: saveAudioError } = await saveAudioPromise;
-	if (saveAudioError) {
-		notify.warning({
-			id: toastId,
-			title: '\u26A0\uFE0F Audio not saved',
-			description: 'Transcription delivered but audio blob was not saved.',
-			action: { type: 'more-details', error: saveAudioError },
-		});
-	}
-
-	// Save succeeded - show completion toast and update recording
-	notify.success({
-		id: toastId,
-		title: completionTitle,
-		description: completionDescription,
-	});
-
-	recordings.update(recording.id, {
-		transcript: transcribedText,
-		transcriptionStatus: 'DONE',
-	});
-
-	// Determine if we need to chain to transformation
+async function runSelectedTransformationStage(recordingId: string) {
 	const transformationId = settings.get('transformation.selectedId');
 
-	// Check if transformation is valid if specified
 	if (!transformationId) return;
 	const transformation = transformations.get(transformationId);
 
@@ -838,7 +702,7 @@ async function processRecordingPipeline({
 	});
 	const { data: transformationRun, error: transformError } =
 		await transformer.transformRecording({
-			recordingId: recording.id,
+			recordingId,
 			transformation,
 		});
 	if (transformError) {
@@ -862,4 +726,216 @@ async function processRecordingPipeline({
 		text: transformationRun.output,
 		toastId: transformToastId,
 	});
+}
+
+function enterPostPipelineCooldown() {
+	markPipelineFinished();
+	void dictationRuntime.setStatus('Cooldown', 'Ready shortly');
+	enterTriggerCooldown();
+	console.info('[Pipeline] complete — cooldown started');
+	window.setTimeout(() => {
+		void dictationRuntime.setStatus('Idle', 'Ready');
+	}, TRIGGER_COOLDOWN_MS);
+	window.dispatchEvent(new CustomEvent(PIPELINE_EVENTS.COMPLETE));
+}
+
+async function finalizeRecordingSuccess({
+	recording,
+	saveAudioPromise,
+	toastId,
+	completionTitle,
+	completionDescription,
+	transcribedText,
+}: {
+	recording: PipelineRecording;
+	saveAudioPromise: ReturnType<typeof services.blobs.audio.save>;
+	toastId: string;
+	completionTitle: string;
+	completionDescription: string;
+	transcribedText: string;
+}) {
+	const { error: saveAudioError } = await saveAudioPromise;
+	if (saveAudioError) {
+		notify.warning({
+			id: toastId,
+			title: '\u26A0\uFE0F Audio not saved',
+			description: 'Transcription delivered but audio blob was not saved.',
+			action: { type: 'more-details', error: saveAudioError },
+		});
+	}
+
+	notify.success({
+		id: toastId,
+		title: completionTitle,
+		description: completionDescription,
+	});
+
+	recordings.update(recording.id, {
+		transcript: transcribedText,
+		transcriptionStatus: 'DONE',
+	});
+}
+
+async function deliverTranscriptStage({
+	transcribedText,
+	transcribeToastId,
+	pipelineStart,
+}: {
+	transcribedText: string;
+	transcribeToastId: string;
+	pipelineStart: number;
+}) {
+	sound.playSoundIfEnabled('transcriptionComplete');
+	void dictationRuntime.setStatus('Pasting', 'Writing at cursor');
+	const deliveryStart = performance.now();
+	await delivery.deliverTranscriptionResult({
+		text: transcribedText,
+		toastId: transcribeToastId,
+	});
+	const deliveryDuration = performance.now() - deliveryStart;
+	const pipelineDuration = performance.now() - pipelineStart;
+	console.info(
+		`[Telemetry] [Pipeline] Delivery stage took ${deliveryDuration.toFixed(2)}ms`,
+	);
+	console.info(
+		`[Telemetry] [Pipeline] End-to-end processRecordingPipeline took ${pipelineDuration.toFixed(2)}ms for ${transcribedText.length} chars`,
+	);
+	rpc.analytics.logEvent({
+		type: 'dictation_timing',
+		stage: 'delivery',
+		duration_ms: Math.round(deliveryDuration),
+		chars: transcribedText.length,
+	});
+	rpc.analytics.logEvent({
+		type: 'dictation_timing',
+		stage: 'pipeline',
+		duration_ms: Math.round(pipelineDuration),
+		chars: transcribedText.length,
+	});
+}
+
+function prepareTranscriptionStage(recording: PipelineRecording, blob: Blob) {
+	void dictationRuntime.setStatus('Transcribing', 'Transcribing locally');
+	const transcribeToastId = nanoid();
+	notify.loading({
+		id: transcribeToastId,
+		title: '📋 Transcribing...',
+		description: 'Your recording is being transcribed...',
+	});
+
+	recordings.set(recording);
+	recordings.update(recording.id, { transcriptionStatus: 'TRANSCRIBING' });
+	const saveAudioPromise = services.blobs.audio.save(recording.id, blob);
+	const transcribePromise = transcribeBlob(blob);
+
+	markPipelineStarted();
+	console.info('[Pipeline] started — transcription in progress');
+	window.dispatchEvent(new CustomEvent(PIPELINE_EVENTS.STARTED));
+
+	return { saveAudioPromise, transcribePromise, transcribeToastId };
+}
+
+async function runTranscriptionStage({
+	recording,
+	transcribePromise,
+	transcribeToastId,
+}: {
+	recording: PipelineRecording;
+	transcribePromise: ReturnType<typeof transcribeBlob>;
+	transcribeToastId: string;
+}) {
+	const transcriptionStart = performance.now();
+	const { data: transcribedText, error: transcribeError } =
+		await withTimeout(
+			transcribePromise,
+			TRANSCRIPTION_TIMEOUT_MS,
+			() =>
+				WhisperingErr({
+					title: 'Transcription timed out',
+					description:
+						'SpeakPaste could not finish local transcription in time. You can try again with a shorter recording.',
+				}),
+		);
+	const transcriptionDuration = performance.now() - transcriptionStart;
+	console.info(
+		`[Telemetry] [Pipeline] Transcription stage took ${transcriptionDuration.toFixed(2)}ms`,
+	);
+	rpc.analytics.logEvent({
+		type: 'dictation_timing',
+		stage: 'transcription',
+		duration_ms: Math.round(transcriptionDuration),
+		chars: transcribedText?.length,
+	});
+
+	if (!transcribeError) return transcribedText;
+
+	markPipelineFinished();
+	void dictationRuntime.setStatus('Error', 'Transcription failed');
+	window.dispatchEvent(new CustomEvent(PIPELINE_EVENTS.ERROR));
+	recordings.update(recording.id, { transcriptionStatus: 'FAILED' });
+	if (transcribeError.name === 'WhisperingError') {
+		notify.error({ id: transcribeToastId, ...transcribeError });
+		return null;
+	}
+	notify.error({
+		id: transcribeToastId,
+		title: '\u274C Failed to transcribe recording',
+		description: 'Your recording could not be transcribed.',
+		action: { type: 'more-details', error: transcribeError },
+	});
+	return null;
+}
+
+/**
+ * Processes a recording through the full pipeline: save → transcribe → transform
+ *
+ * This function handles the complete flow from recording creation through transcription:
+ * 1. Creates recording metadata and saves to database
+ * 2. Handles database save errors
+ * 3. Shows completion toast
+ * 4. Executes transcription flow
+ * 5. Applies transformation if one is selected
+ *
+ * @param recordingId - Optional recording ID. When provided (e.g., from CPAL recorder),
+ * the ID was generated earlier in the pipeline and is passed through for consistency.
+ * When omitted (e.g., VAD recording, file uploads), a new ID is generated here using nanoid().
+ * This flexibility allows different recording methods to control ID generation at the
+ * appropriate point in their respective pipelines.
+ */
+async function processRecordingPipeline({
+	blob,
+	recordingId,
+	toastId,
+	completionTitle,
+	completionDescription,
+}: ProcessRecordingPipelineInput) {
+	const pipelineStart = performance.now();
+	const recording = createRecordingRecord(recordingId);
+	const { saveAudioPromise, transcribePromise, transcribeToastId } =
+		prepareTranscriptionStage(recording, blob);
+	const transcribedText = await runTranscriptionStage({
+		recording,
+		transcribePromise,
+		transcribeToastId,
+	});
+	if (!transcribedText) return;
+
+	await deliverTranscriptStage({
+		transcribedText,
+		transcribeToastId,
+		pipelineStart,
+	});
+
+	enterPostPipelineCooldown();
+
+	await finalizeRecordingSuccess({
+		recording,
+		saveAudioPromise,
+		toastId,
+		completionTitle,
+		completionDescription,
+		transcribedText,
+	});
+
+	await runSelectedTransformationStage(recording.id);
 }
