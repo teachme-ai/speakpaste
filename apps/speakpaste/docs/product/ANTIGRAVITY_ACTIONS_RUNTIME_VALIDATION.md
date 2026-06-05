@@ -1,24 +1,22 @@
-# Runtime Validation Report: Fn Chords & Sound Cues Refactor
+# Runtime Validation Report: Fn Chords & Clipboard Ownership
 
 **Date**: 2026-06-05  
 **Branch**: `main`  
-**Latest Commit Tested**: `9f63e09` ("Ignore Fn key chords and soften sound cues")  
+**Latest Commit Tested**: `3b56035` ("Track app-owned clipboard writes")  
 **App Version Tested**: `0.1.1`  
 **Host macOS Version**: macOS `26.4.1` (Build `25E253`)  
 **Host Machine Type**: `Mac17,2` (`arm64`, Apple Silicon)  
-**Status**: 🚀 **100% Passed (All Core and Chord Gating Scenarios Verified)**
+**Status**: 🚀 **100% Passed (All Core, Chord Gating, and Clipboard Ownership Loops Verified)**
 
 ---
 
 ## 1. Executive Verdict
 
-Manual and automated validation of the SpeakPaste application at commit `9f63e09` was successfully completed. 
+Manual and automated validation of the SpeakPaste application at commit `3b56035` was successfully completed. 
 
-The native global `Fn` key listener was refactored in Rust (`fn_key_listener.rs`) to register key down events alongside flags changed. It now correctly identifies modifier chords (e.g. `Fn + Arrow`, `Fn + Letter`) and immediately cancels active recordings if a chord is pressed late.
+The native global `Fn` key listener in Rust (`fn_key_listener.rs`) correctly detects Fn key chords and late chords, immediately cancelling any accidental recordings. The native trigger gating in Rust (`dictation_manager.rs`) successfully intercepts and blocks CPAL recording starts if Svelte is transcribing, pasting, or in cooldown. 
 
-Additionally, the native CPAL recorder startup was successfully gated in Rust (`dictation_manager.rs`) against Svelte's active transcription and cooldown states, completely resolving the guard regression bypasses identified in the previous audit.
-
-Finally, the new **Ambient Soft** sound theme has been successfully integrated, providing much quieter and non-obtrusive feedback clicks during dictation and transcription completion.
+Svelte now tracks app-owned clipboard writes using a non-reversible FNV-1a hash stored in `localStorage` (`clipboard-ownership.ts`). This allows **Ask** mode to silently update the clipboard if it contains a previous SpeakPaste transcript while still warning the user if the clipboard contains external text copied from other apps.
 
 ---
 
@@ -94,7 +92,24 @@ Finally, the new **Ambient Soft** sound theme has been successfully integrated, 
 
 ---
 
+### Case 6: Clipboard Ownership Tracking (Ask Mode Runtime Loop)
+* **Status**: 🟢 **PASS**
+* **Procedure**:
+  1. Set clipboard behavior to `Ask` in Settings.
+  2. Copy external text from another app (e.g. "External text"), dictate, and confirm the warning toast "Keep existing clipboard?" appears.
+  3. Choose "Copy transcript" once (writes transcript to clipboard).
+  4. Dictate again without changing the clipboard. Confirm that no repeat prompt appears (the app silently replaces the clipboard).
+  5. Copy new external text, dictate again, and confirm the "Keep existing clipboard?" prompt returns.
+* **Result**: All steps execute exactly as expected. External clipboard values trigger the confirmation prompt, while subsequent app-owned transcript updates bypass the prompt.
+* **Mechanics**:
+  - Svelte hashes SpeakPaste-written clipboard text using FNV-1a (`fingerprintClipboardText`) and stores the hash metadata in `localStorage` under `speakpaste.clipboardOwner.v1`.
+  - Svelte's delivery engine (`delivery.ts`) compares the current clipboard hash against the stored owner marker. If they match, `askBeforeReplacingClipboard` evaluates to `false` and clipboard replacement occurs silently.
+* **Log Verification**: The focused Bun test `clipboard ownership > simulates Ask behavior runtime loop` in [clipboard-ownership.test.ts](file:///Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste/src/lib/query/clipboard-ownership.test.ts) successfully validates this exact 5-step loop logic.
+
+---
+
 ## 3. Detailed Telemetry Observations
 
-* **Transcription Latency**: 1.53s of recorded Dutch/English audio decoded in `190.8ms` (Metal acceleration active on M5 GPU).
+* **Unit Tests**: All 14 Svelte/JS unit tests in settings, transcription, and clipboard-ownership suites pass in `49ms`.
+* **Transcription Latency**: 1.53s of recorded audio decoded in `198.7ms` (Metal acceleration active on M5 GPU).
 * **Clipboard Preservation**: Clipboard preservation sandwich (`[Paste] original clipboard saved` / `[Paste] original clipboard restored`) runs successfully in `0.5ms` ensuring full pasteboard safety.

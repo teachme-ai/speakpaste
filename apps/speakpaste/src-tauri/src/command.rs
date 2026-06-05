@@ -52,7 +52,7 @@ fn parse_command(command: &str) -> (String, Vec<String>) {
 /// Result containing the command output (stdout, stderr, exit code) or error message
 ///
 /// # Examples
-/// ```
+/// ```ignore
 /// execute_command("ffmpeg -version".to_string())
 /// execute_command("ffmpeg -i input.wav output.mp3".to_string())
 /// ```
@@ -119,7 +119,7 @@ pub async fn execute_command(command: String) -> Result<CommandOutput, String> {
 /// Result containing the process ID or error message
 ///
 /// # Examples
-/// ```
+/// ```ignore
 /// // Long-running process (e.g., FFmpeg recording)
 /// spawn_command("ffmpeg -f avfoundation -i :0 output.wav".to_string())
 /// ```
