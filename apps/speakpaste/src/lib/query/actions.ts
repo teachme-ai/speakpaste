@@ -200,6 +200,7 @@ const stopManualRecording = defineMutation({
 		await processRecordingPipeline({
 			blob,
 			recordingId,
+			source: 'manual',
 			toastId,
 			completionTitle: '✨ Recording Complete!',
 			completionDescription: 'Recording saved and session closed successfully',
@@ -259,6 +260,7 @@ const startVadRecording = defineMutation({
 
 					await processRecordingPipeline({
 						blob,
+						source: 'vad',
 						toastId,
 						completionTitle: '✨ Voice activated capture complete!',
 						completionDescription:
@@ -379,6 +381,7 @@ export const actions = {
 			await processRecordingPipeline({
 				blob,
 				recordingId,
+				source: 'native',
 				toastId,
 				completionTitle: 'Background recording complete',
 				completionDescription: 'Recording captured by the native runtime',
@@ -530,6 +533,7 @@ export const actions = {
 					const toastId = nanoid();
 					await processRecordingPipeline({
 						blob: audioBlob,
+						source: 'upload',
 						toastId,
 						completionTitle: '📁 File uploaded successfully!',
 						completionDescription: file.name,
@@ -644,10 +648,13 @@ export const actions = {
 type ProcessRecordingPipelineInput = {
 	blob: Blob;
 	recordingId?: string;
+	source: PipelineSource;
 	toastId: string;
 	completionTitle: string;
 	completionDescription: string;
 };
+
+type PipelineSource = 'manual' | 'native' | 'vad' | 'upload';
 
 type PipelineRecording = {
 	id: string;
@@ -658,6 +665,17 @@ type PipelineRecording = {
 	duration: undefined;
 	transcriptionStatus: 'UNPROCESSED';
 };
+
+type PipelineStageEvent = Parameters<typeof rpc.analytics.logEvent>[0] & {
+	type: 'pipeline_stage';
+};
+
+function logPipelineStage(event: PipelineStageEvent) {
+	console.info(
+		`[Diagnostics] [Pipeline] ${event.stage} source=${event.source} recording=${event.recording_id}`,
+	);
+	rpc.analytics.logEvent(event);
+}
 
 function createRecordingRecord(recordingId?: string): PipelineRecording {
 	const now = new Date().toISOString();
@@ -672,10 +690,24 @@ function createRecordingRecord(recordingId?: string): PipelineRecording {
 	};
 }
 
-async function runSelectedTransformationStage(recordingId: string) {
+async function runSelectedTransformationStage({
+	recordingId,
+	source,
+}: {
+	recordingId: string;
+	source: PipelineSource;
+}) {
 	const transformationId = settings.get('transformation.selectedId');
 
-	if (!transformationId) return;
+	if (!transformationId) {
+		logPipelineStage({
+			type: 'pipeline_stage',
+			stage: 'transformation_skipped',
+			recording_id: recordingId,
+			source,
+		});
+		return;
+	}
 	const transformation = transformations.get(transformationId);
 
 	if (!transformation) {
@@ -690,9 +722,23 @@ async function runSelectedTransformationStage(recordingId: string) {
 				href: '/transformations',
 			},
 		});
+		logPipelineStage({
+			type: 'pipeline_stage',
+			stage: 'transformation_failed',
+			recording_id: recordingId,
+			source,
+			error_title: 'Selected transformation not found',
+		});
 		return;
 	}
 
+	const transformationStart = performance.now();
+	logPipelineStage({
+		type: 'pipeline_stage',
+		stage: 'transformation_started',
+		recording_id: recordingId,
+		source,
+	});
 	const transformToastId = nanoid();
 	notify.loading({
 		id: transformToastId,
@@ -707,6 +753,15 @@ async function runSelectedTransformationStage(recordingId: string) {
 		});
 	if (transformError) {
 		notify.error({ id: transformToastId, ...transformError });
+		logPipelineStage({
+			type: 'pipeline_stage',
+			stage: 'transformation_failed',
+			recording_id: recordingId,
+			source,
+			duration_ms: Math.round(performance.now() - transformationStart),
+			error_title: transformError.title,
+			error_description: transformError.description,
+		});
 		return;
 	}
 
@@ -717,6 +772,15 @@ async function runSelectedTransformationStage(recordingId: string) {
 			description: transformationRun.error,
 			action: { type: 'more-details', error: transformationRun.error },
 		});
+		logPipelineStage({
+			type: 'pipeline_stage',
+			stage: 'transformation_failed',
+			recording_id: recordingId,
+			source,
+			duration_ms: Math.round(performance.now() - transformationStart),
+			error_title: 'Transformation error',
+			error_description: transformationRun.error,
+		});
 		return;
 	}
 
@@ -726,9 +790,27 @@ async function runSelectedTransformationStage(recordingId: string) {
 		text: transformationRun.output,
 		toastId: transformToastId,
 	});
+	logPipelineStage({
+		type: 'pipeline_stage',
+		stage: 'transformation_completed',
+		recording_id: recordingId,
+		source,
+		duration_ms: Math.round(performance.now() - transformationStart),
+		chars: transformationRun.output.length,
+	});
 }
 
-function enterPostPipelineCooldown() {
+function enterPostPipelineCooldown({
+	recordingId,
+	source,
+	pipelineStart,
+	chars,
+}: {
+	recordingId: string;
+	source: PipelineSource;
+	pipelineStart: number;
+	chars: number;
+}) {
 	markPipelineFinished();
 	void dictationRuntime.setStatus('Cooldown', 'Ready shortly');
 	enterTriggerCooldown();
@@ -737,11 +819,20 @@ function enterPostPipelineCooldown() {
 		void dictationRuntime.setStatus('Idle', 'Ready');
 	}, TRIGGER_COOLDOWN_MS);
 	window.dispatchEvent(new CustomEvent(PIPELINE_EVENTS.COMPLETE));
+	logPipelineStage({
+		type: 'pipeline_stage',
+		stage: 'pipeline_completed',
+		recording_id: recordingId,
+		source,
+		duration_ms: Math.round(performance.now() - pipelineStart),
+		chars,
+	});
 }
 
 async function finalizeRecordingSuccess({
 	recording,
 	saveAudioPromise,
+	source,
 	toastId,
 	completionTitle,
 	completionDescription,
@@ -749,11 +840,13 @@ async function finalizeRecordingSuccess({
 }: {
 	recording: PipelineRecording;
 	saveAudioPromise: ReturnType<typeof services.blobs.audio.save>;
+	source: PipelineSource;
 	toastId: string;
 	completionTitle: string;
 	completionDescription: string;
 	transcribedText: string;
 }) {
+	const audioSaveStart = performance.now();
 	const { error: saveAudioError } = await saveAudioPromise;
 	if (saveAudioError) {
 		notify.warning({
@@ -761,6 +854,23 @@ async function finalizeRecordingSuccess({
 			title: '\u26A0\uFE0F Audio not saved',
 			description: 'Transcription delivered but audio blob was not saved.',
 			action: { type: 'more-details', error: saveAudioError },
+		});
+		logPipelineStage({
+			type: 'pipeline_stage',
+			stage: 'audio_save_failed',
+			recording_id: recording.id,
+			source,
+			duration_ms: Math.round(performance.now() - audioSaveStart),
+			error_title: saveAudioError.title,
+			error_description: saveAudioError.description,
+		});
+	} else {
+		logPipelineStage({
+			type: 'pipeline_stage',
+			stage: 'audio_save_completed',
+			recording_id: recording.id,
+			source,
+			duration_ms: Math.round(performance.now() - audioSaveStart),
 		});
 	}
 
@@ -777,16 +887,27 @@ async function finalizeRecordingSuccess({
 }
 
 async function deliverTranscriptStage({
+	recordingId,
+	source,
 	transcribedText,
 	transcribeToastId,
 	pipelineStart,
 }: {
+	recordingId: string;
+	source: PipelineSource;
 	transcribedText: string;
 	transcribeToastId: string;
 	pipelineStart: number;
 }) {
 	sound.playSoundIfEnabled('transcriptionComplete');
 	void dictationRuntime.setStatus('Pasting', 'Writing at cursor');
+	logPipelineStage({
+		type: 'pipeline_stage',
+		stage: 'delivery_started',
+		recording_id: recordingId,
+		source,
+		chars: transcribedText.length,
+	});
 	const deliveryStart = performance.now();
 	await delivery.deliverTranscriptionResult({
 		text: transcribedText,
@@ -812,9 +933,25 @@ async function deliverTranscriptStage({
 		duration_ms: Math.round(pipelineDuration),
 		chars: transcribedText.length,
 	});
+	logPipelineStage({
+		type: 'pipeline_stage',
+		stage: 'delivery_completed',
+		recording_id: recordingId,
+		source,
+		duration_ms: Math.round(deliveryDuration),
+		chars: transcribedText.length,
+	});
 }
 
-function prepareTranscriptionStage(recording: PipelineRecording, blob: Blob) {
+function prepareTranscriptionStage({
+	recording,
+	blob,
+	source,
+}: {
+	recording: PipelineRecording;
+	blob: Blob;
+	source: PipelineSource;
+}) {
 	void dictationRuntime.setStatus('Transcribing', 'Transcribing locally');
 	const transcribeToastId = nanoid();
 	notify.loading({
@@ -825,7 +962,28 @@ function prepareTranscriptionStage(recording: PipelineRecording, blob: Blob) {
 
 	recordings.set(recording);
 	recordings.update(recording.id, { transcriptionStatus: 'TRANSCRIBING' });
+	logPipelineStage({
+		type: 'pipeline_stage',
+		stage: 'recording_created',
+		recording_id: recording.id,
+		source,
+		blob_size: blob.size,
+	});
+	logPipelineStage({
+		type: 'pipeline_stage',
+		stage: 'audio_save_started',
+		recording_id: recording.id,
+		source,
+		blob_size: blob.size,
+	});
 	const saveAudioPromise = services.blobs.audio.save(recording.id, blob);
+	logPipelineStage({
+		type: 'pipeline_stage',
+		stage: 'transcription_started',
+		recording_id: recording.id,
+		source,
+		blob_size: blob.size,
+	});
 	const transcribePromise = transcribeBlob(blob);
 
 	markPipelineStarted();
@@ -837,10 +995,12 @@ function prepareTranscriptionStage(recording: PipelineRecording, blob: Blob) {
 
 async function runTranscriptionStage({
 	recording,
+	source,
 	transcribePromise,
 	transcribeToastId,
 }: {
 	recording: PipelineRecording;
+	source: PipelineSource;
 	transcribePromise: ReturnType<typeof transcribeBlob>;
 	transcribeToastId: string;
 }) {
@@ -867,7 +1027,17 @@ async function runTranscriptionStage({
 		chars: transcribedText?.length,
 	});
 
-	if (!transcribeError) return transcribedText;
+	if (!transcribeError) {
+		logPipelineStage({
+			type: 'pipeline_stage',
+			stage: 'transcription_completed',
+			recording_id: recording.id,
+			source,
+			duration_ms: Math.round(transcriptionDuration),
+			chars: transcribedText.length,
+		});
+		return transcribedText;
+	}
 
 	markPipelineFinished();
 	void dictationRuntime.setStatus('Error', 'Transcription failed');
@@ -875,6 +1045,15 @@ async function runTranscriptionStage({
 	recordings.update(recording.id, { transcriptionStatus: 'FAILED' });
 	if (transcribeError.name === 'WhisperingError') {
 		notify.error({ id: transcribeToastId, ...transcribeError });
+		logPipelineStage({
+			type: 'pipeline_stage',
+			stage: 'transcription_failed',
+			recording_id: recording.id,
+			source,
+			duration_ms: Math.round(transcriptionDuration),
+			error_title: transcribeError.title,
+			error_description: transcribeError.description,
+		});
 		return null;
 	}
 	notify.error({
@@ -882,6 +1061,16 @@ async function runTranscriptionStage({
 		title: '\u274C Failed to transcribe recording',
 		description: 'Your recording could not be transcribed.',
 		action: { type: 'more-details', error: transcribeError },
+	});
+	logPipelineStage({
+		type: 'pipeline_stage',
+		stage: 'transcription_failed',
+		recording_id: recording.id,
+		source,
+		duration_ms: Math.round(transcriptionDuration),
+		error_title: 'Failed to transcribe recording',
+		error_description:
+			transcribeError instanceof Error ? transcribeError.message : undefined,
 	});
 	return null;
 }
@@ -905,6 +1094,7 @@ async function runTranscriptionStage({
 async function processRecordingPipeline({
 	blob,
 	recordingId,
+	source,
 	toastId,
 	completionTitle,
 	completionDescription,
@@ -912,30 +1102,39 @@ async function processRecordingPipeline({
 	const pipelineStart = performance.now();
 	const recording = createRecordingRecord(recordingId);
 	const { saveAudioPromise, transcribePromise, transcribeToastId } =
-		prepareTranscriptionStage(recording, blob);
+		prepareTranscriptionStage({ recording, blob, source });
 	const transcribedText = await runTranscriptionStage({
 		recording,
+		source,
 		transcribePromise,
 		transcribeToastId,
 	});
 	if (!transcribedText) return;
 
 	await deliverTranscriptStage({
+		recordingId: recording.id,
+		source,
 		transcribedText,
 		transcribeToastId,
 		pipelineStart,
 	});
 
-	enterPostPipelineCooldown();
+	enterPostPipelineCooldown({
+		recordingId: recording.id,
+		source,
+		pipelineStart,
+		chars: transcribedText.length,
+	});
 
 	await finalizeRecordingSuccess({
 		recording,
 		saveAudioPromise,
+		source,
 		toastId,
 		completionTitle,
 		completionDescription,
 		transcribedText,
 	});
 
-	await runSelectedTransformationStage(recording.id);
+	await runSelectedTransformationStage({ recordingId: recording.id, source });
 }

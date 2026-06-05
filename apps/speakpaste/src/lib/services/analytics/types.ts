@@ -71,6 +71,32 @@ export type Event =
 			chars?: number;
 	  }
 	| {
+			type: 'pipeline_stage';
+			stage:
+				| 'recording_created'
+				| 'audio_save_started'
+				| 'transcription_started'
+				| 'transcription_completed'
+				| 'transcription_failed'
+				| 'delivery_started'
+				| 'delivery_completed'
+				| 'audio_save_completed'
+				| 'audio_save_failed'
+				| 'pipeline_completed'
+				| 'pipeline_failed'
+				| 'transformation_started'
+				| 'transformation_completed'
+				| 'transformation_failed'
+				| 'transformation_skipped';
+			recording_id: string;
+			source: 'manual' | 'native' | 'vad' | 'upload';
+			duration_ms?: number;
+			blob_size?: number;
+			chars?: number;
+			error_title?: string;
+			error_description?: string;
+	  }
+	| {
 			type: 'transcription_cleanup_applied';
 			original_chars: number;
 			cleaned_chars: number;
