@@ -13,8 +13,6 @@
 		switch (pill.label) {
 			case 'Listening':
 				return 'border-emerald-400/40 bg-emerald-500/10 text-emerald-700 shadow-[0_12px_30px_-20px_rgba(52,211,153,0.65)] dark:text-emerald-300';
-			case 'Transcribing locally':
-				return 'border-cyan-400/40 bg-cyan-500/10 text-cyan-700 shadow-[0_12px_30px_-20px_rgba(56,189,248,0.65)] dark:text-cyan-300';
 			case 'Pasted':
 				return 'border-stone-900/20 bg-stone-950 text-stone-50 shadow-[0_12px_30px_-20px_rgba(15,23,42,0.42)] dark:border-white/10';
 			default:

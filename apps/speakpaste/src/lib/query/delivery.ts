@@ -112,23 +112,21 @@ export const delivery = {
 					// Both operations succeeded
 					rpc.notify.success({
 						id: toastId,
-						title: 'Recording transcribed, pasted, and copied',
-						description: text,
+						title: 'Pasted and copied',
 					});
 				} else if (copied) {
 					// Only copy succeeded
 					rpc.notify.success({
 						id: toastId,
-						title: 'Recording transcribed and copied',
-						description: text,
+						title: 'Copied transcript',
 					});
 				} else if (written) {
 					// Only write succeeded
+					if (clipboardChoiceOffered) return;
 					rpc.notify.success({
 						id: toastId,
-						title: 'Recording transcribed and pasted',
-						description: text,
-						action: clipboardChoiceOffered ? undefined : copyTranscriptAction,
+						title: 'Pasted',
+						action: copyTranscriptAction,
 					});
 				} else {
 					// Neither succeeded, offer manual copy
@@ -200,7 +198,7 @@ export const delivery = {
 				clipboardChoiceOffered = true;
 				rpc.notify.info({
 					id: `${toastId}:clipboard-choice`,
-					title: 'Clipboard preserved',
+					title: 'Keep existing clipboard?',
 					description:
 						'Your previous clipboard is still available. Copy the transcript only if you want to replace it.',
 					action: copyTranscriptAction,

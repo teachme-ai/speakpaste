@@ -220,7 +220,7 @@ const output = {
 	'output.transcription.clipboard': defineKv(type('boolean'), true),
 	'output.transcription.clipboardBehavior': defineKv(
 		type.enumerated(...TRANSCRIPTION_CLIPBOARD_BEHAVIORS),
-		'preserve',
+		'ask',
 	),
 	'output.transcription.cursor': defineKv(type('boolean'), true),
 	'output.transcription.enter': defineKv(type('boolean'), false),

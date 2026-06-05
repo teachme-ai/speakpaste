@@ -262,7 +262,6 @@
 	const pills = $derived([
 		{ label: 'Ready',               active: recorderState === 'IDLE' && !isTranscribing && !justPasted },
 		{ label: 'Listening',           active: recorderState === 'RECORDING' },
-		{ label: 'Transcribing locally',active: isTranscribing },
 		{ label: 'Pasted',              active: justPasted },
 	]);
 

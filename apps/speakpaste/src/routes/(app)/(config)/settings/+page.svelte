@@ -255,7 +255,7 @@
 							settings.set('output.transcription.clipboardBehavior', behavior.value);
 							settings.set(
 								'output.transcription.clipboard',
-								behavior.value === 'replace',
+								behavior.value !== 'preserve',
 							);
 						}}
 				>
@@ -276,8 +276,8 @@
 					</Select.Content>
 				</Select.Root>
 				<Field.Description>
-					Default keeps your existing clipboard safe. You can still copy the
-					transcript from the success message or recent capture.
+					Default asks before replacing existing clipboard text. Preserve keeps
+					your clipboard untouched; replace leaves the transcript copied.
 				</Field.Description>
 			</Field.Field>
 

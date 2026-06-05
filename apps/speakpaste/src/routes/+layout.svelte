@@ -30,17 +30,17 @@
 </QueryClientProvider>
 
 <Toaster
-	offset={16}
+	offset={10}
 	class="xs:block hidden"
-	duration={5000}
-	visibleToasts={5}
+	duration={3000}
+	visibleToasts={2}
 	closeButton
 	toastOptions={{
 		classes: {
-			toast: 'flex flex-wrap *:data-content:flex-1',
+			toast: 'flex flex-wrap *:data-content:flex-1 text-sm shadow-lg',
 			icon: 'shrink-0',
-			actionButton: 'w-full mt-3 inline-flex justify-center',
-			closeButton: 'w-full mt-3 inline-flex justify-center',
+			actionButton: 'mt-2 inline-flex justify-center',
+			closeButton: 'mt-2 inline-flex justify-center',
 		},
 	}}
 />
