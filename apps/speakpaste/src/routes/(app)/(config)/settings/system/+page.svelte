@@ -89,6 +89,20 @@
 		</Field.Description>
 		<Field.Separator />
 
+		<div class="flex items-center gap-4 rounded-lg border bg-card/70 p-4 shadow-sm">
+			<img
+				src="/apple-touch-icon.png"
+				alt=""
+				class="size-14 rounded-[18px] shadow-md shadow-black/10 ring-1 ring-black/10 dark:ring-white/10"
+			/>
+			<div class="min-w-0">
+				<h2 class="text-base font-semibold tracking-tight">Mynah</h2>
+				<p class="text-sm text-muted-foreground">
+					Release {BUILD_INFO.gitCommitCount} · Version {BUILD_INFO.marketingVersion}
+				</p>
+			</div>
+		</div>
+
 		<div class="grid gap-4 md:grid-cols-2">
 			<Card.Root class="border-green-100 dark:border-green-900/20">
 				<Card.Header>

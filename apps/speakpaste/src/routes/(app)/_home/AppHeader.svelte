@@ -4,6 +4,11 @@
 
 <div class="relative w-full flex items-start justify-center px-5 pt-8 pb-3">
 	<div class="flex flex-col items-center justify-center text-center">
+		<img
+			src="/apple-touch-icon.png"
+			alt=""
+			class="mb-3 size-14 rounded-[18px] shadow-lg shadow-black/10 ring-1 ring-black/10 dark:shadow-emerald-950/20 dark:ring-white/10"
+		/>
 		<p class="text-[10px] font-semibold uppercase tracking-[0.34em] text-emerald-700/80 dark:text-emerald-300/80">
 			Private voice-to-cursor
 		</p>

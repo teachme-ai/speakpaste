@@ -23,11 +23,18 @@
 		<!-- App Metadata Info Card -->
 		<div class="rounded-xl border border-muted bg-card p-6 shadow-sm">
 			<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-				<div class="space-y-1">
-					<h3 class="text-xl font-bold tracking-tight">🎙️ Mynah</h3>
-					<p class="text-sm text-muted-foreground">
-						Release {BUILD_INFO.gitCommitCount} · Version {BUILD_INFO.marketingVersion}
-					</p>
+				<div class="flex items-center gap-4">
+					<img
+						src="/apple-touch-icon.png"
+						alt=""
+						class="size-16 rounded-[20px] shadow-md shadow-black/10 ring-1 ring-black/10 dark:ring-white/10"
+					/>
+					<div class="space-y-1">
+						<h3 class="text-xl font-bold tracking-tight">Mynah</h3>
+						<p class="text-sm text-muted-foreground">
+							Release {BUILD_INFO.gitCommitCount} · Version {BUILD_INFO.marketingVersion}
+						</p>
+					</div>
 				</div>
 				<div class="flex flex-wrap gap-2">
 					<Badge variant="default" class="bg-primary/10 text-primary hover:bg-primary/20 border-primary/20">Release {BUILD_INFO.gitCommitCount}</Badge>

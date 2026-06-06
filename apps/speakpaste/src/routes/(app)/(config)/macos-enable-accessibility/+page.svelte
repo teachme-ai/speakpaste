@@ -145,7 +145,19 @@
 <main class="flex flex-1 items-center justify-center">
 	<Card.Root class="w-full max-w-2xl">
 		<Card.Header>
-			<Card.Title class="text-xl">MacOS Accessibility</Card.Title>
+			<div class="flex items-center gap-4">
+				<img
+					src="/apple-touch-icon.png"
+					alt=""
+					class="size-14 rounded-[18px] shadow-md shadow-black/10 ring-1 ring-black/10 dark:ring-white/10"
+				/>
+				<div class="min-w-0">
+					<Card.Title class="text-xl">MacOS Accessibility</Card.Title>
+					<p class="mt-1 text-sm text-muted-foreground">
+						Approve Mynah for system-wide cursor typing.
+					</p>
+				</div>
+			</div>
 			<Card.Description class="leading-7">
 				Mynah requires fresh Microphone and Accessibility permissions.
 				Old SpeakPaste permission entries may remain in System Settings and should be removed.
