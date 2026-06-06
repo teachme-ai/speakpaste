@@ -41,6 +41,7 @@ Mynah lets Mac users speak into the app they are already using without sending t
 - menu-bar native
 - no account required
 - no cloud required for core dictation
+- one-time lifetime license
 - transparent about permissions and local engines
 - designed around a minimal daily reflex, not a complex transcription workbench
 
@@ -105,6 +106,21 @@ What Mynah should avoid:
 - cloud-style trust language
 - leading with tone rewriting or AI refinement
 - implying transcript/audio privacy without explaining the actual local architecture
+
+### Pricing context
+
+The public dictation category is moving in two directions:
+
+1. cloud-first products that charge subscriptions because inference, sync, and cross-platform services create recurring vendor costs
+2. local-first Mac utilities that can justify one-time pricing because the user supplies the hardware and the core runtime is on-device
+
+Mynah belongs in the second category.
+
+The website should not apologize for charging. It should explain the bargain clearly:
+
+> Pay once for a private Mac utility. Use it for life on your Mac. Mynah's core dictation work runs locally on hardware you already own.
+
+Do not position the lifetime license as "cheap." Position it as **ownership**, **clarity**, and **no recurring rent for a local utility**.
 
 ---
 
@@ -176,6 +192,33 @@ Recommended copy angle:
 
 > The local stack is disclosed because trust should not be hidden behind marketing.
 
+### I. One-time lifetime license
+
+Mynah should have a dedicated pricing message because the model is part of the product philosophy.
+
+Recommended copy angle:
+
+> One payment. Lifetime use. No subscription meter for a local Mac utility.
+
+Supporting points:
+
+- the core runtime uses local compute on the user's Mac
+- the app does not need per-minute cloud transcription costs for core dictation
+- the user gets ongoing compatibility updates for major macOS releases where practical
+- the license should fund careful Mac engineering, permissions reliability, release packaging, diagnostics, and support
+- future optional paid major upgrades can remain a business decision, but the current public promise should be precise
+
+Recommended wording:
+
+> Mynah is sold as a one-time lifetime license for the current Mac app. The goal is simple: no monthly subscription for a local dictation utility that runs on your own Mac.
+
+Avoid:
+
+- "free forever"
+- "all future major versions forever" unless legally and operationally intended
+- "lifetime updates" if the intended promise is lifetime use plus compatibility maintenance
+- attacking subscription competitors directly
+
 ---
 
 ## 4. Features To Present On The Site
@@ -194,6 +237,7 @@ Recommended copy angle:
 - Local diagnostics and support bundle
 - Build/version accountability
 - macOS Accessibility and Microphone guidance
+- One-time lifetime license
 
 ### Secondary/supporting features
 
@@ -241,6 +285,7 @@ Release and installer page.
 
 Content:
 
+- one-time lifetime license statement
 - current version
 - release/build number
 - architecture
@@ -303,6 +348,22 @@ Content:
 - download links
 - permission or migration notes
 
+### `/pricing`
+
+Optional for the first launch, recommended once the purchase flow is ready.
+
+Content:
+
+- one-time lifetime license
+- what is included
+- what is local
+- what does not require a subscription
+- upgrade/support policy
+- refund policy
+- supported macOS range
+
+If pricing is simple, this can be a section on `/download` instead of a standalone page.
+
 ---
 
 ## 6. Homepage Section Plan
@@ -328,6 +389,7 @@ Hero trust strip:
 - No cloud required
 - Menu-bar native
 - Apple Silicon ready
+- One-time license
 
 Primary CTA:
 
@@ -418,6 +480,58 @@ Steps:
 4. Grant Accessibility
 5. Hold Fn and speak
 
+### Lifetime License Section
+
+Title:
+
+> Pay once for the Mac utility.
+
+Supporting copy:
+
+> Mynah is built as a local app, not a cloud transcription meter. Buy a lifetime license once and keep using the Mac app without a monthly subscription.
+
+Suggested bullets:
+
+- one-time lifetime use license
+- no account required for the core local dictation loop
+- no recurring cloud transcription fee for core use
+- maintained for major macOS releases where practical
+- transparent release and build numbers
+
+CTA:
+
+> Buy Mynah
+
+Secondary link:
+
+> Download and try setup
+
+### Comparison Section
+
+Title:
+
+> Different from cloud dictation subscriptions.
+
+The comparison table should be compact and factual. Do not use a large adversarial table in the first viewport.
+
+Recommended columns:
+
+| Dimension | Mynah | Cloud dictation subscriptions | Built-in macOS Dictation |
+| --- | --- | --- | --- |
+| Pricing | One-time lifetime license | Usually monthly or annual | Included with macOS |
+| Core processing | Local on Mac | Often cloud/server-assisted | Apple system service |
+| Account | Not required for core use | Often required | Apple/macOS account context |
+| Trigger | Hold Fn, release to paste | Hotkey/app dependent | System dictation trigger |
+| Cursor output | Yes | Yes | Yes |
+| Clipboard controls | Configurable | Varies | Limited |
+| Local diagnostics | Yes | Varies | No product-level diagnostics |
+| Technology disclosure | Explicit local stack | Varies | Apple system implementation |
+| Best for | Private Mac voice-to-cursor | Cross-platform AI polish/sync | Built-in occasional dictation |
+
+Add footnote:
+
+> Competitor features and pricing change frequently. This table focuses on product architecture and purchase model, not temporary promotions.
+
 ---
 
 ## 7. Visual Direction
@@ -446,6 +560,7 @@ The site should feel aligned with the Mynah app rather than the old SpeakPaste i
 - oversized "3x faster" claims as the only message
 - dark-only palette if the app is moving to system-aware light/dark
 - dense comparison tables on the first viewport
+- aggressive anti-competitor copy
 
 ---
 
@@ -528,9 +643,192 @@ Future:
 - add Intel or universal build when validated
 - add auto-update metadata only when that feature is back in scope
 
+### License and purchase strategy
+
+The site should support a one-time lifetime license model.
+
+Recommended public promise:
+
+> One-time lifetime license for Mynah's Mac app.
+
+Recommended detail:
+
+- lifetime use of the purchased Mac app
+- compatibility updates for major macOS releases where practical
+- no recurring subscription for the core local dictation loop
+- license applies to personal use on the user's Macs, subject to final license terms
+- future major paid editions should not be promised away unless this is an intentional business decision
+
+Recommended website placement:
+
+- hero trust strip: "One-time license"
+- homepage pricing section
+- `/download` purchase panel
+- FAQ answer: "Is Mynah a subscription?"
+
+Suggested FAQ:
+
+**Is Mynah a subscription?**
+
+No. Mynah is planned as a one-time lifetime license for the Mac app. The core dictation loop runs locally on your Mac, so the product is not priced like a cloud transcription meter.
+
+**Will I get updates?**
+
+The license should include ongoing maintenance and compatibility updates for major macOS releases where practical. Be precise in the final legal terms before publishing.
+
+**Why charge for a local app?**
+
+Mynah is paid software because the value is in the Mac engineering: native background runtime, permissions reliability, local model support, diagnostics, packaging, testing, and release maintenance.
+
 ---
 
-## 9. GitHub And Vercel Setup Checklist
+## 9. Runtime Competitor Benchmark Plan
+
+Mynah should be benchmarked against competitors in a repeatable, evidence-based way. The goal is not to claim "we are better" broadly. The goal is to understand exactly where Mynah wins, where it is comparable, and where cloud-first tools have advantages.
+
+### Primary comparison target
+
+Use Wispr Flow-style competitors as the reference class:
+
+- polished commercial dictation
+- subscription pricing
+- cloud/server-assisted AI features
+- cross-platform or sync-oriented value proposition
+
+### Benchmark principles
+
+- test on the same Mac
+- test the same utterances
+- test the same target apps
+- test warm and cold states
+- test foreground and hidden-window behavior where applicable
+- record numbers, not impressions
+- separate privacy/security architecture from speed/accuracy results
+
+### Measured dimensions
+
+| Dimension | What to measure | Mynah method | Competitor method |
+| --- | --- | --- | --- |
+| Idle memory | RAM while app is open but not recording | Activity Monitor / `ps` / Instruments | same |
+| Recording CPU | CPU while actively listening | Activity Monitor / `powermetrics` | same |
+| Transcription CPU | CPU spike after release | Activity Monitor / Instruments | same |
+| End-to-end latency | release key to final text visible | screen recording timestamps | same |
+| Cold start | launch to first usable dictation | stopwatch/screen recording | same |
+| Hidden-window reliability | trigger and paste with UI hidden | manual runbook | equivalent supported mode |
+| Paste success | text appears in target field | manual corpus | same |
+| Accuracy | WER on fixed corpus | benchmark corpus | same |
+| Hallucination rate | extra trailing words after silence | benchmark corpus | same |
+| Network activity | whether dictation requires network | Little Snitch / LuLu / tcpdump | same |
+| Disk footprint | installed app size and local model size | Finder / `du` | same |
+| Permission surface | required macOS permissions | System Settings | same |
+| Data handling clarity | what leaves device | product docs + network observation | product docs + network observation |
+| Pricing over 3 years | total user cost | license price | subscription/lifetime public price |
+
+### Recommended tools
+
+- Activity Monitor for quick RAM and CPU checks
+- Xcode Instruments / `xcrun xctrace` for CPU and memory traces
+- `powermetrics` for energy/thermal checks
+- `sample` or `spindump` for runtime stalls
+- `du -sh /Applications/Mynah.app` for bundle size
+- `ps -axo pid,comm,rss,%cpu` for repeatable process snapshots
+- Little Snitch, LuLu, or `tcpdump` for network activity observation
+- screen recording for latency timing
+- the existing Mynah benchmark corpus for utterance consistency
+
+### Suggested manual benchmark set
+
+Run each app through the same six scenarios:
+
+1. quiet room, short phrase
+2. quiet room, long paragraph
+3. office noise, medium phrase
+4. HVAC/fan tail, short phrase
+5. hidden-window paste into Notes
+6. paste into browser text field or chat input
+
+For each scenario record:
+
+- transcript result
+- pasted successfully: yes/no
+- latency estimate
+- memory before/after
+- peak CPU
+- whether any network connection occurred
+- extra trailing words
+- user-visible friction
+
+### Public-use rule
+
+Only publish benchmark claims that are:
+
+- repeatable
+- dated
+- tied to a named hardware profile
+- tied to a named app version
+- careful about competitor version changes
+
+Recommended public wording:
+
+> We benchmark Mynah against leading dictation apps on latency, memory, local processing, paste reliability, and permission friction. Results are published only when they are repeatable on named Mac hardware.
+
+Do not publish:
+
+- vague "faster than Wispr" claims
+- screenshots of competitor internals
+- security accusations based only on rumor
+- network claims without measurement
+
+---
+
+## 10. Revised Public Comparison Strategy
+
+The old comparison table from `speakpaste.online` should be replaced.
+
+### New comparison purpose
+
+The table should help users understand purchase model, local architecture, and product fit.
+
+It should not try to prove that Mynah has every feature competitors have.
+
+### Recommended comparison categories
+
+Compare Mynah against:
+
+1. cloud-first dictation subscriptions
+2. local power-user dictation apps
+3. built-in macOS Dictation
+4. file transcription tools
+
+### Recommended dimensions
+
+- one-time license vs subscription
+- local core transcription
+- no account required
+- Mac menu-bar utility
+- active cursor paste
+- Fn-key workflow
+- local diagnostics
+- clipboard behavior controls
+- local model choice
+- cross-platform sync
+- AI rewriting/tone automation
+- enterprise/team controls
+
+### Honest positioning
+
+Mynah should openly say:
+
+- it is not trying to be a cross-platform dictation suite
+- it is not primarily a cloud AI rewriting product
+- it is not a file transcription workbench
+- it is a focused Mac utility for private voice-to-cursor use
+
+This honesty is a moat. Users tired of bloated subscription tools will understand the trade-off quickly.
+
+---
+
+## 11. GitHub And Vercel Setup Checklist
 
 ### GitHub
 
@@ -568,7 +866,7 @@ After Mynah site is live:
 
 ---
 
-## 10. SEO And Metadata
+## 12. SEO And Metadata
 
 ### Homepage title
 
@@ -576,7 +874,7 @@ After Mynah site is live:
 
 ### Homepage description
 
-`Mynah is a local-first Mac dictation app. Hold Fn, speak naturally, and paste text into the active cursor without requiring a cloud account.`
+`Mynah is a local-first Mac dictation app. Hold Fn, speak naturally, and paste text into the active cursor without requiring a cloud account or monthly subscription.`
 
 ### Keywords to naturally include
 
@@ -587,6 +885,8 @@ After Mynah site is live:
 - voice-to-cursor
 - private dictation app
 - whisper.cpp Mac dictation
+- one-time Mac dictation app
+- lifetime dictation app for Mac
 
 ### Open Graph
 
@@ -597,7 +897,7 @@ After Mynah site is live:
 
 ---
 
-## 11. Content Accuracy Rules
+## 13. Content Accuracy Rules
 
 Do not publish claims that are not true in the current app.
 
@@ -612,6 +912,7 @@ Do not publish claims that are not true in the current app.
 - local engines and model files
 - local diagnostics
 - transparent technology disclosures
+- one-time lifetime license, once purchase terms are final
 
 ### Avoid unless separately validated
 
@@ -625,10 +926,11 @@ Do not publish claims that are not true in the current app.
 - Intel performance guarantees
 - no clipboard use at all
 - App Store availability
+- all future major upgrades included forever
 
 ---
 
-## 12. First Build Sequence
+## 14. First Build Sequence
 
 1. Create the static website scaffold in `/Users/irfan/projects/Mynah/website`.
 2. Add Mynah icon and favicon assets.
@@ -636,16 +938,17 @@ Do not publish claims that are not true in the current app.
 4. Add download page.
 5. Add permissions/support page.
 6. Add privacy and credits pages.
-7. Add `downloads.json`.
-8. Run local preview.
-9. Push to new GitHub repository.
-10. Connect to Vercel.
-11. Point `mynah.site`.
-12. Validate mobile, desktop, SEO metadata, and download links.
+7. Add pricing/lifetime license section or page.
+8. Add `downloads.json`.
+9. Run local preview.
+10. Push to new GitHub repository.
+11. Connect to Vercel.
+12. Point `mynah.site`.
+13. Validate mobile, desktop, SEO metadata, and download links.
 
 ---
 
-## 13. Open Questions Before Build
+## 15. Open Questions Before Build
 
 These should be answered before final publishing, but they do not block the first static build.
 
@@ -654,11 +957,15 @@ These should be answered before final publishing, but they do not block the firs
 3. Is the first public DMG Apple Silicon only, or do we hold the Intel claim until validated?
 4. Do we keep `speakpaste.online` as a redirect or a migration landing page?
 5. What support email should the site show?
-6. Should pricing be omitted entirely for the first release?
+6. What is the exact one-time lifetime license price?
+7. Does the license cover one user across multiple personal Macs?
+8. What is the exact upgrade promise for future major versions?
+9. What payment provider will be used?
+10. Should the first public comparison mention named competitors or use category labels only?
 
 ---
 
-## 14. Recommended Immediate Next Step
+## 16. Recommended Immediate Next Step
 
 Build the first static version of the Mynah site with:
 
@@ -667,9 +974,10 @@ Build the first static version of the Mynah site with:
 - permissions page
 - privacy page
 - credits page
+- pricing/lifetime license section
 
 Do not start with pricing, comparison tables, or complex animations.
 
 The first version should win on clarity:
 
-> Mynah is a private Mac utility. Hold Fn, speak, release, and your words appear at the cursor. No account. No cloud required. Built for local control.
+> Mynah is a private Mac utility. Hold Fn, speak, release, and your words appear at the cursor. No account. No cloud required. One-time license. Built for local control.
