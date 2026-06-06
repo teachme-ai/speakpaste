@@ -17,6 +17,24 @@ export function finishRecordingOperation() {
 	isRecordingOperationBusy = false;
 }
 
+export async function withRecordingOperation<T>({
+	onBusy,
+	operation,
+}: {
+	onBusy: () => T | Promise<T>;
+	operation: () => T | Promise<T>;
+}) {
+	if (!tryBeginRecordingOperation()) {
+		return await onBusy();
+	}
+
+	try {
+		return await operation();
+	} finally {
+		finishRecordingOperation();
+	}
+}
+
 export function markManualRecordingStarted(now = Date.now()) {
 	manualRecordingStartTime = now;
 }

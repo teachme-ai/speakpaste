@@ -27,11 +27,10 @@ import { recorder } from './recorder';
 import {
 	clearManualRecordingStartTime,
 	consumeManualRecordingDuration,
-	finishRecordingOperation,
 	isInTriggerCooldown,
 	isPipelineActive,
 	markManualRecordingStarted,
-	tryBeginRecordingOperation,
+	withRecordingOperation,
 } from './recording-runtime-guards';
 import { sound } from './sound';
 import { text } from './text';
@@ -53,110 +52,115 @@ function isDesktopApp() {
 // Internal mutations for manual recording
 const startManualRecording = defineMutation({
 	mutationKey: COMMAND_KEYS.START_MANUAL_RECORDING,
-	mutationFn: async () => {
-		if (!tryBeginRecordingOperation()) {
-			console.info('Recording operation already in progress, ignoring start');
-			return Ok(undefined);
-		}
-		void dictationRuntime.setStatus('Recording', 'Preparing microphone');
+	mutationFn: () =>
+		withRecordingOperation({
+			onBusy: () => {
+				console.info('Recording operation already in progress, ignoring start');
+				return Ok(undefined);
+			},
+			operation: async () => {
+				void dictationRuntime.setStatus('Recording', 'Preparing microphone');
 
-		settings.set('recording.mode', 'manual');
-		if (isDesktopApp() && deviceConfig.get('recording.method') !== 'cpal') {
-			deviceConfig.set('recording.method', 'cpal');
-		}
+				settings.set('recording.mode', 'manual');
+				if (isDesktopApp() && deviceConfig.get('recording.method') !== 'cpal') {
+					deviceConfig.set('recording.method', 'cpal');
+				}
 
-		const toastId = nanoid();
-		activityFeed.info('Preparing microphone', 'Setting up local capture.');
+				const toastId = nanoid();
+				activityFeed.info('Preparing microphone', 'Setting up local capture.');
 
-		const { data: deviceAcquisitionOutcome, error: startRecordingError } =
-			await recorder.startRecording({ toastId });
+				const { data: deviceAcquisitionOutcome, error: startRecordingError } =
+					await recorder.startRecording({ toastId });
 
-		finishRecordingOperation();
+				if (startRecordingError) {
+					void dictationRuntime.setStatus('Error', startRecordingError.message);
+					notify.error({ id: toastId, ...startRecordingError });
+					return Ok(undefined);
+				}
 
-		if (startRecordingError) {
-			void dictationRuntime.setStatus('Error', startRecordingError.message);
-			notify.error({ id: toastId, ...startRecordingError });
-			return Ok(undefined);
-		}
-
-		switch (deviceAcquisitionOutcome.outcome) {
-			case 'success': {
-				activityFeed.info('Listening', 'Release Fn to transcribe and paste.');
-				break;
-			}
-			case 'fallback': {
-				const method = deviceConfig.get('recording.method');
-				deviceConfig.set(
-					`recording.${method}.deviceId`,
-					deviceAcquisitionOutcome.deviceId,
-				);
-				switch (deviceAcquisitionOutcome.reason) {
-					case 'no-device-selected': {
-						notify.info({
-							id: toastId,
-							title: '🎙️ Switched to available microphone',
-							description:
-								'No microphone was selected, so we automatically connected to an available one. You can update your selection in settings.',
-							action: {
-								type: 'link',
-								label: 'Open Settings',
-								href: '/settings/recording',
-							},
-						});
+				switch (deviceAcquisitionOutcome.outcome) {
+					case 'success': {
+						activityFeed.info('Listening', 'Release Fn to transcribe and paste.');
 						break;
 					}
-					case 'preferred-device-unavailable': {
-						notify.info({
-							id: toastId,
-							title: '🎙️ Switched to different microphone',
-							description:
-								"Your previously selected microphone wasn't found, so we automatically connected to an available one.",
-							action: {
-								type: 'link',
-								label: 'Open Settings',
-								href: '/settings/recording',
-							},
-						});
-						break;
+					case 'fallback': {
+						const method = deviceConfig.get('recording.method');
+						deviceConfig.set(
+							`recording.${method}.deviceId`,
+							deviceAcquisitionOutcome.deviceId,
+						);
+						switch (deviceAcquisitionOutcome.reason) {
+							case 'no-device-selected': {
+								notify.info({
+									id: toastId,
+									title: '🎙️ Switched to available microphone',
+									description:
+										'No microphone was selected, so we automatically connected to an available one. You can update your selection in settings.',
+									action: {
+										type: 'link',
+										label: 'Open Settings',
+										href: '/settings/recording',
+									},
+								});
+								break;
+							}
+							case 'preferred-device-unavailable': {
+								notify.info({
+									id: toastId,
+									title: '🎙️ Switched to different microphone',
+									description:
+										"Your previously selected microphone wasn't found, so we automatically connected to an available one.",
+									action: {
+										type: 'link',
+										label: 'Open Settings',
+										href: '/settings/recording',
+									},
+								});
+								break;
+							}
+						}
 					}
 				}
-			}
-		}
-		// Track start time for duration calculation
-		markManualRecordingStarted();
-		void dictationRuntime.setStatus('Recording', 'Listening');
-		console.info('Recording started');
-		return Ok(undefined);
-	},
+				// Track start time for duration calculation
+				markManualRecordingStarted();
+				void dictationRuntime.setStatus('Recording', 'Listening');
+				console.info('Recording started');
+				return Ok(undefined);
+			},
+		}),
 });
 
 const stopManualRecording = defineMutation({
 	mutationKey: COMMAND_KEYS.STOP_MANUAL_RECORDING,
 	mutationFn: async () => {
-		if (!tryBeginRecordingOperation()) {
-			console.info('Recording operation already in progress, ignoring stop');
-			return Ok(undefined);
-		}
-		void dictationRuntime.setStatus('Transcribing', 'Finalizing recording');
+		const stoppedRecording = await withRecordingOperation({
+			onBusy: () => {
+				console.info('Recording operation already in progress, ignoring stop');
+				return null;
+			},
+			operation: async () => {
+				void dictationRuntime.setStatus('Transcribing', 'Finalizing recording');
 
-		const toastId = nanoid();
-		activityFeed.info('Finalizing audio', 'Preparing your recording.');
+				const toastId = nanoid();
+				activityFeed.info('Finalizing audio', 'Preparing your recording.');
 
-		const { data, error: stopRecordingError } = await recorder.stopRecording({
-			toastId,
+				const { data, error: stopRecordingError } = await recorder.stopRecording({
+					toastId,
+				});
+
+				if (stopRecordingError) {
+					void dictationRuntime.setStatus('Error', stopRecordingError.message);
+					notify.error({ id: toastId, ...stopRecordingError });
+					return null;
+				}
+
+				return { ...data, toastId };
+			},
 		});
 
-		// Release mutex after the actual stop operation completes
-		// This allows new recordings to start while pipeline runs
-		finishRecordingOperation();
+		if (!stoppedRecording) return Ok(undefined);
 
-		if (stopRecordingError) {
-			void dictationRuntime.setStatus('Error', stopRecordingError.message);
-			notify.error({ id: toastId, ...stopRecordingError });
-			return Ok(undefined);
-		}
-
-		const { blob, recordingId } = data;
+		const { blob, recordingId, toastId } = stoppedRecording;
 
 		activityFeed.info(
 			'Preparing transcription',
@@ -397,49 +401,54 @@ export const actions = {
 	// Cancel manual recording
 	cancelManualRecording: defineMutation({
 		mutationKey: COMMAND_KEYS.CANCEL_MANUAL_RECORDING,
-		mutationFn: async () => {
-			if (!tryBeginRecordingOperation()) {
-				console.info(
-					'Recording operation already in progress, ignoring cancel',
-				);
-				return Ok(undefined);
-			}
+		mutationFn: () =>
+			withRecordingOperation({
+				onBusy: () => {
+					console.info(
+						'Recording operation already in progress, ignoring cancel',
+					);
+					return Ok(undefined);
+				},
+				operation: async () => {
+					const toastId = nanoid();
+					activityFeed.info(
+						'Canceling recording',
+						'Cleaning up the recording session.',
+					);
+					const { data: cancelRecordingResult, error: cancelRecordingError } =
+						await recorder.cancelRecording({ toastId });
 
-			const toastId = nanoid();
-			activityFeed.info('Canceling recording', 'Cleaning up the recording session.');
-			const { data: cancelRecordingResult, error: cancelRecordingError } =
-				await recorder.cancelRecording({ toastId });
-
-			// Release mutex after the actual cancel operation completes
-			finishRecordingOperation();
-
-			if (cancelRecordingError) {
-				void dictationRuntime.setStatus('Error', cancelRecordingError.message);
-				notify.error({ id: toastId, ...cancelRecordingError });
-				return Ok(undefined);
-			}
-			switch (cancelRecordingResult.status) {
-				case 'no-recording': {
-					notify.info({
-						id: toastId,
-						title: 'No active recording',
-						description: 'There is no recording in progress to cancel.',
-					});
-					break;
-				}
-				case 'cancelled': {
-					// Session cleanup is now handled internally by the recorder service
-					// Reset start time if recording was cancelled
-					clearManualRecordingStartTime();
-					activityFeed.success('Recording canceled', 'Ready for the next capture.');
-					void dictationRuntime.setStatus('Idle', 'Recording cancelled');
-					sound.playSoundIfEnabled('manual-cancel');
-					console.info('Recording cancelled');
-					break;
-				}
-			}
-			return Ok(undefined);
-		},
+					if (cancelRecordingError) {
+						void dictationRuntime.setStatus('Error', cancelRecordingError.message);
+						notify.error({ id: toastId, ...cancelRecordingError });
+						return Ok(undefined);
+					}
+					switch (cancelRecordingResult.status) {
+						case 'no-recording': {
+							notify.info({
+								id: toastId,
+								title: 'No active recording',
+								description: 'There is no recording in progress to cancel.',
+							});
+							break;
+						}
+						case 'cancelled': {
+							// Session cleanup is now handled internally by the recorder service
+							// Reset start time if recording was cancelled
+							clearManualRecordingStartTime();
+							activityFeed.success(
+								'Recording canceled',
+								'Ready for the next capture.',
+							);
+							void dictationRuntime.setStatus('Idle', 'Recording cancelled');
+							sound.playSoundIfEnabled('manual-cancel');
+							console.info('Recording cancelled');
+							break;
+						}
+					}
+					return Ok(undefined);
+				},
+			}),
 	}),
 
 	// Toggle VAD recording

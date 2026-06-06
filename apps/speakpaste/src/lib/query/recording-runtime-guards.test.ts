@@ -11,6 +11,7 @@ import {
 	markPipelineStarted,
 	resetRecordingRuntimeGuardsForTest,
 	tryBeginRecordingOperation,
+	withRecordingOperation,
 } from './recording-runtime-guards';
 
 describe('recording runtime guards', () => {
@@ -23,6 +24,29 @@ describe('recording runtime guards', () => {
 		expect(tryBeginRecordingOperation()).toBe(false);
 
 		finishRecordingOperation();
+
+		expect(tryBeginRecordingOperation()).toBe(true);
+	});
+
+	test('withRecordingOperation releases the guard after success', async () => {
+		const result = await withRecordingOperation({
+			onBusy: () => 'busy',
+			operation: () => 'done',
+		});
+
+		expect(result).toBe('done');
+		expect(tryBeginRecordingOperation()).toBe(true);
+	});
+
+	test('withRecordingOperation releases the guard after failure', async () => {
+		await expect(
+			withRecordingOperation({
+				onBusy: () => 'busy',
+				operation: () => {
+					throw new Error('boom');
+				},
+			}),
+		).rejects.toThrow('boom');
 
 		expect(tryBeginRecordingOperation()).toBe(true);
 	});
