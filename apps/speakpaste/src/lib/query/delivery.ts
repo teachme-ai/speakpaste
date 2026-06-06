@@ -3,6 +3,7 @@ import { rpc } from '$lib/query';
 import { defineMutation } from '$lib/query/client';
 import type { WhisperingError } from '$lib/result';
 import type { TextError } from '$lib/services/text';
+import { activityFeed } from '$lib/state/activity-feed.svelte';
 import { settings } from '$lib/state/settings.svelte';
 import {
 	isSpeakPasteOwnedClipboardText,
@@ -81,11 +82,7 @@ export const delivery = {
 				onClick: async () => {
 					const copiedTranscript = await copyTranscriptToClipboard();
 					if (!copiedTranscript) return;
-					rpc.notify.success({
-						id: `${toastId}:copy`,
-						title: 'Copied transcript',
-						description: text,
-					});
+					activityFeed.success('Copied transcript', 'Transcript is now on the clipboard.');
 				},
 			};
 
@@ -114,25 +111,16 @@ export const delivery = {
 			// Show appropriate success notification based on what succeeded
 			const showSuccessNotification = () => {
 				if (copied && written) {
-					// Both operations succeeded
-					rpc.notify.success({
-						id: toastId,
-						title: 'Pasted and copied',
-					});
+					activityFeed.success(
+						'Pasted and copied',
+						'Text was delivered and kept on the clipboard.',
+					);
 				} else if (copied) {
-					// Only copy succeeded
-					rpc.notify.success({
-						id: toastId,
-						title: 'Copied transcript',
-					});
+					activityFeed.success('Copied transcript', 'Transcript is ready on the clipboard.');
 				} else if (written) {
 					// Only write succeeded
 					if (clipboardChoiceOffered) return;
-					rpc.notify.success({
-						id: toastId,
-						title: 'Pasted',
-						action: copyTranscriptAction,
-					});
+					activityFeed.success('Pasted', 'Text was written into the active app.');
 				} else {
 					// Neither succeeded, offer manual copy
 					offerManualCopy();
@@ -285,12 +273,10 @@ export const delivery = {
 								});
 								return;
 							}
-							// Confirm manual copy succeeded
-							rpc.notify.success({
-								id: toastId,
-								title: 'Copied transformed text to clipboard!',
-								description: text,
-							});
+							activityFeed.success(
+								'Copied transformed text',
+								'The text rule output is now on the clipboard.',
+							);
 						},
 					},
 				});
@@ -320,42 +306,17 @@ export const delivery = {
 			// Show appropriate success notification based on what succeeded
 			const showSuccessNotification = () => {
 				if (copied && written) {
-					// Both operations succeeded
-					rpc.notify.success({
-						id: toastId,
-						title:
-							'🔄 Transformation complete, copied to clipboard, and written to cursor!',
-						description: text,
-						action: {
-							type: 'link',
-							label: 'Go to recordings',
-							href: WHISPERING_RECORDINGS_PATHNAME,
-						},
-					});
+					activityFeed.success(
+						'Text rule delivered',
+						'Output was pasted and copied to the clipboard.',
+					);
 				} else if (copied) {
-					// Only copy succeeded
-					rpc.notify.success({
-						id: toastId,
-						title: '🔄 Transformation complete and copied to clipboard!',
-						description: text,
-						action: {
-							type: 'link',
-							label: 'Go to recordings',
-							href: WHISPERING_RECORDINGS_PATHNAME,
-						},
-					});
+					activityFeed.success('Text rule copied', 'Output is ready on the clipboard.');
 				} else if (written) {
-					// Only write succeeded
-					rpc.notify.success({
-						id: toastId,
-						title: '🔄 Transformation complete and written to cursor!',
-						description: text,
-						action: {
-							type: 'link',
-							label: 'Go to recordings',
-							href: WHISPERING_RECORDINGS_PATHNAME,
-						},
-					});
+					activityFeed.success(
+						'Text rule pasted',
+						'Output was written into the active app.',
+					);
 				} else {
 					// Neither succeeded, offer manual copy
 					offerManualCopy();

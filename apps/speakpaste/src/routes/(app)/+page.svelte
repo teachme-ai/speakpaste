@@ -36,6 +36,7 @@
 	import PipelineControlDeck from './_home/PipelineControlDeck.svelte';
 	import LastPastedCard from './_home/LastPastedCard.svelte';
 	import RecentHistoryList from './_home/RecentHistoryList.svelte';
+	import ActivityFeed from './_home/ActivityFeed.svelte';
 
 	let showHistory = $state(false);
 	let isOverlay = $state(false);
@@ -285,6 +286,8 @@
 			</div>
 			<PipelineControlDeck />
 		</div>
+
+		<ActivityFeed />
 
 		<div class="flex justify-center mt-7 mb-5">
 			<button class="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/60 px-5 py-2.5 text-sm font-semibold text-stone-900 shadow-sm transition-all hover:bg-white/85 dark:border-white/10 dark:bg-white/10 dark:text-stone-50 dark:hover:bg-white/15" onclick={toggleHistory}>
