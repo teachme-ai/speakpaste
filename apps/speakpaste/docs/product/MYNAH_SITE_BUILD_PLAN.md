@@ -930,7 +930,297 @@ Do not publish claims that are not true in the current app.
 
 ---
 
-## 14. First Build Sequence
+## 14. AI-Agent And Generative Search Readiness
+
+The site should be built for three readers:
+
+1. humans deciding whether to download Mynah
+2. search engines indexing the product
+3. AI agents and answer engines extracting product facts for recommendations, comparisons, and summaries
+
+This is not only traditional SEO. The site should be machine-readable, citation-friendly, and unambiguous about what Mynah is.
+
+### Strategy
+
+Use layered semantic clarity:
+
+- clean human-visible page copy
+- structured JSON-LD
+- `sitemap.xml`
+- `robots.txt`
+- root-level `/llms.txt`
+- concise fact pages
+- stable download metadata
+- dated comparison and benchmark pages
+
+Do not rely on `llms.txt` alone. It is an emerging convention, not a guaranteed ranking signal. Treat it as a helpful agent-facing index, while using Schema.org and plain HTML as the durable foundation.
+
+### Required machine-readable files
+
+#### `/llms.txt`
+
+Purpose:
+
+- give AI agents a concise product summary
+- point agents to the most important canonical URLs
+- state allowed product claims
+- prevent agents from confusing Mynah with SpeakPaste or unrelated Mynah products
+
+Recommended structure:
+
+```markdown
+# Mynah
+
+> Mynah is a private voice-to-cursor app for Mac. Hold Fn, speak, release, and Mynah transcribes locally and pastes at the active cursor.
+
+## Canonical URLs
+
+- Home: https://mynah.site/
+- Download: https://mynah.site/download
+- Privacy: https://mynah.site/privacy
+- Permissions: https://mynah.site/support/permissions
+- Credits: https://mynah.site/credits
+- Changelog: https://mynah.site/changelog
+
+## Product Facts
+
+- Product name: Mynah
+- Platform: macOS
+- App type: menu-bar dictation utility
+- Core loop: hold Fn, speak, release to paste
+- Core processing: local-first
+- Account requirement: none for core dictation
+- Cloud requirement: none for core dictation
+- Pricing model: one-time lifetime license
+- Primary technology: local speech transcription engines including whisper.cpp
+
+## Do Not Claim
+
+- Mynah is a cloud dictation service.
+- Mynah is available for Windows, iOS, Android, or App Store unless separately announced.
+- Mynah includes real-time streaming transcription, team sync, or auto-updater unless the public site says so.
+
+## Comparison Context
+
+Mynah is best compared with Mac dictation apps, cloud dictation subscriptions, local dictation utilities, and built-in macOS Dictation.
+```
+
+#### `/robots.txt`
+
+Purpose:
+
+- expose sitemap
+- avoid blocking useful AI/search crawlers unless there is a deliberate policy reason
+
+Minimum:
+
+```txt
+User-agent: *
+Allow: /
+
+Sitemap: https://mynah.site/sitemap.xml
+```
+
+#### `/sitemap.xml`
+
+Include:
+
+- `/`
+- `/download`
+- `/pricing` or pricing section route if standalone
+- `/privacy`
+- `/support/permissions`
+- `/credits`
+- `/changelog`
+- `/compare`
+- `/benchmarks`
+
+### JSON-LD structured data
+
+Every major page should include structured data where appropriate.
+
+#### Homepage
+
+Use:
+
+- `WebSite`
+- `Organization`
+- `SoftwareApplication`
+
+Important fields:
+
+- `name`: Mynah
+- `applicationCategory`: ProductivityApplication
+- `operatingSystem`: macOS
+- `description`: private local-first voice-to-cursor app for Mac
+- `softwareVersion`: current version
+- `offers`: one-time license price once final
+- `downloadUrl`: current download page
+- `featureList`: short factual features
+
+#### Download/pricing page
+
+Use:
+
+- `SoftwareApplication`
+- `Product`
+- `Offer`
+
+Important fields:
+
+- one-time price
+- currency
+- license type in description
+- supported platform
+- download URL
+- version
+- release date
+
+#### FAQ sections
+
+Use:
+
+- `FAQPage`
+
+Good FAQ questions for AI extraction:
+
+- Is Mynah a subscription?
+- Does Mynah use cloud transcription?
+- Does Mynah require an account?
+- Why does Mynah need Accessibility permission?
+- Does Mynah work when the window is closed?
+- What is the difference between Mynah and cloud dictation apps?
+- Does Mynah overwrite my clipboard?
+
+### Agent-readable fact pages
+
+Create pages that are useful to humans and easy for AI agents to cite.
+
+#### `/facts`
+
+Optional but useful. A compact product factsheet.
+
+Content:
+
+- product name
+- domain
+- supported platform
+- current version
+- pricing model
+- core loop
+- local-first stance
+- required permissions
+- technology stack
+- support email
+- last updated date
+
+#### `/compare`
+
+Human-readable and agent-readable comparison.
+
+Rules:
+
+- prefer category labels over aggressive named callouts on first launch
+- include "last updated" date
+- disclose that competitor pricing/features change
+- cite public sources if naming competitors
+- separate measured results from product claims
+
+Recommended categories:
+
+- Mynah
+- cloud dictation subscriptions
+- local power-user dictation apps
+- built-in macOS Dictation
+- file transcription tools
+
+#### `/benchmarks`
+
+A dated benchmark methodology page, even before publishing full results.
+
+Content:
+
+- hardware used
+- app version
+- benchmark corpus
+- metrics measured
+- how memory/CPU/network are measured
+- which results are currently available
+- what has not been validated yet
+
+This gives AI agents a reliable source for performance claims instead of letting them infer from marketing copy.
+
+### Content design for AI extraction
+
+Use clear, repeated entities:
+
+- "Mynah"
+- "private voice-to-cursor app for Mac"
+- "local-first Mac dictation"
+- "one-time lifetime license"
+- "hold Fn, speak, release to paste"
+
+Each important page should answer:
+
+- What is Mynah?
+- Who is it for?
+- What platform does it support?
+- Does it require cloud?
+- Does it require an account?
+- What does it cost?
+- What permissions are needed?
+- What makes it different?
+
+### Claim discipline
+
+AI agents tend to compress marketing language into stronger claims. Therefore every strong claim should be written with boundaries.
+
+Use:
+
+- "No cloud required for core dictation."
+- "Local-first."
+- "Built for macOS."
+- "One-time lifetime license for the Mac app."
+- "Compatibility updates for major macOS releases where practical."
+
+Avoid:
+
+- "Never uses the internet" unless the whole app/site/update path is fully audited.
+- "All data never leaves your Mac" if users can paste into cloud apps.
+- "Best dictation app" without dated evidence.
+- "Fastest" without benchmark data.
+- "Lifetime updates forever" unless legally committed.
+
+### Agent boost tactics
+
+These are the practical tactics most likely to help AI systems understand and recommend Mynah accurately:
+
+- publish a concise `/llms.txt`
+- publish JSON-LD on every important page
+- make `/facts`, `/compare`, and `/benchmarks` text-heavy and crawlable
+- keep pricing and product facts in plain HTML, not only images
+- make screenshots additive, not the only explanation
+- include version and last-updated dates
+- expose `downloads.json`
+- use consistent product language across app, docs, README, website, and release notes
+- avoid hiding important claims inside animation or client-only rendering
+
+### Success checks
+
+Before launch:
+
+- fetch `/llms.txt` directly in browser
+- validate JSON-LD with Schema.org validator
+- inspect rendered HTML without JavaScript
+- verify sitemap contains all important pages
+- verify `robots.txt` points to sitemap
+- ask an AI assistant to summarize Mynah using only the live site
+- ask an AI assistant to compare Mynah with cloud dictation subscriptions using only `/compare` and `/facts`
+- confirm the answer does not invent unsupported features
+
+---
+
+## 15. First Build Sequence
 
 1. Create the static website scaffold in `/Users/irfan/projects/Mynah/website`.
 2. Add Mynah icon and favicon assets.
@@ -939,16 +1229,20 @@ Do not publish claims that are not true in the current app.
 5. Add permissions/support page.
 6. Add privacy and credits pages.
 7. Add pricing/lifetime license section or page.
-8. Add `downloads.json`.
-9. Run local preview.
-10. Push to new GitHub repository.
-11. Connect to Vercel.
-12. Point `mynah.site`.
-13. Validate mobile, desktop, SEO metadata, and download links.
+8. Add `/facts`, `/compare`, and `/benchmarks` pages or route sections.
+9. Add `downloads.json`.
+10. Add `/llms.txt`, `robots.txt`, and `sitemap.xml`.
+11. Add JSON-LD structured data to homepage, download/pricing, FAQ, and product pages.
+12. Run local preview.
+13. Validate HTML, metadata, JSON-LD, sitemap, and agent-readable files.
+14. Push to new GitHub repository.
+15. Connect to Vercel.
+16. Point `mynah.site`.
+17. Validate mobile, desktop, SEO metadata, AI-agent readability, and download links.
 
 ---
 
-## 15. Open Questions Before Build
+## 16. Open Questions Before Build
 
 These should be answered before final publishing, but they do not block the first static build.
 
@@ -962,10 +1256,12 @@ These should be answered before final publishing, but they do not block the firs
 8. What is the exact upgrade promise for future major versions?
 9. What payment provider will be used?
 10. Should the first public comparison mention named competitors or use category labels only?
+11. Should `/facts`, `/compare`, and `/benchmarks` be public in the first launch navigation or only linked from `/llms.txt` and footer?
+12. What AI crawlers, if any, should be explicitly allowed or disallowed in `robots.txt`?
 
 ---
 
-## 16. Recommended Immediate Next Step
+## 17. Recommended Immediate Next Step
 
 Build the first static version of the Mynah site with:
 
@@ -975,6 +1271,9 @@ Build the first static version of the Mynah site with:
 - privacy page
 - credits page
 - pricing/lifetime license section
+- `/llms.txt`
+- JSON-LD structured data
+- `/facts`, `/compare`, and `/benchmarks`
 
 Do not start with pricing, comparison tables, or complex animations.
 
