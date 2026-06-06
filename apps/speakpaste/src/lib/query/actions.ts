@@ -1109,7 +1109,20 @@ async function processRecordingPipeline({
 		transcribePromise,
 		transcribeToastId,
 	});
-	if (!transcribedText) return;
+	if (transcribedText === null) return;
+
+	if (transcribedText === '') {
+		console.info('[Pipeline] empty transcription — no speech detected');
+		notify.info({
+			id: transcribeToastId,
+			title: 'No speech detected',
+			description: 'SpeakPaste did not detect any words in the audio.',
+		});
+		markPipelineFinished();
+		void dictationRuntime.setStatus('Idle', 'Ready');
+		window.dispatchEvent(new CustomEvent(PIPELINE_EVENTS.COMPLETE));
+		return;
+	}
 
 	await deliverTranscriptStage({
 		recordingId: recording.id,
