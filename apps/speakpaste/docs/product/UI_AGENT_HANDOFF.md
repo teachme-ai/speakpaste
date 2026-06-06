@@ -4,7 +4,7 @@ Date: 2026-06-02
 
 ## Purpose
 
-This file is the coordination point for a separate UI/design agent working on SpeakPaste.
+This file is the coordination point for a separate UI/design agent working on Mynah.
 
 Use it to avoid environment confusion and to avoid two agents editing the same files blindly.
 
@@ -13,13 +13,13 @@ Use it to avoid environment confusion and to avoid two agents editing the same f
 Workspace root:
 
 ```text
-/Users/irfan/projects/SpeakPaste/speakpaste
+/Users/irfan/projects/Mynah/mynah
 ```
 
 Actual app package:
 
 ```text
-apps/speakpaste
+apps/mynah
 ```
 
 The app is a Bun workspace package. Do not assume `npm` or repo-root `node_modules/.bin/vite` is the right execution context.
@@ -47,14 +47,14 @@ Do not switch the project to npm, pnpm, or yarn. Do not generate a new lockfile 
 Most reliable form:
 
 ```bash
-cd /Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste
+cd /Users/irfan/projects/Mynah/mynah/apps/mynah
 bun run dev:web -- --host 127.0.0.1 --port 5173
 ```
 
 If the agent tool supports a `cwd` / working-directory field, set it to:
 
 ```text
-/Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste
+/Users/irfan/projects/Mynah/mynah/apps/mynah
 ```
 
 Then run:
@@ -66,14 +66,14 @@ bun run dev:web -- --host 127.0.0.1 --port 5173
 From workspace root, web-only Vite dev:
 
 ```bash
-cd apps/speakpaste
+cd apps/mynah
 bun run dev:web -- --host 127.0.0.1 --port 5173
 ```
 
 Equivalent from workspace root without `cd`:
 
 ```bash
-bun --cwd apps/speakpaste run dev:web -- --host 127.0.0.1 --port 5173
+bun --cwd apps/mynah run dev:web -- --host 127.0.0.1 --port 5173
 ```
 
 If one form fails in the agent shell, use the explicit `cd` form above. The two commands are intended to be equivalent, but some agent harnesses handle `--cwd`, workspace roots, or shell resolution differently.
@@ -81,7 +81,7 @@ If one form fails in the agent shell, use the explicit `cd` form above. The two 
 Tauri desktop dev:
 
 ```bash
-cd apps/speakpaste
+cd apps/mynah
 bun run dev
 ```
 
@@ -94,7 +94,7 @@ bun run build
 Tauri `.app` build only:
 
 ```bash
-cd apps/speakpaste
+cd apps/mynah
 bun tauri build --bundles app
 ```
 
@@ -104,9 +104,9 @@ The repo root `package.json` has these scripts:
 
 ```json
 {
-  "dev": "cd apps/speakpaste && bun run dev",
-  "build": "cd apps/speakpaste && bun run build",
-  "typecheck": "cd apps/speakpaste && bun run typecheck"
+  "dev": "cd apps/mynah && bun run dev",
+  "build": "cd apps/mynah && bun run build",
+  "typecheck": "cd apps/mynah && bun run typecheck"
 }
 ```
 
@@ -115,13 +115,13 @@ It does not define `dev:web` at the root.
 `dev:web` exists only in:
 
 ```text
-apps/speakpaste/package.json
+apps/mynah/package.json
 ```
 
 Also, repo-root `node_modules/.bin` may not contain `vite`. The `vite` binary is available under:
 
 ```text
-apps/speakpaste/node_modules/.bin/vite
+apps/mynah/node_modules/.bin/vite
 ```
 
 So running Vite from the wrong cwd can fail even if dependencies are installed.
@@ -133,13 +133,13 @@ Prefer Bun scripts first.
 If the Bun script path is blocked by the agent environment, this direct command can be used from workspace root:
 
 ```bash
-node apps/speakpaste/node_modules/vite/bin/vite.js dev --host 127.0.0.1 --port 5173 --config apps/speakpaste/vite.config.ts
+node apps/mynah/node_modules/vite/bin/vite.js dev --host 127.0.0.1 --port 5173 --config apps/mynah/vite.config.ts
 ```
 
 But the preferred command remains:
 
 ```bash
-bun --cwd apps/speakpaste run dev:web -- --host 127.0.0.1 --port 5173
+bun --cwd apps/mynah run dev:web -- --host 127.0.0.1 --port 5173
 ```
 
 ## Current Design Direction
@@ -147,8 +147,8 @@ bun --cwd apps/speakpaste run dev:web -- --host 127.0.0.1 --port 5173
 Read first:
 
 ```text
-apps/speakpaste/docs/product/UI_REDESIGN_BRIEF.md
-apps/speakpaste/docs/product/CURRENT_PHASE_STATUS.md
+apps/mynah/docs/product/UI_REDESIGN_BRIEF.md
+apps/mynah/docs/product/CURRENT_PHASE_STATUS.md
 ```
 
 Current target:
@@ -178,16 +178,16 @@ git status --short
 At the time this handoff was created, the implementation lane had uncommitted home-surface UI edits in these files:
 
 ```text
-apps/speakpaste/src/routes/(app)/+page.svelte
-apps/speakpaste/src/routes/(app)/_home/AppHeader.svelte
-apps/speakpaste/src/routes/(app)/_home/EngineBadge.svelte
-apps/speakpaste/src/routes/(app)/_home/HintText.svelte
-apps/speakpaste/src/routes/(app)/_home/LastPastedCard.svelte
-apps/speakpaste/src/routes/(app)/_home/MicButton.svelte
-apps/speakpaste/src/routes/(app)/_home/PipelineControlDeck.svelte
-apps/speakpaste/src/routes/(app)/_home/RecentHistoryList.svelte
-apps/speakpaste/src/routes/(app)/_home/SettingsPopover.svelte
-apps/speakpaste/src/routes/(app)/_home/StatePillBar.svelte
+apps/mynah/src/routes/(app)/+page.svelte
+apps/mynah/src/routes/(app)/_home/AppHeader.svelte
+apps/mynah/src/routes/(app)/_home/EngineBadge.svelte
+apps/mynah/src/routes/(app)/_home/HintText.svelte
+apps/mynah/src/routes/(app)/_home/LastPastedCard.svelte
+apps/mynah/src/routes/(app)/_home/MicButton.svelte
+apps/mynah/src/routes/(app)/_home/PipelineControlDeck.svelte
+apps/mynah/src/routes/(app)/_home/RecentHistoryList.svelte
+apps/mynah/src/routes/(app)/_home/SettingsPopover.svelte
+apps/mynah/src/routes/(app)/_home/StatePillBar.svelte
 ```
 
 Do not overwrite those files unless the user explicitly asks you to take over the same UI slice.
@@ -204,7 +204,7 @@ Safer options:
 Use files under:
 
 ```text
-apps/speakpaste/docs/product
+apps/mynah/docs/product
 ```
 
 Recommended pattern:
@@ -217,19 +217,19 @@ Recommended pattern:
 For UI/design work, write output to:
 
 ```text
-apps/speakpaste/docs/product/UI_AGENT_REVIEW.md
+apps/mynah/docs/product/UI_AGENT_REVIEW.md
 ```
 
 For implementation notes, write output to:
 
 ```text
-apps/speakpaste/docs/product/UI_IMPLEMENTATION_NOTES.md
+apps/mynah/docs/product/UI_IMPLEMENTATION_NOTES.md
 ```
 
 For blockers, append a short section to this file:
 
 ```text
-apps/speakpaste/docs/product/UI_AGENT_HANDOFF.md
+apps/mynah/docs/product/UI_AGENT_HANDOFF.md
 ```
 
 ## Validation Commands
@@ -240,7 +240,7 @@ Run at minimum after UI changes:
 bun run build
 ```
 
-From workspace root this is valid because root `build` delegates to `apps/speakpaste`.
+From workspace root this is valid because root `build` delegates to `apps/mynah`.
 
 If changing TypeScript-heavy code:
 

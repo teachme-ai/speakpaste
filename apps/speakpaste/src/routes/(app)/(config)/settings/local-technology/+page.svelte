@@ -5,13 +5,13 @@
 </script>
 
 <svelte:head>
-	<title>Local Technology - SpeakPaste</title>
+	<title>Local Technology - Mynah</title>
 </svelte:head>
 
 <Field.Set>
 	<Field.Legend>Local Technology</Field.Legend>
 	<Field.Description>
-		SpeakPaste documents the local frameworks and engines used by the app.
+		Mynah documents the local frameworks and engines used by the app.
 		Nothing here implies cloud processing.
 	</Field.Description>
 	<Field.Separator />
@@ -45,14 +45,14 @@
 	<div class="space-y-3 rounded-lg border border-dashed p-4">
 		<h3 class="text-sm font-semibold tracking-tight">Local metrics</h3>
 		<p class="text-sm text-muted-foreground leading-relaxed">
-			SpeakPaste may keep operational metrics on the device, such as session
+			Mynah may keep operational metrics on the device, such as session
 			count, recording duration, transcription latency, paste result, mode used,
 			and approximate word count. It does not need transcript text, raw audio, or
 			private context to keep that local dashboard useful.
 		</p>
 		<p class="text-sm text-muted-foreground leading-relaxed">
 			When a capability depends on a system permission or Apple framework,
-			SpeakPaste should say so at runtime instead of hiding the requirement.
+			Mynah should say so at runtime instead of hiding the requirement.
 		</p>
 		<div class="pt-1">
 			<Link href="/settings/about" class="text-sm">

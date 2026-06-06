@@ -7,4 +7,4 @@
 	});
 </script>
 
-<svelte:head> <title>Shortcuts - SpeakPaste</title> </svelte:head>
+<svelte:head> <title>Shortcuts - Mynah</title> </svelte:head>

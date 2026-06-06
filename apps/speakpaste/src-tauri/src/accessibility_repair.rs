@@ -307,9 +307,9 @@ mod tests {
 
     fn sample_fingerprint(build_signature: &str) -> InstallFingerprint {
         InstallFingerprint {
-            bundle_identifier: "com.speakpaste.app".to_string(),
-            bundle_path: "/Applications/SpeakPaste.app".to_string(),
-            executable_path: "/Applications/SpeakPaste.app/Contents/MacOS/speakpaste".to_string(),
+            bundle_identifier: "com.mynah.app".to_string(),
+            bundle_path: "/Applications/Mynah.app".to_string(),
+            executable_path: "/Applications/Mynah.app/Contents/MacOS/mynah".to_string(),
             build_signature: build_signature.to_string(),
             marketing_version: "0.1.1".to_string(),
             bundle_version: "20260603.210000".to_string(),

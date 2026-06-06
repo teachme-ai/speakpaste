@@ -1,4 +1,4 @@
-# SpeakPaste Pipeline Side-Effect Map
+# Mynah Pipeline Side-Effect Map
 
 > Codex review note, 2026-06-04: this AG audit was produced against an older branch/commit snapshot. Treat line numbers and exact event literals as directional only. It remains useful as a side-effect map before any deeper `actions.ts` refactor.
 
@@ -47,7 +47,7 @@ sequenceDiagram
         UI->>State: setStatus("Error", error.message)
         UI->>UI: notify.error({ id: toastId })
     else if success
-        UI->>UI: notify.success({ id: toastId, title: "SpeakPaste is recording..." })
+        UI->>UI: notify.success({ id: toastId, title: "Mynah is recording..." })
         alt if fallback device used
             UI->>UI: Set deviceConfig deviceId = fallbackId
             UI->>UI: notify.info("Switched to different microphone")
@@ -165,13 +165,13 @@ This is the most critical flow containing asynchronous operations that must exec
 graph TD
     A[Start Pipeline] --> B[Set Status: Transcribing]
     B --> C[Set isPipelineRunning = true]
-    C --> D[DispatchEvent: speakpaste:pipeline-started]
+    C --> D[DispatchEvent: mynah:pipeline-started]
     D --> E[Save audio blob asynchronously]
     D --> F[Run transcribeBlob asynchronously]
     F --> G{Transcription Result?}
     G -- Error --> H[Set isPipelineRunning = false]
     H --> I[Set Status: Error]
-    I --> J[DispatchEvent: speakpaste:pipeline-error]
+    I --> J[DispatchEvent: mynah:pipeline-error]
     I --> K[Set DB transcriptionStatus = FAILED]
     I --> L[notify.error]
     
@@ -181,7 +181,7 @@ graph TD
     O --> P[Set isPipelineRunning = false]
     P --> Q[Set Status: Cooldown]
     Q --> R[Call enterCooldown: set isCooldown = true]
-    R --> S[DispatchEvent: speakpaste:pipeline-complete]
+    R --> S[DispatchEvent: mynah:pipeline-complete]
     S --> T[Await audio save result]
     T --> U[notify.success]
     U --> V[Set DB transcriptionStatus = DONE]
@@ -198,7 +198,7 @@ graph TD
      * Write: `recordings.update(recording.id, { transcriptionStatus: 'TRANSCRIBING' })` (line 727).
   2. **Asynchronous Dispatch**:
      * Write: `isPipelineRunning = true` (line 732).
-     * Dispatch: `window.dispatchEvent(new CustomEvent('speakpaste:pipeline-started'))` (line 734).
+     * Dispatch: `window.dispatchEvent(new CustomEvent('mynah:pipeline-started'))` (line 734).
      * FFI Call (Async): `services.blobs.audio.save(recording.id, blob)` (line 728).
      * FFI Call (Async): `transcribeBlob(blob)` (line 729).
   3. **Transcription Await**:
@@ -213,7 +213,7 @@ graph TD
      * If error occurs:
        * Write: `isPipelineRunning = false` (line 752).
        * Write: `dictationRuntime.setStatus('Error', 'Transcription failed')` (line 753).
-       * Dispatch: `window.dispatchEvent(new CustomEvent('speakpaste:pipeline-error'))` (line 754).
+       * Dispatch: `window.dispatchEvent(new CustomEvent('mynah:pipeline-error'))` (line 754).
        * Write: `recordings.update(recording.id, { transcriptionStatus: 'FAILED' })` (line 756).
   5. **Text Post-Processing**:
      * Call: `cleanWhisperHallucinations(text)` (line 229 in `transcription.ts`) - sanitizes Whisper repeating text output.
@@ -237,7 +237,7 @@ graph TD
      * Write: `dictationRuntime.setStatus('Cooldown', 'Ready shortly')` (line 801).
      * Trigger Cooldown: `enterCooldown()` (line 802) -> sets `isCooldown = true`, fires a 700ms timer to set `isCooldown = false`.
      * Trigger Idle: `setTimeout` 700ms (line 804) -> sets `dictationRuntime.setStatus('Idle', 'Ready')`.
-     * Dispatch: `window.dispatchEvent(new CustomEvent('speakpaste:pipeline-complete'))` (line 809).
+     * Dispatch: `window.dispatchEvent(new CustomEvent('mynah:pipeline-complete'))` (line 809).
   8. **Audio Save Synchronization**:
      * Await: `saveAudioPromise` (line 812).
      * Write: `recordings.update(recording.id, { transcript, transcriptionStatus: 'DONE' })` (line 829).

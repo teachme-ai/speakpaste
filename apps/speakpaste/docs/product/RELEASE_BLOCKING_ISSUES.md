@@ -14,15 +14,15 @@ Severity: release blocker
 
 Reported behavior:
 
-- SpeakPaste shows the macOS Accessibility guide.
-- In System Settings / System Preferences > Privacy & Security > Accessibility, `SpeakPaste` appears in the list but is not selected.
-- User selects/checks `SpeakPaste`; it visually appears selected.
-- User closes System Settings and returns to SpeakPaste.
-- SpeakPaste still behaves as if Accessibility is not active:
+- Mynah shows the macOS Accessibility guide.
+- In System Settings / System Preferences > Privacy & Security > Accessibility, `Mynah` appears in the list but is not selected.
+- User selects/checks `Mynah`; it visually appears selected.
+- User closes System Settings and returns to Mynah.
+- Mynah still behaves as if Accessibility is not active:
   - Fn trigger does not work, or
   - permission guide remains active, or
   - the app does not initialize the global Fn listener.
-- Removing the existing Accessibility entry and re-adding `/Applications/SpeakPaste.app` does not reliably activate the currently running app.
+- Removing the existing Accessibility entry and re-adding `/Applications/Mynah.app` does not reliably activate the currently running app.
 - In some reinstall flows, the second remove/reinstall attempt works, which suggests macOS may be applying the permission to a different bundle instance, stale TCC entry, or a process that must be restarted.
 
 Why this matters:
@@ -34,15 +34,15 @@ Why this matters:
 Current implementation references:
 
 - Rust permission repair:
-  - `apps/speakpaste/src-tauri/src/accessibility_repair.rs`
+  - `apps/mynah/src-tauri/src/accessibility_repair.rs`
 - Rust Fn key listener:
-  - `apps/speakpaste/src-tauri/src/fn_key_listener.rs`
+  - `apps/mynah/src-tauri/src/fn_key_listener.rs`
 - Frontend permission registration:
-  - `apps/speakpaste/src/routes/(app)/_layout-utils/register-permissions.ts`
+  - `apps/mynah/src/routes/(app)/_layout-utils/register-permissions.ts`
 - Accessibility guide:
-  - `apps/speakpaste/src/routes/(app)/(config)/macos-enable-accessibility/+page.svelte`
+  - `apps/mynah/src/routes/(app)/(config)/macos-enable-accessibility/+page.svelte`
 - Permission service:
-  - `apps/speakpaste/src/lib/services/desktop/permissions.ts`
+  - `apps/mynah/src/lib/services/desktop/permissions.ts`
 
 Initial investigation notes:
 
@@ -50,7 +50,7 @@ Initial investigation notes:
 - `should_reset_stale_accessibility(...)` currently resets only when:
   - the app has previously seen Accessibility trusted, and
   - the current build signature has not already had a reset.
-- This means a bad first-run/reinstall state may not reset if local recovery state does not show prior trust, even if System Settings contains a stale visible `SpeakPaste` entry.
+- This means a bad first-run/reinstall state may not reset if local recovery state does not show prior trust, even if System Settings contains a stale visible `Mynah` entry.
 - The frontend polls `desktopServices.permissions.accessibility.check()`, which comes from `tauri-plugin-macos-permissions-api`.
 - The Fn listener separately checks `accessibility_sys::AXIsProcessTrusted()` before creating the CGEventTap.
 - If the plugin check and `AXIsProcessTrusted()` disagree briefly, or if macOS needs process restart after TCC change, the UI can show misleading recovery progress.
@@ -61,7 +61,7 @@ Working hypotheses:
 
 1. Stale TCC entry:
    - The Accessibility row shown in System Settings belongs to a previous bundle/executable/signature path.
-   - Selecting it does not grant trust to the currently running `/Applications/SpeakPaste.app`.
+   - Selecting it does not grant trust to the currently running `/Applications/Mynah.app`.
 
 2. Permission applies only after process restart:
    - macOS may mark the app trusted in TCC, but the running process/event tap path does not become usable until the process restarts.
@@ -84,10 +84,10 @@ Recommended fix direction:
    - The UI should not show “granted” until Rust confirms the listener is initialized.
 
 2. Add a guided “Repair Accessibility” action:
-   - Run `tccutil reset Accessibility com.speakpaste.app`.
+   - Run `tccutil reset Accessibility com.mynah.app`.
    - Open the Accessibility pane.
    - Keep polling Rust trust state.
-   - If selected but still not usable after a timeout, prompt the user to fully quit and reopen SpeakPaste.
+   - If selected but still not usable after a timeout, prompt the user to fully quit and reopen Mynah.
 
 3. Make stale-entry repair more aggressive, but controlled:
    - If install fingerprint changed and trust is false, consider allowing one reset for the current build even when `has_seen_accessibility_trusted` is false.
@@ -97,20 +97,20 @@ Recommended fix direction:
 4. Improve user copy:
    - Stop implying the app can silently fix all stale entries.
    - Say macOS may require “refresh and reopen” when replacing an app.
-   - The guide should explain that the selected checkbox is not considered complete until SpeakPaste reports “Fn trigger ready.”
+   - The guide should explain that the selected checkbox is not considered complete until Mynah reports “Fn trigger ready.”
 
 5. Add validation cases:
    - Fresh install with no existing TCC entry.
-   - Replace existing `/Applications/SpeakPaste.app` while old app was previously trusted.
+   - Replace existing `/Applications/Mynah.app` while old app was previously trusted.
    - Delete app, install new build, existing Accessibility row remains.
-   - Remove row manually, re-add `/Applications/SpeakPaste.app`, keep app running.
+   - Remove row manually, re-add `/Applications/Mynah.app`, keep app running.
    - Remove row manually, re-add app, quit/reopen.
 
 Acceptance criteria:
 
-- If Accessibility is missing, SpeakPaste opens the guide and can open the correct System Settings pane.
+- If Accessibility is missing, Mynah opens the guide and can open the correct System Settings pane.
 - If a stale entry exists, clicking Repair resets the bundle-id TCC entry once for that build and asks the user to approve the current app.
 - The UI does not mark Accessibility as complete until Rust confirms the Fn listener can initialize.
-- If macOS requires restart, the app says so clearly and provides a “Quit SpeakPaste” action.
+- If macOS requires restart, the app says so clearly and provides a “Quit Mynah” action.
 - After reinstall/replace, the user should not need to discover manual remove/re-add steps by trial and error.
 

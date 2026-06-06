@@ -76,7 +76,7 @@ At minimum consider:
 
 Write results to:
 
-`apps/speakpaste/docs/product/ANTIGRAVITY_DIAGNOSTICS_USABILITY_SPEC.md`
+`apps/mynah/docs/product/ANTIGRAVITY_DIAGNOSTICS_USABILITY_SPEC.md`
 
 #### Why This Matters Now
 
@@ -122,7 +122,7 @@ For each issue found, provide:
 
 Write results to:
 
-`apps/speakpaste/docs/product/ANTIGRAVITY_SETTINGS_WORDING_AUDIT.md`
+`apps/mynah/docs/product/ANTIGRAVITY_SETTINGS_WORDING_AUDIT.md`
 
 #### Why This Matters
 
@@ -159,13 +159,13 @@ Separate:
 
 - practical and short
 - not a generic release template
-- tailored to SpeakPaste’s current state
+- tailored to Mynah’s current state
 
 #### Output File
 
 Write results to:
 
-`apps/speakpaste/docs/product/ANTIGRAVITY_RELEASE_READINESS_CHECKLIST.md`
+`apps/mynah/docs/product/ANTIGRAVITY_RELEASE_READINESS_CHECKLIST.md`
 
 #### Why This Matters
 
@@ -211,7 +211,7 @@ For each finding provide:
 
 Write results to:
 
-`apps/speakpaste/docs/product/ANTIGRAVITY_PRODUCT_SURFACE_RESIDUAL_AUDIT.md`
+`apps/mynah/docs/product/ANTIGRAVITY_PRODUCT_SURFACE_RESIDUAL_AUDIT.md`
 
 #### Why This Matters
 
@@ -221,11 +221,11 @@ Codex may use this in a later cleanup slice, but it is lower priority than diagn
 
 Before doing the tasks above, Antigravity should review:
 
-- `apps/speakpaste/docs/product/CURRENT_PHASE_STATUS.md`
-- `apps/speakpaste/docs/product/ANTIGRAVITY_PERFORMANCE_MATRIX.md`
-- `apps/speakpaste/docs/product/ANTIGRAVITY_BENCHMARK_CORPUS_RUNBOOK.md`
-- `apps/speakpaste/docs/product/ANTIGRAVITY_REVIEW_FULL_PRODUCT_SURFACE_AUDIT.md`
-- `apps/speakpaste/docs/product/OBSERVABILITY_AND_TEST_STRATEGY.md`
+- `apps/mynah/docs/product/CURRENT_PHASE_STATUS.md`
+- `apps/mynah/docs/product/ANTIGRAVITY_PERFORMANCE_MATRIX.md`
+- `apps/mynah/docs/product/ANTIGRAVITY_BENCHMARK_CORPUS_RUNBOOK.md`
+- `apps/mynah/docs/product/ANTIGRAVITY_REVIEW_FULL_PRODUCT_SURFACE_AUDIT.md`
+- `apps/mynah/docs/product/OBSERVABILITY_AND_TEST_STRATEGY.md`
 
 ## Files Codex Will Consume Directly
 

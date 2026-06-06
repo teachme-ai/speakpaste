@@ -1,21 +1,21 @@
-﻿# SpeakPaste Product Inventory and Website Alignment Brief
+﻿# Mynah Product Inventory and Website Alignment Brief
 
 ## Purpose
 
 This document does two things:
 
-1. captures the current, real product surface of SpeakPaste as it exists in the app today
-2. identifies what should change on `speakpaste.online` so the website matches the product we are actually shipping
+1. captures the current, real product surface of Mynah as it exists in the app today
+2. identifies what should change on `mynah.online` so the website matches the product we are actually shipping
 
 This is the source brief to use when rewriting the website.
 
 ---
 
-## 1. Product Truth: What SpeakPaste Is Now
+## 1. Product Truth: What Mynah Is Now
 
 ### Core product
 
-SpeakPaste is a **Mac-first, local-first, menu-bar voice typing app**.
+Mynah is a **Mac-first, local-first, menu-bar voice typing app**.
 
 The primary loop is:
 
@@ -263,13 +263,13 @@ Positioning should move forward.
 Website change:
 
 - keep upstream acknowledgement in About, Credits, or a footer/legal section
-- remove any homepage copy that makes SpeakPaste sound like mainly a branded derivative
+- remove any homepage copy that makes Mynah sound like mainly a branded derivative
 
 ---
 
 ## 5. Live Website: What Specifically Should Change
 
-The current homepage at `https://speakpaste.online` has several sections that should be changed.
+The current homepage at `https://mynah.online` has several sections that should be changed.
 
 ### Hero
 
@@ -295,7 +295,7 @@ or
 
 Supporting line:
 
-- **SpeakPaste is a local-first menu-bar dictation app for macOS. Hold Fn, speak naturally, and paste text into the app you are already using.**
+- **Mynah is a local-first menu-bar dictation app for macOS. Hold Fn, speak naturally, and paste text into the app you are already using.**
 
 Support bullets:
 
@@ -408,7 +408,7 @@ Recommended change:
 Why:
 
 - it spends too much homepage attention on competitors and upstream origin
-- the homepage should first establish SpeakPaste’s own product identity
+- the homepage should first establish Mynah’s own product identity
 
 ### Docs section
 
@@ -517,7 +517,7 @@ These are safe lines to reuse.
 
 ### Short product description
 
-SpeakPaste is a local-first menu-bar dictation app for macOS. Hold Fn, speak naturally, and paste text directly into the app you are already using.
+Mynah is a local-first menu-bar dictation app for macOS. Hold Fn, speak naturally, and paste text directly into the app you are already using.
 
 ### Privacy line
 
@@ -525,7 +525,7 @@ Voice, transcript flow, and diagnostics stay on your Mac. No account required.
 
 ### Support line
 
-SpeakPaste can detect common macOS permission issues after reinstall and guide recovery automatically.
+Mynah can detect common macOS permission issues after reinstall and guide recovery automatically.
 
 ### Performance line
 
@@ -557,7 +557,7 @@ materials for the rewrite:
 4. [WEBSITE_CREDITS_ATTRIBUTION_PAGE.md](./WEBSITE_CREDITS_ATTRIBUTION_PAGE.md)
    - short and full upstream attribution copy for the website
 5. [WEBSITE_SECTION_REWRITE_CHECKLIST.md](./WEBSITE_SECTION_REWRITE_CHECKLIST.md)
-   - section-by-section rewrite checklist for the current `speakpaste.online` page
+   - section-by-section rewrite checklist for the current `mynah.online` page
 
 ---
 

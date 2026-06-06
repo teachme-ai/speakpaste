@@ -4,7 +4,7 @@ Date: 2026-06-02
 
 ## Goal
 
-Make SpeakPaste feel less like a generic settings utility and more like a memorable Mac-native voice instrument.
+Make Mynah feel less like a generic settings utility and more like a memorable Mac-native voice instrument.
 
 The product is local, private, fast, and always available from the menu bar. The UI should express that without becoming loud, decorative, or AI-generic.
 
@@ -148,13 +148,13 @@ Implement only the home surface refresh first.
 
 Files likely touched:
 
-- `apps/speakpaste/src/routes/(app)/+page.svelte`
-- `apps/speakpaste/src/routes/(app)/_home/MicButton.svelte`
-- `apps/speakpaste/src/routes/(app)/_home/AppHeader.svelte`
-- `apps/speakpaste/src/routes/(app)/_home/StatePillBar.svelte`
-- `apps/speakpaste/src/routes/(app)/_home/EngineBadge.svelte`
-- `apps/speakpaste/src/routes/(app)/_home/PipelineControlDeck.svelte`
-- `apps/speakpaste/src/routes/(app)/_home/LastPastedCard.svelte`
+- `apps/mynah/src/routes/(app)/+page.svelte`
+- `apps/mynah/src/routes/(app)/_home/MicButton.svelte`
+- `apps/mynah/src/routes/(app)/_home/AppHeader.svelte`
+- `apps/mynah/src/routes/(app)/_home/StatePillBar.svelte`
+- `apps/mynah/src/routes/(app)/_home/EngineBadge.svelte`
+- `apps/mynah/src/routes/(app)/_home/PipelineControlDeck.svelte`
+- `apps/mynah/src/routes/(app)/_home/LastPastedCard.svelte`
 
 Avoid package-wide token changes until the direction is validated.
 
@@ -174,7 +174,7 @@ Avoid package-wide token changes until the direction is validated.
 Use this with Claude Design, Figma, AG, or another Codex chat:
 
 ```text
-You are designing a Mac-native local voice typing app called SpeakPaste.
+You are designing a Mac-native local voice typing app called Mynah.
 
 Product ethos:
 - local-only

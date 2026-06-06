@@ -84,7 +84,7 @@
 			</Select.Content>
 		</Select.Root>
 		<Field.Description>
-			Use the macOS default unless you need SpeakPaste to listen to a specific
+			Use the macOS default unless you need Mynah to listen to a specific
 			microphone.
 		</Field.Description>
 	</Field.Field>

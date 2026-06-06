@@ -5,9 +5,9 @@ Date: 2026-06-02
 Installed app tested:
 
 ```text
-/Applications/SpeakPaste.app
+/Applications/Mynah.app
 Version: 0.1.1
-Bundle identifier: com.speakpaste.app
+Bundle identifier: com.mynah.app
 ```
 
 ## Manual Test Result
@@ -29,7 +29,7 @@ permissions/shortcut flow survived app restart
 
 The core local macOS runtime loop succeeded:
 
-1. App launched from `/Applications/SpeakPaste.app`.
+1. App launched from `/Applications/Mynah.app`.
 2. User triggered recording with the configured shortcut/Fn flow.
 3. Recording/transcription completed.
 4. Paste at cursor succeeded.
@@ -43,4 +43,4 @@ The user has confirmed the primary paste loop. The following checks are still us
 - Confirm clipboard fallback contains the transcript after paste.
 - Confirm background/minimized shortcut trigger still starts recording.
 - Confirm microphone permission recovery messaging is clear on a fresh Mac or after revoking permissions.
-- Release blocker: investigate `RB-001` in `RELEASE_BLOCKING_ISSUES.md` before relying on Accessibility stale-entry self-repair. User observed that SpeakPaste can appear selected in System Settings but remain inactive for the current running app after reinstall/replacement.
+- Release blocker: investigate `RB-001` in `RELEASE_BLOCKING_ISSUES.md` before relying on Accessibility stale-entry self-repair. User observed that Mynah can appear selected in System Settings but remain inactive for the current running app after reinstall/replacement.

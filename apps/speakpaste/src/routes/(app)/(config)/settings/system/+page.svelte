@@ -78,7 +78,7 @@
 	}
 </script>
 
-<svelte:head> <title>System - SpeakPaste</title> </svelte:head>
+<svelte:head> <title>System - Mynah</title> </svelte:head>
 
 <div class="space-y-8">
 	<Field.Set>
@@ -113,14 +113,14 @@
 				<Card.Header>
 					<Card.Title class="text-base">Permissions</Card.Title>
 					<Card.Description>
-						SpeakPaste needs macOS Accessibility to paste at the cursor and
+						Mynah needs macOS Accessibility to paste at the cursor and
 						Microphone permission to capture dictation.
 					</Card.Description>
 				</Card.Header>
 				<Card.Content class="space-y-2 text-sm text-muted-foreground">
 					<p>
 						If macOS keeps a stale Accessibility entry after reinstalling, remove
-						the old SpeakPaste entry, launch the app from Applications, and approve
+						the old Mynah entry, launch the app from Applications, and approve
 						the fresh entry when prompted.
 					</p>
 					<p>
@@ -195,7 +195,7 @@
 	<Field.Set>
 		<Field.Legend>Technology & Credits</Field.Legend>
 		<Field.Description>
-			Everything SpeakPaste uses should be visible and acknowledged.
+			Everything Mynah uses should be visible and acknowledged.
 		</Field.Description>
 		<Field.Separator />
 
@@ -227,7 +227,7 @@
 
 		<div class="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
 			<p>
-				SpeakPaste is adapted from the open-source Whispering project and keeps
+				Mynah is adapted from the open-source Whispering project and keeps
 				upstream acknowledgements visible for licensing compliance.
 			</p>
 			<div class="mt-3 flex flex-wrap gap-3">

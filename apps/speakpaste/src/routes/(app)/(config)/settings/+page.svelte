@@ -68,7 +68,7 @@
 	);
 </script>
 
-<svelte:head> <title>Control Center - SpeakPaste</title> </svelte:head>
+<svelte:head> <title>Control Center - Mynah</title> </svelte:head>
 
 <div class="space-y-8">
 	<Field.Set>
@@ -279,7 +279,7 @@
 		<Field.Set>
 			<Field.Legend>Mac Behavior</Field.Legend>
 			<Field.Description>
-				Small desktop behaviors that make SpeakPaste feel native.
+				Small desktop behaviors that make Mynah feel native.
 			</Field.Description>
 			<Field.Separator />
 			<Field.Group>
@@ -287,7 +287,7 @@
 					<Field.Content>
 						<Field.Label for="autostart">Launch at login</Field.Label>
 						<Field.Description>
-							Open SpeakPaste automatically when you log in.
+							Open Mynah automatically when you log in.
 						</Field.Description>
 					</Field.Content>
 					<Switch

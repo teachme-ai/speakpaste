@@ -14,7 +14,7 @@ export function registerOnboarding() {
 	// Check transcription service configuration
 	if (!selectedService) {
 		rpc.notify.info({
-			title: 'Welcome to SpeakPaste!',
+			title: 'Welcome to Mynah!',
 			description: 'Please select a transcription service to get started.',
 			action: {
 				type: 'link',
@@ -28,7 +28,7 @@ export function registerOnboarding() {
 
 	if (!isTranscriptionServiceConfigured(selectedService)) {
 		rpc.notify.info({
-			title: 'Welcome to SpeakPaste!',
+			title: 'Welcome to Mynah!',
 			description: `Please configure your ${selectedService.name} model file to get started.`,
 			action: {
 				type: 'link',

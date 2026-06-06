@@ -103,7 +103,7 @@ pub fn start_native_dictation_for_app(app: &AppHandle) -> Result<(), String> {
     }
 
     let config = read_runtime_config_from_disk(app)?.ok_or_else(|| {
-        "Runtime config is missing. Open SpeakPaste once before using background dictation."
+        "Runtime config is missing. Open Mynah once before using background dictation."
             .to_string()
     })?;
 

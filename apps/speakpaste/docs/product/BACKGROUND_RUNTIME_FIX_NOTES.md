@@ -4,7 +4,7 @@ Date: 2026-06-02
 
 ## User-Reported Issue
 
-After setup/configuration, closing the primary SpeakPaste UI while leaving the app visible in the macOS menu/status bar caused the Fn/global shortcut to stop responding. The app appeared to remain running in the background, but dictation no longer worked.
+After setup/configuration, closing the primary Mynah UI while leaving the app visible in the macOS menu/status bar caused the Fn/global shortcut to stop responding. The app appeared to remain running in the background, but dictation no longer worked.
 
 ## Root Cause
 
@@ -31,8 +31,8 @@ Tray "Start Dictation" no longer forces the window visible before invoking `wind
 
 ## Files Changed
 
-- `apps/speakpaste/src-tauri/src/lib.rs`
-- `apps/speakpaste/src/lib/services/desktop/tray.ts`
+- `apps/mynah/src-tauri/src/lib.rs`
+- `apps/mynah/src/lib/services/desktop/tray.ts`
 
 ## Follow-Up Robust Fix
 
@@ -44,7 +44,7 @@ For this launch phase, close-to-hide is the safest targeted correction because i
 
 After reinstalling the rebuilt app:
 
-1. Launch SpeakPaste.
+1. Launch Mynah.
 2. Confirm dictation works.
 3. Close the primary UI window with the red close button.
 4. Confirm the tray/menu-bar icon remains.

@@ -376,7 +376,7 @@ async function runTranscriptionStage({
 				WhisperingErr({
 					title: 'Transcription timed out',
 					description:
-						'SpeakPaste could not finish local transcription in time. You can try again with a shorter recording.',
+						'Mynah could not finish local transcription in time. You can try again with a shorter recording.',
 				}),
 		);
 	const transcriptionDuration = performance.now() - transcriptionStart;
@@ -475,7 +475,7 @@ export async function processRecordingPipeline({
 		console.info('[Pipeline] empty transcription — no speech detected');
 		activityFeed.warning(
 			'No speech detected',
-			'SpeakPaste did not detect any words in the audio.',
+			'Mynah did not detect any words in the audio.',
 		);
 		markPipelineFinished();
 		void dictationRuntime.setStatus('Idle', 'Ready');

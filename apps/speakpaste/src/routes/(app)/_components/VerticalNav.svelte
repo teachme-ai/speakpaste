@@ -39,7 +39,7 @@
 							<div
 								class="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden"
 							>
-								<span class="truncate font-semibold">SpeakPaste</span>
+								<span class="truncate font-semibold">Mynah</span>
 								<span class="truncate text-xs text-muted-foreground"
 									>Local voice typing</span
 								>
@@ -99,7 +99,7 @@
 				<Sidebar.MenuButton>
 					{#snippet child({ props })}
 						<a
-							href="https://github.com/irfan1476/speakpaste"
+							href="https://github.com/irfan1476/mynah"
 							target="_blank"
 							rel="noopener noreferrer"
 							{...props}

@@ -8,7 +8,7 @@
 
 ## 1. Context & Purpose
 
-The transition of **SpeakPaste** to a robust macOS utility has progressed in targeted slices:
+The transition of **Mynah** to a robust macOS utility has progressed in targeted slices:
 * **Slice 1**: Complete local-only cleanse (pruned cloud API components).
 * **Slice 2**: Rebranded complex transformations to advanced deterministic "Text Rules."
 * **Slice 3**: Created the **Runtime Settings Bridge** (commit `f2ece07`), which debounces Svelte state changes and writes mirrored values directly to `{tauri app data dir}/runtime-config.json`.
@@ -118,7 +118,7 @@ let _ = dictation_manager::stop_native_recording(&state.app_handle);
    * Change callback targets from emitting events (`fn-key-down`) to calling `dictation_manager::toggle_recording` natively.
 
 ### ⚡ Svelte Frontend
-1. **`apps/speakpaste/src/routes/(app)/_components/AppLayout.svelte` [MODIFY]**:
+1. **`apps/mynah/src/routes/(app)/_components/AppLayout.svelte` [MODIFY]**:
    * Delete Svelte global hotkey listeners and `fn-key-down` / `fn-key-up` handlers.
    * Subscribe to Tauri's native `"dictation:audio-ready"` event:
      ```ts
@@ -130,7 +130,7 @@ let _ = dictation_manager::stop_native_recording(&state.app_handle);
          await processRecordingPipeline({ blob, recordingId });
      });
      ```
-2. **`apps/speakpaste/src/lib/state/runtime-config-bridge.ts` [MODIFY]**:
+2. **`apps/mynah/src/lib/state/runtime-config-bridge.ts` [MODIFY]**:
    * Add a post-sync hook: after writing `runtime-config.json`, invoke `invoke("reload_shortcuts")` to update the native Rust registers in real-time.
 
 ---
@@ -142,7 +142,7 @@ let _ = dictation_manager::stop_native_recording(&state.app_handle);
 * **Rust Compiles**: `cargo check --offline` must compile in under 1 second with no FFI link issues.
 
 ### Manual Verification
-1. Launch SpeakPaste, focus Apple Notes, and tap the global trigger.
+1. Launch Mynah, focus Apple Notes, and tap the global trigger.
 2. Verify that Rust starts CPAL audio recording immediately (observed in terminal logs and visualizer state).
 3. Stop recording. Confirm that Rust writes the `.wav` file, Svelte receives `"dictation:audio-ready"`, and the transcribed text is successfully typed at the cursor.
 4. Close the main window (hiding it) and verify that the background trigger still captures and pastes perfectly.

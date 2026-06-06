@@ -122,7 +122,7 @@ export type InferDeviceValue<K extends DeviceConfigKey> =
 
 export const deviceConfig: PersistedMap<typeof DEVICE_DEFINITIONS> =
 	createPersistedMap({
-		prefix: 'speakpaste.device.',
+		prefix: 'mynah.device.',
 		definitions: DEVICE_DEFINITIONS,
 		onError: (key) => {
 			console.warn(`Invalid device config for "${key}", using default`);

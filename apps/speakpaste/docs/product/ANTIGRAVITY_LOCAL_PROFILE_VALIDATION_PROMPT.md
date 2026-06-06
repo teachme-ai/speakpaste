@@ -38,15 +38,15 @@ On the Home and Control Center surfaces:
 1. Run the app build:
 
 ```bash
-cd /Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste
+cd /Users/irfan/projects/Mynah/mynah/apps/mynah
 bun run build
 ```
 
 2. Run the settings test:
 
 ```bash
-cd /Users/irfan/projects/SpeakPaste/speakpaste
-bun test apps/speakpaste/src/lib/state/settings.test.ts
+cd /Users/irfan/projects/Mynah/mynah
+bun test apps/mynah/src/lib/state/settings.test.ts
 ```
 
 3. Inspect the Capture settings page:
@@ -65,7 +65,7 @@ bun test apps/speakpaste/src/lib/state/settings.test.ts
 
 5. Runtime smoke, if available:
 
-- Launch `/Applications/SpeakPaste.app`.
+- Launch `/Applications/Mynah.app`.
 - Select each profile.
 - Trigger dictation with the configured global shortcut or Fn key.
 - Confirm recording/transcription/paste still works.
@@ -74,7 +74,7 @@ bun test apps/speakpaste/src/lib/state/settings.test.ts
 
 Write results to a new file:
 
-`apps/speakpaste/docs/product/ANTIGRAVITY_REVIEW_LOCAL_PROFILE_VALIDATION.md`
+`apps/mynah/docs/product/ANTIGRAVITY_REVIEW_LOCAL_PROFILE_VALIDATION.md`
 
 Include:
 

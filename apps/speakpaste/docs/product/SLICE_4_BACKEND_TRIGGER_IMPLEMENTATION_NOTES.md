@@ -89,7 +89,7 @@ Manual validation should focus on:
 Slice 4B adds:
 
 6. Build/install `.app` bundle.
-7. Launch from `/Applications/SpeakPaste.app`.
+7. Launch from `/Applications/Mynah.app`.
 8. Confirm the configured global toggle shortcut records and pastes.
 9. Close/hide the main window and confirm the same shortcut still records and pastes.
 10. Restart the app and confirm shortcut ownership survives because Rust reloads from `runtime-config.json`.
@@ -100,10 +100,10 @@ If this passes, the next slice can move more of the transcription/paste pipeline
 
 Please review the latest working tree/commit for:
 
-1. Native shortcut ownership in `apps/speakpaste/src-tauri/src/native_shortcuts.rs`.
+1. Native shortcut ownership in `apps/mynah/src-tauri/src/native_shortcuts.rs`.
 2. Whether native shortcut registration can conflict with the existing JS global shortcut manager.
 3. Whether the frontend skip-list in `syncGlobalShortcutsWithSettings` preserves fallback behavior.
 4. Whether shortcut changes after startup should trigger any additional JS/native resync work.
 5. Manual restart/background validation risks.
 
-AG should write findings into `apps/speakpaste/docs/product/ANTIGRAVITY_REVIEW_RUNTIME_VALIDATION.md` or append to this file if the finding is implementation-specific.
+AG should write findings into `apps/mynah/docs/product/ANTIGRAVITY_REVIEW_RUNTIME_VALIDATION.md` or append to this file if the finding is implementation-specific.

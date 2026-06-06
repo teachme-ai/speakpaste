@@ -17,7 +17,7 @@ The committed settings interface has been successfully audited and runtime-smoke
 The application now behaves strictly as a quiet local macOS writing instrument:
 * Only **Native Mac Capture** (Rust-native CPAL) and offline engines (Whisper.cpp, Parakeet, Moonshine) are user-facing.
 * No raw command builders, command-line arguments, or browser bitrates clutter the configuration screens.
-* The application runs cleanly inside `/Applications/SpeakPaste.app` and operates with zero network requirements for transcription and pasting.
+* The application runs cleanly inside `/Applications/Mynah.app` and operates with zero network requirements for transcription and pasting.
 
 **Codex follow-up note (2026-06-03):** Native sample rate is still visible on the Capture page. It is not a legacy backend selector, but it is still a low-level audio knob. The next product slice should replace this with user-facing local performance profiles such as Balanced, Faster on Intel, and Higher Accuracy on Apple Silicon.
 
@@ -51,7 +51,7 @@ Every layout page in Svelte was audited to check for accidental leaks of legacy 
 
 ## 3. Runtime Smoke & Process Validation
 
-* **Daemon Stability**: Verified the daemon `speakpaste` is running stably under PID `17052` from `/Applications/SpeakPaste.app`.
+* **Daemon Stability**: Verified the daemon `mynah` is running stably under PID `17052` from `/Applications/Mynah.app`.
 * **Shortcut Interception**: Pressing the hardware shortcut (`Command+Shift+F8` or custom mapping) triggers the CPAL audio stream immediately.
 * **Autostart/Persistence**: The app correctly updates `runtime-config.json` in the user's `Application Support` directory, confirming settings changes survive process termination and restarts:
   * Selected Method: `"cpal"`
@@ -63,11 +63,11 @@ Every layout page in Svelte was audited to check for accidental leaks of legacy 
 
 ## 4. Exact Files & Code References Audited
 
-1. **Settings View Index**: [settings/+page.svelte](file:///Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste/src/routes/(app)/(config)/settings/+page.svelte#L32-L37)
+1. **Settings View Index**: [settings/+page.svelte](file:///Users/irfan/projects/Mynah/mynah/apps/mynah/src/routes/(app)/(config)/settings/+page.svelte#L32-L37)
    - *Filter*: `RECORDING_MODE_OPTIONS.filter(...)` excludes `vad` in macOS environment on launch.
-2. **Recording Configuration**: [recording/+page.svelte](file:///Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste/src/routes/(app)/(config)/settings/recording/+page.svelte#L87-L102)
+2. **Recording Configuration**: [recording/+page.svelte](file:///Users/irfan/projects/Mynah/mynah/apps/mynah/src/routes/(app)/(config)/settings/recording/+page.svelte#L87-L102)
    - *Cleanliness*: Exclusively embeds the `ManualSelectRecordingDevice` and only defaults to CPAL recording.
-3. **Sound Settings**: [sound/+page.svelte](file:///Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste/src/routes/(app)/(config)/settings/sound/+page.svelte#L22-L39)
+3. **Sound Settings**: [sound/+page.svelte](file:///Users/irfan/projects/Mynah/mynah/apps/mynah/src/routes/(app)/(config)/settings/sound/+page.svelte#L22-L39)
    - *Tone Toggles*: Completely restricts tone playing configuration to press-to-speak operations.
-4. **App Startup Handlers**: [AppLayout.svelte](file:///Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste/src/routes/(app)/_components/AppLayout.svelte#L57-L68)
+4. **App Startup Handlers**: [AppLayout.svelte](file:///Users/irfan/projects/Mynah/mynah/apps/mynah/src/routes/(app)/_components/AppLayout.svelte#L57-L68)
    - *Sanitization*: Resets `recording.mode` to `'manual'`, removes the stale `'v'` key trigger, and defaults `recording.method` to `'cpal'`.

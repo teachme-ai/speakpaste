@@ -10,11 +10,11 @@
 
 ## 1. Executive Summary
 
-SpeakPaste has successfully completed its automated preflight verification pipeline. All core Svelte settings validation tests pass with 100% success, the Rust backend compiles flawlessly in offline mode, and the static frontend build is packaged cleanly into static assets.
+Mynah has successfully completed its automated preflight verification pipeline. All core Svelte settings validation tests pass with 100% success, the Rust backend compiles flawlessly in offline mode, and the static frontend build is packaged cleanly into static assets.
 
 A high-integrity search sweep has mathematically proven that the codebase is 100% free of lingering updaters, cloud APIs, remote completions, or tracking telemetry.
 
-The latest desktop build of `SpeakPaste.app` has been successfully compiled and installed directly to `/Applications/SpeakPaste.app` in an **ad-hoc signed, arm64 thin mach-o bundle format**.
+The latest desktop build of `Mynah.app` has been successfully compiled and installed directly to `/Applications/Mynah.app` in an **ad-hoc signed, arm64 thin mach-o bundle format**.
 
 The application is in a stable, optimized state and is **100% prepared for native macOS runtime loop validation** (microphone capture, CGEventTap shortcut interception, local Whisper inference, and Enigo keystroke pasting).
 
@@ -25,7 +25,7 @@ The application is in a stable, optimized state and is **100% prepared for nativ
 Four rigorous automated checkpoints were run and validated:
 
 ### Check 1: Settings State Schemas
-* **Command**: `bun test apps/speakpaste/src/lib/state/settings.test.ts`
+* **Command**: `bun test apps/mynah/src/lib/state/settings.test.ts`
 * **Outcome**: 🟢 **Passed** (46ms)
 * **Assertions**: 7 passed, 0 failed, 27 expectations verified.
 * **Verification Scope**:
@@ -35,7 +35,7 @@ Four rigorous automated checkpoints were run and validated:
   * Local engine model path mapping operates successfully.
 
 ### Check 2: Rust Backend Compilation
-* **Command**: `cargo check --offline` inside `apps/speakpaste/src-tauri`
+* **Command**: `cargo check --offline` inside `apps/mynah/src-tauri`
 * **Outcome**: 🟢 **Passed** (0.58s)
 * **Verification Scope**:
   * Pure local compiler checks succeed with zero unresolved crate links or FFI library errors.
@@ -53,10 +53,10 @@ Four rigorous automated checkpoints were run and validated:
   * Confirms no tracking code or outbound telemetry loops are linked in static assets.
 
 ### Check 4: Production Web Build
-* **Command**: `bun run build` inside `apps/speakpaste`
+* **Command**: `bun run build` inside `apps/mynah`
 * **Outcome**: 🟢 **Passed** (7.05s)
 * **Verification Scope**:
-  * Vite packages all layouts and Svelte routes cleanly, writing compiled static files to `apps/speakpaste/build`.
+  * Vite packages all layouts and Svelte routes cleanly, writing compiled static files to `apps/mynah/build`.
 
 ---
 
@@ -65,9 +65,9 @@ Four rigorous automated checkpoints were run and validated:
 The final compiled binary is currently installed in the host `/Applications` directory with the following verified attributes:
 
 ```text
-Path:               /Applications/SpeakPaste.app
-Executable:         /Applications/SpeakPaste.app/Contents/MacOS/speakpaste
-Identifier:         speakpaste-aa16b7d6c1c677ad
+Path:               /Applications/Mynah.app
+Executable:         /Applications/Mynah.app/Contents/MacOS/mynah
+Identifier:         mynah-aa16b7d6c1c677ad
 Format:             Mach-O thin (arm64)
 Architecture:       Apple Silicon Native (M1/M2/M3)
 Signing Signature:  Ad-Hoc (linker-signed)
@@ -76,7 +76,7 @@ Info.plist Status:  Cleanly Bound
 ```
 
 > [!TIP]
-> At just **29 MB**, SpeakPaste represents a highly efficient native desktop shell, consuming only a fraction of the storage and RAM footprint required by bulky Electron-based competitor dictation utilities.
+> At just **29 MB**, Mynah represents a highly efficient native desktop shell, consuming only a fraction of the storage and RAM footprint required by bulky Electron-based competitor dictation utilities.
 
 ---
 
@@ -95,13 +95,13 @@ Since automated suites cannot test native macOS system events, the user must exe
 sequenceDiagram
     autonumber
     actor User as Mac User
-    participant App as SpeakPaste.app
+    participant App as Mynah.app
     participant OS as macOS Permissions
     participant Mic as CoreAudio (Mic)
     participant Engine as Whisper.cpp (Local)
     participant Cursor as Active Text Field
 
-    User->>App: Launch /Applications/SpeakPaste.app
+    User->>App: Launch /Applications/Mynah.app
     App->>OS: Request Microphone Entitlement
     OS-->>User: Show Mic Modal? [Allow]
     User->>App: Tap Hardware "Fn" Key
@@ -155,7 +155,7 @@ Our professional evaluations of the 5 specific review target requests are detail
 * **Details**:
   * If native Rust registration fails inside `native_shortcuts.rs`, the failure is caught gracefully, logged, and appended to the `failed` array inside `NativeShortcutReloadResult`.
   * Because the failed command ID is *not* in Svelte's `skipCommandIds` skip-list, Svelte automatically attempts to bind that hotkey using the standard JS global shortcut path.
-  * If Svelte's JS path also fails, it triggers the secondary fallback (e.g., binding `CommandOrControl+Shift+F9` as an emergency toggle). This ensures SpeakPaste never goes silent.
+  * If Svelte's JS path also fails, it triggers the secondary fallback (e.g., binding `CommandOrControl+Shift+F9` as an emergency toggle). This ensures Mynah never goes silent.
 
 ### 4. Live Settings Synchronisation & Event Propagation Gap
 * **Finding**: ⚠️ **Reactive Sync Gap Identified (Non-Blocking Polish)**.

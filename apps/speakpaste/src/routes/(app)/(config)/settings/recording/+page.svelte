@@ -48,12 +48,12 @@
 	}
 </script>
 
-<svelte:head> <title>Recording Settings - SpeakPaste</title> </svelte:head>
+<svelte:head> <title>Recording Settings - Mynah</title> </svelte:head>
 
 <Field.Set>
 	<Field.Legend>Voice Capture</Field.Legend>
 	<Field.Description>
-		Choose how SpeakPaste listens before running local transcription.
+		Choose how Mynah listens before running local transcription.
 	</Field.Description>
 	<Field.Separator />
 	<Field.Group>
@@ -89,7 +89,7 @@
 					<div class="space-y-1">
 						<p class="text-sm font-medium">Native Mac capture</p>
 						<p class="text-sm text-muted-foreground">
-							SpeakPaste uses its native capture engine by default for reliable
+							Mynah uses its native capture engine by default for reliable
 							global shortcuts and direct local transcription.
 						</p>
 					</div>
@@ -170,7 +170,7 @@
 					</Select.Content>
 				</Select.Root>
 				<Field.Description>
-					Choose how aggressively SpeakPaste should optimize local capture for
+					Choose how aggressively Mynah should optimize local capture for
 					this Mac.
 				</Field.Description>
 			</Field.Field>

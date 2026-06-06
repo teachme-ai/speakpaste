@@ -142,7 +142,7 @@ pub async fn run() {
         {
             use std::fs::OpenOptions;
             use std::io::Write;
-            let crash_log_path = std::env::temp_dir().join("speakpaste-crash.log");
+            let crash_log_path = std::env::temp_dir().join("mynah-crash.log");
             if let Ok(mut file) = OpenOptions::new()
                 .create(true)
                 .append(true)
@@ -175,10 +175,10 @@ pub async fn run() {
 
     let log_plugin = tauri_plugin_log::Builder::new()
         .level(log::LevelFilter::Info)
-        .level_for("speakpaste::transcription", log::LevelFilter::Info)
+        .level_for("mynah::transcription", log::LevelFilter::Info)
         .target(Target::new(TargetKind::Stdout))
         .target(Target::new(TargetKind::LogDir {
-            file_name: Some("speakpaste".to_string()),
+            file_name: Some("mynah".to_string()),
         }))
         .build();
 
@@ -212,7 +212,7 @@ pub async fn run() {
             #[cfg(target_os = "macos")]
             if let Some(main_window) = app.get_webview_window("main") {
                 use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
-                let _ = apply_vibrancy(&main_window, NSVisualEffectMaterial::HudWindow, None, None);
+                let _ = apply_vibrancy(&main_window, NSVisualEffectMaterial::Popover, None, None);
             }
 
             // Configure overlay window to float on top of full screen apps

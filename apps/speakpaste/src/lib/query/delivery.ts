@@ -6,8 +6,8 @@ import type { TextError } from '$lib/services/text';
 import { activityFeed } from '$lib/state/activity-feed.svelte';
 import { settings } from '$lib/state/settings.svelte';
 import {
-	isSpeakPasteOwnedClipboardText,
-	rememberSpeakPasteClipboardText,
+	isMynahOwnedClipboardText,
+	rememberMynahClipboardText,
 } from './clipboard-ownership';
 
 export const delivery = {
@@ -71,7 +71,7 @@ export const delivery = {
 					warnAutoCopyFailed(error);
 					return false;
 				}
-				rememberSpeakPasteClipboardText(text);
+				rememberMynahClipboardText(text);
 				copied = true;
 				return true;
 			};
@@ -137,7 +137,7 @@ export const delivery = {
 				askBeforeReplacingClipboard = Boolean(
 					currentClipboard?.trim() &&
 						currentClipboard !== text &&
-						!isSpeakPasteOwnedClipboardText(currentClipboard),
+						!isMynahOwnedClipboardText(currentClipboard),
 				);
 			}
 

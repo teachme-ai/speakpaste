@@ -9,14 +9,14 @@ const localStorageMock = {
 	clear: () => { storage.clear(); },
 };
 
-describe("🎙️ SpeakPaste LocalStorage Settings 100% Full-Coverage Suite", () => {
+describe("🎙️ Mynah LocalStorage Settings 100% Full-Coverage Suite", () => {
 	
 	test("🔒 Retired Remote Credential Keys Stay Unused", () => {
 		const retiredKeys = [
-			"speakpaste.device.apiKeys.openai",
-			"speakpaste.device.apiKeys.anthropic",
-			"speakpaste.device.apiKeys.groq",
-			"speakpaste.device.apiKeys.google",
+			"mynah.device.apiKeys.openai",
+			"mynah.device.apiKeys.anthropic",
+			"mynah.device.apiKeys.groq",
+			"mynah.device.apiKeys.google",
 		];
 
 		for (const key of retiredKeys) {
@@ -25,11 +25,11 @@ describe("🎙️ SpeakPaste LocalStorage Settings 100% Full-Coverage Suite", ()
 	});
 
 	test("🎙️ Recording Constraints & Sample Rate Assertions", () => {
-		const rateKey = "speakpaste.device.recording.cpal.sampleRate";
-		const profileKey = "speakpaste.device.local.performanceProfile";
-		const methodKey = "speakpaste.device.recording.method";
-		const devIdKey = "speakpaste.device.recording.cpal.deviceId";
-		const ffmpegFlagsKey = "speakpaste.device.recording.ffmpeg.globalOptions";
+		const rateKey = "mynah.device.recording.cpal.sampleRate";
+		const profileKey = "mynah.device.local.performanceProfile";
+		const methodKey = "mynah.device.recording.method";
+		const devIdKey = "mynah.device.recording.cpal.deviceId";
+		const ffmpegFlagsKey = "mynah.device.recording.ffmpeg.globalOptions";
 
 		// CPAL sample rates (16kHz, 44.1kHz, 48kHz)
 		const allowedRates = ["16000", "44100", "48000"];
@@ -59,8 +59,8 @@ describe("🎙️ SpeakPaste LocalStorage Settings 100% Full-Coverage Suite", ()
 	});
 
 	test("⌨️ Keyboard Entitlements & Shortcuts Assertions", () => {
-		const shortcutKey = "speakpaste.device.shortcuts.global.toggleManualRecording";
-		const pttKey = "speakpaste.device.shortcuts.global.pushToTalk";
+		const shortcutKey = "mynah.device.shortcuts.global.toggleManualRecording";
+		const pttKey = "mynah.device.shortcuts.global.pushToTalk";
 
 		// Modifier binding formats
 		localStorageMock.setItem(shortcutKey, "Command+Shift+F8");
@@ -75,9 +75,9 @@ describe("🎙️ SpeakPaste LocalStorage Settings 100% Full-Coverage Suite", ()
 	});
 
 	test("🔊 Sound Alerts & Theme Assertions", () => {
-		const soundThemeKey = "speakpaste.settings.sound.theme";
-		const manualStartSoundKey = "speakpaste.settings.sound.manualStart";
-		const completeSoundKey = "speakpaste.settings.sound.transcriptionComplete";
+		const soundThemeKey = "mynah.settings.sound.theme";
+		const manualStartSoundKey = "mynah.settings.sound.manualStart";
+		const completeSoundKey = "mynah.settings.sound.transcriptionComplete";
 
 		// sound themes (ambient, classic, modern, scifi)
 		const allowedThemes = ["ambient", "classic", "modern", "scifi"];
@@ -94,10 +94,10 @@ describe("🎙️ SpeakPaste LocalStorage Settings 100% Full-Coverage Suite", ()
 	});
 
 	test("🧠 Transcription & Model Swaps Assertions", () => {
-		const serviceKey = "speakpaste.settings.transcription.service";
-		const languageKey = "speakpaste.settings.transcription.language";
-		const tempKey = "speakpaste.settings.transcription.temperature";
-		const promptKey = "speakpaste.settings.transcription.prompt";
+		const serviceKey = "mynah.settings.transcription.service";
+		const languageKey = "mynah.settings.transcription.language";
+		const tempKey = "mynah.settings.transcription.temperature";
+		const promptKey = "mynah.settings.transcription.prompt";
 
 		// switches between local transcription services
 		const allowedServices = ["whispercpp", "parakeet", "moonshine"];
@@ -120,11 +120,11 @@ describe("🎙️ SpeakPaste LocalStorage Settings 100% Full-Coverage Suite", ()
 	});
 
 	test("📋 Clipboard & Cursor Delivery Assertions", () => {
-		const clipKey = "speakpaste.settings.output.transcription.clipboard";
+		const clipKey = "mynah.settings.output.transcription.clipboard";
 		const clipboardBehaviorKey =
-			"speakpaste.settings.output.transcription.clipboardBehavior";
-		const cursorKey = "speakpaste.settings.output.transcription.cursor";
-		const enterKey = "speakpaste.settings.output.transcription.enter";
+			"mynah.settings.output.transcription.clipboardBehavior";
+		const cursorKey = "mynah.settings.output.transcription.cursor";
+		const enterKey = "mynah.settings.output.transcription.enter";
 
 		// copy-to-clipboard settings persistence
 		localStorageMock.setItem(clipKey, "true");
@@ -147,8 +147,8 @@ describe("🎙️ SpeakPaste LocalStorage Settings 100% Full-Coverage Suite", ()
 	});
 
 	test("🗑️ Data Retention Policies Assertions", () => {
-		const stratKey = "speakpaste.settings.retention.strategy";
-		const countKey = "speakpaste.settings.retention.maxCount";
+		const stratKey = "mynah.settings.retention.strategy";
+		const countKey = "mynah.settings.retention.maxCount";
 
 		// strategy options (keep-forever vs limit-count)
 		const allowedStrategies = ["keep-forever", "limit-count"];

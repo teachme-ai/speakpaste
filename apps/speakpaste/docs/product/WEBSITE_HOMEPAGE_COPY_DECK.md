@@ -1,10 +1,10 @@
-# SpeakPaste Homepage Copy Deck
+# Mynah Homepage Copy Deck
 
 ## Purpose
 
-This is the one-page copy deck for the next `speakpaste.online` homepage rewrite. It should be used with `WEBSITE_PRODUCT_ALIGNMENT_BRIEF.md`.
+This is the one-page copy deck for the next `mynah.online` homepage rewrite. It should be used with `WEBSITE_PRODUCT_ALIGNMENT_BRIEF.md`.
 
-The homepage should make SpeakPaste feel like a focused Mac utility, not a broad transcription platform.
+The homepage should make Mynah feel like a focused Mac utility, not a broad transcription platform.
 
 ---
 
@@ -12,7 +12,7 @@ The homepage should make SpeakPaste feel like a focused Mac utility, not a broad
 
 ### One-line product definition
 
-SpeakPaste is a local-first menu-bar dictation app for macOS.
+Mynah is a local-first menu-bar dictation app for macOS.
 
 ### Primary promise
 
@@ -36,7 +36,7 @@ Press Fn. Speak. Paste.
 
 ### Supporting copy
 
-SpeakPaste turns your Mac into a private voice-to-cursor tool. Hold the Fn key, speak naturally, release, and your words appear where you are already typing.
+Mynah turns your Mac into a private voice-to-cursor tool. Hold the Fn key, speak naturally, release, and your words appear where you are already typing.
 
 ### Hero proof points
 
@@ -73,7 +73,7 @@ One gesture. One flow.
 
 ### Section intro
 
-SpeakPaste is designed around the simplest dictation reflex on a Mac.
+Mynah is designed around the simplest dictation reflex on a Mac.
 
 ### Step 1
 
@@ -85,7 +85,7 @@ Start dictation with the native Mac Fn key. No mode switching, no setup page ope
 
 **Speak naturally**
 
-Say the thing you want to write. SpeakPaste captures the audio locally and prepares it for on-device transcription.
+Say the thing you want to write. Mynah captures the audio locally and prepares it for on-device transcription.
 
 ### Step 3
 
@@ -109,7 +109,7 @@ Built around the way Mac users already work.
 
 **Menu-bar runtime**
 
-SpeakPaste stays available from the menu bar and keeps working when the main window is hidden.
+Mynah stays available from the menu bar and keeps working when the main window is hidden.
 
 **System-wide cursor output**
 
@@ -121,7 +121,7 @@ The primary trigger is the Mac Fn key, with one optional fallback shortcut if yo
 
 **Permission recovery**
 
-If macOS keeps a stale Accessibility entry after reinstalling or replacing the app, SpeakPaste attempts a local repair and guides approval when needed.
+If macOS keeps a stale Accessibility entry after reinstalling or replacing the app, Mynah attempts a local repair and guides approval when needed.
 
 ---
 
@@ -137,7 +137,7 @@ Your voice should stay on your Mac.
 
 ### Supporting copy
 
-SpeakPaste is shaped around local transcription and local diagnostics. The app does not need an account or cloud service for the core dictation loop.
+Mynah is shaped around local transcription and local diagnostics. The app does not need an account or cloud service for the core dictation loop.
 
 ### Privacy table
 
@@ -163,7 +163,7 @@ Choose a local setup that fits your Mac.
 
 ### Supporting copy
 
-SpeakPaste supports local transcription engines and simple performance profiles so the app can feel responsive across different Mac hardware.
+Mynah supports local transcription engines and simple performance profiles so the app can feel responsive across different Mac hardware.
 
 ### Cards
 
@@ -231,7 +231,7 @@ Text rules when you want more control.
 
 ### Supporting copy
 
-For advanced users, SpeakPaste can apply local text rules for deterministic cleanup. This is optional and should not get in the way of the core Fn-to-cursor flow.
+For advanced users, Mynah can apply local text rules for deterministic cleanup. This is optional and should not get in the way of the core Fn-to-cursor flow.
 
 ---
 
@@ -239,7 +239,7 @@ For advanced users, SpeakPaste can apply local text rules for deterministic clea
 
 ### Title
 
-Download SpeakPaste for macOS
+Download Mynah for macOS
 
 ### Supporting copy
 
@@ -255,7 +255,7 @@ Download for macOS
 
 ### Install notes
 
-- Drag SpeakPaste to Applications
+- Drag Mynah to Applications
 - Allow Microphone and Accessibility permissions
 - Hold Fn to dictate
 
@@ -269,7 +269,7 @@ Private voice typing for macOS.
 
 ### Credits line
 
-SpeakPaste uses open-source technologies including whisper.cpp, Tauri, Svelte, CPAL, and Enigo. It is adapted from Whispering by Braden Wong and the Epicenter contributors.
+Mynah uses open-source technologies including whisper.cpp, Tauri, Svelte, CPAL, and Enigo. It is adapted from Whispering by Braden Wong and the Epicenter contributors.
 
 ---
 

@@ -5,7 +5,7 @@
 </script>
 
 <svelte:head>
-	<title>{page.status === 404 ? 'Page Not Found' : 'Error'} - SpeakPaste</title>
+	<title>{page.status === 404 ? 'Page Not Found' : 'Error'} - Mynah</title>
 </svelte:head>
 
 <Empty.Root class="flex-1 p-8">

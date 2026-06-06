@@ -13,7 +13,7 @@ import { tryAsync } from 'wellcrafted/result';
 import { goto } from '$app/navigation';
 
 /**
- * SpeakPaste tray states — drives icon and menu status line.
+ * Mynah tray states — drives icon and menu status line.
  *
  * IDLE        → gray mic     — ready for input
  * RECORDING   → green        — actively capturing audio
@@ -21,16 +21,16 @@ import { goto } from '$app/navigation';
  * PASTED      → blue         — delivery complete (brief, then returns to IDLE)
  * ERROR       → red          — something went wrong
  */
-export type SpeakPasteTrayState =
+export type MynahTrayState =
 	| 'IDLE'
 	| 'RECORDING'
 	| 'TRANSCRIBING'
 	| 'PASTED'
 	| 'ERROR';
 
-const TRAY_ID = 'speakpaste-tray';
+const TRAY_ID = 'mynah-tray';
 
-const ICON_PATHS: Record<SpeakPasteTrayState, string> = {
+const ICON_PATHS: Record<MynahTrayState, string> = {
 	IDLE:         'recorder-state-icons/gray_circle.png',
 	RECORDING:    'recorder-state-icons/green_circle.png',
 	TRANSCRIBING: 'recorder-state-icons/orange_circle.png',
@@ -38,7 +38,7 @@ const ICON_PATHS: Record<SpeakPasteTrayState, string> = {
 	ERROR:        'recorder-state-icons/red_large_square.png',
 };
 
-const STATE_LABELS: Record<SpeakPasteTrayState, string> = {
+const STATE_LABELS: Record<MynahTrayState, string> = {
 	IDLE:         '⚪ Ready',
 	RECORDING:    '🟢 Listening',
 	TRANSCRIBING: '🟠 Transcribing',
@@ -66,7 +66,7 @@ function getTray() {
 }
 
 // Track current state for menu display
-let currentState: SpeakPasteTrayState = 'IDLE';
+let currentState: MynahTrayState = 'IDLE';
 let currentShortcut = 'Fn key';
 let currentModel = 'tiny.en';
 let autoPasteEnabled = true;
@@ -75,14 +75,14 @@ export const TrayIconServiceLive = {
 	/**
 	 * Update tray icon and menu status line to reflect new app state.
 	 */
-	setTrayState: (state: SpeakPasteTrayState) =>
+	setTrayState: (state: MynahTrayState) =>
 		tryAsync({
 			try: async () => {
 				currentState = state;
 				const iconPath = await resolveResource(ICON_PATHS[state]);
 				const tray = await getTray();
 				await tray.setIcon(iconPath);
-				await tray.setTooltip(`SpeakPaste — ${STATE_LABELS[state]}`);
+				await tray.setTooltip(`Mynah — ${STATE_LABELS[state]}`);
 				console.info(`[Tray] state → ${state} (${STATE_LABELS[state]})`);
 			},
 			catch: (error) => TrayError.SetIcon({ cause: error }),
@@ -102,7 +102,7 @@ export const TrayIconServiceLive = {
 		if (opts.autoPaste !== undefined) autoPasteEnabled = opts.autoPaste;
 	},
 
-	// Legacy compat — maps WhisperingRecordingState to SpeakPasteTrayState
+	// Legacy compat — maps WhisperingRecordingState to MynahTrayState
 	setTrayIcon: (recorderState: 'IDLE' | 'RECORDING') =>
 		TrayIconServiceLive.setTrayState(recorderState),
 };
@@ -115,7 +115,7 @@ async function buildMenu() {
 			// App title (disabled, just a label)
 			await MenuItem.new({
 				id: 'title',
-				text: 'SpeakPaste',
+				text: 'Mynah',
 				enabled: false,
 				action: () => {},
 			}),
@@ -163,7 +163,7 @@ async function buildMenu() {
 			// Open window
 			await MenuItem.new({
 				id: 'open',
-				text: 'Open SpeakPaste',
+				text: 'Open Mynah',
 				action: () => {
 					void getCurrentWindow().show();
 					void getCurrentWindow().setFocus();
@@ -196,7 +196,7 @@ async function buildMenu() {
 			// Quit
 			await MenuItem.new({
 				id: 'quit',
-				text: 'Quit SpeakPaste',
+				text: 'Quit Mynah',
 				action: () => void exit(0),
 			}),
 		],
@@ -214,7 +214,7 @@ async function initTray() {
 		id: TRAY_ID,
 		icon: iconPath,
 		menu: trayMenu,
-		tooltip: 'SpeakPaste — Ready',
+		tooltip: 'Mynah — Ready',
 		menuOnLeftClick: false,
 		action: (e) => {
 			// Left click → show window

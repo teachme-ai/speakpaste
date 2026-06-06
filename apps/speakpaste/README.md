@@ -1,4 +1,4 @@
-# SpeakPaste
+# Mynah
 
 Local voice typing for macOS. Hotkey → speak → whisper.cpp → paste.
 

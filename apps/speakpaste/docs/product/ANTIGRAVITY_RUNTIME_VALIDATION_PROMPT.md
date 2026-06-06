@@ -13,15 +13,15 @@ Latest relevant commits:
 
 ## AG Task
 
-Act as the runtime-validation observer and reviewer for SpeakPaste.
+Act as the runtime-validation observer and reviewer for Mynah.
 
 Do not edit code unless explicitly asked. Build/install/test the latest app when possible, inspect runtime logs, review any manual notes produced by Codex/user, and write findings to:
 
-`apps/speakpaste/docs/product/ANTIGRAVITY_REVIEW_RUNTIME_VALIDATION.md`
+`apps/mynah/docs/product/ANTIGRAVITY_REVIEW_RUNTIME_VALIDATION.md`
 
 ## Runtime Baseline To Validate
 
-SpeakPaste launch flow:
+Mynah launch flow:
 
 1. User focuses a text field in another macOS app.
 2. User triggers the hardware `Fn` key or configured global shortcut.
@@ -39,15 +39,15 @@ Please take over the heavier build/install/runtime validation loop for the lates
 2. Build the latest macOS app bundle:
 
    ```bash
-   cd apps/speakpaste
+   cd apps/mynah
    bun tauri build --bundles app
    ```
 
-3. Install the latest `.app` bundle to `/Applications/SpeakPaste.app`.
+3. Install the latest `.app` bundle to `/Applications/Mynah.app`.
    - If an older app exists, replace it with the newly built bundle.
    - Do not require a DMG for this validation loop.
    - If DMG packaging fails, record it as distribution follow-up only; do not block `.app` validation.
-4. Launch `/Applications/SpeakPaste.app`.
+4. Launch `/Applications/Mynah.app`.
 5. Test live native shortcut reload:
    - Start with the current configured global trigger shortcut.
    - Confirm it records/transcribes/pastes.
@@ -74,12 +74,12 @@ Known state:
 - `.app` bundling works.
 - Local DMG creation has failed in the Codex sandbox because `hdiutil` returns `Device not configured`.
 - A normal terminal or release pipeline may still produce a DMG; treat that as packaging/distribution follow-up.
-- Runtime validation should use `/Applications/SpeakPaste.app`.
+- Runtime validation should use `/Applications/Mynah.app`.
 
 ## What AG Should Review
 
 1. **Runtime Logs / Evidence**
-   - Read any logs or notes Codex/user adds under `apps/speakpaste/docs/product/`.
+   - Read any logs or notes Codex/user adds under `apps/mynah/docs/product/`.
    - Look for permission failures, model-path failures, recorder failures, transcription errors, paste failures, or unexpected network calls.
 
 2. **Manual Test Protocol Completeness**

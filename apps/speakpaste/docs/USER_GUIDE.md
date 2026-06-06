@@ -1,6 +1,6 @@
-# SpeakPaste User Guide
+# Mynah User Guide
 
-SpeakPaste is local voice typing for macOS: press a hotkey, speak, transcribe on your Mac, and paste the result at the active cursor.
+Mynah is local voice typing for macOS: press a hotkey, speak, transcribe on your Mac, and paste the result at the active cursor.
 
 The current product baseline is local-only. Audio, transcripts, settings, diagnostics, and personal usage intelligence are designed to stay on the user's Mac.
 
@@ -11,11 +11,11 @@ The current product baseline is local-only. Audio, transcripts, settings, diagno
 3. Press the hotkey in any text field.
 4. Speak naturally.
 5. Release or stop recording.
-6. SpeakPaste inserts the transcript at the cursor.
+6. Mynah inserts the transcript at the cursor.
 
 ## Local Engines
 
-SpeakPaste currently focuses on local engines:
+Mynah currently focuses on local engines:
 
 - `whispercpp`: default local transcription engine.
 - `parakeet`: local experimental engine for compatible model setups.

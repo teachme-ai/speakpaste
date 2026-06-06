@@ -5,7 +5,7 @@ Date: 2026-06-01
 
 ## Summary
 
-SpeakPaste is evolving from a local dictation utility into a sovereign language layer for Mac.
+Mynah is evolving from a local dictation utility into a sovereign language layer for Mac.
 
 The product helps users speak naturally, then locally turns that speech into usable text for the app they are already in.
 

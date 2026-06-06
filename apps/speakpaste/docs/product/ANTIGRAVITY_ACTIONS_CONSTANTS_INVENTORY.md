@@ -1,4 +1,4 @@
-# SpeakPaste Actions Constants Inventory
+# Mynah Actions Constants Inventory
 
 > Codex review note, 2026-06-04: this AG audit was produced against an older branch/commit snapshot. Treat line numbers and current-state claims as directional only. The first constants slice has since extracted pipeline event names and the main trigger/tray timing literals into `src/lib/constants/app`.
 
@@ -28,9 +28,9 @@ Custom string events dispatched across window boundaries. Extract to `src/lib/co
 
 | Event String | Dispatching File | Listening File | Purpose |
 | :--- | :--- | :--- | :--- |
-| **`"speakpaste:pipeline-started"`** | `actions.ts:734` | `+page.svelte:233` | Signals UI that dictation recording has stopped and transcription began. |
-| **`"speakpaste:pipeline-complete"`** | `actions.ts:809` | `+page.svelte:219` | Signals UI that paste has completed and history logs must reload. |
-| **`"speakpaste:pipeline-error"`** | `actions.ts:754` | `+page.svelte:229` | Signals UI that transcription failed so visual indicators reset. |
+| **`"mynah:pipeline-started"`** | `actions.ts:734` | `+page.svelte:233` | Signals UI that dictation recording has stopped and transcription began. |
+| **`"mynah:pipeline-complete"`** | `actions.ts:809` | `+page.svelte:219` | Signals UI that paste has completed and history logs must reload. |
+| **`"mynah:pipeline-error"`** | `actions.ts:754` | `+page.svelte:229` | Signals UI that transcription failed so visual indicators reset. |
 | **`"dictation:audio-ready"`** | Tauri Rust Backend | `device-config.svelte.js` | Native callback containing the captured WAV audio path. |
 | **`"fn-key-down"`** | Tauri Rust Backend | `device-config.svelte.js` | Native hardware key tap signaling recording start. |
 | **`"fn-key-up"`** | Tauri Rust Backend | `device-config.svelte.js` | Native hardware key release signaling recording stop. |
@@ -40,7 +40,7 @@ Custom string events dispatched across window boundaries. Extract to `src/lib/co
 
 ## 3. Dictation Status & Wording Constants
 
-SpeakPaste updates the global status of the dictation engine using the `dictationRuntime` service. These strings are repeated or tightly coupled to UI pill components. Recommend extracting to a shared enum `DictationStatus`.
+Mynah updates the global status of the dictation engine using the `dictationRuntime` service. These strings are repeated or tightly coupled to UI pill components. Recommend extracting to a shared enum `DictationStatus`.
 
 * **Global Status States**:
   * `STATUS_IDLE` = `"Idle"` (with detail strings: `"Ready"`, `"Recording cancelled"`)

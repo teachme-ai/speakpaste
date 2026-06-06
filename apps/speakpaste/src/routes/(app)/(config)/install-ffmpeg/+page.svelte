@@ -7,4 +7,4 @@
 	});
 </script>
 
-<svelte:head> <title>Capture Settings - SpeakPaste</title> </svelte:head>
+<svelte:head> <title>Capture Settings - Mynah</title> </svelte:head>

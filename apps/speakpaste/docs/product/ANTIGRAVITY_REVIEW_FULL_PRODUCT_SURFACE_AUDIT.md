@@ -8,8 +8,8 @@
 ## Build Tested
 - **Branch**: `local-only-product-surface`
 - **Commit**: `f6e7080` (Disable dormant hands free shortcuts)
-- **App path**: `/Applications/SpeakPaste.app`
-- **Build command**: `bun tauri build --bundles app` inside `apps/speakpaste`
+- **App path**: `/Applications/Mynah.app`
+- **Build command**: `bun tauri build --bundles app` inside `apps/mynah`
 - **Result**: Success. Web static assets built in **6.81s**, native bundle compiled in **19.54s**.
 
 ---

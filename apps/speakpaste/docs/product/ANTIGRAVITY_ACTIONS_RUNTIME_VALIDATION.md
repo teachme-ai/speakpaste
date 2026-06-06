@@ -12,11 +12,11 @@
 
 ## 1. Executive Verdict
 
-Manual and automated validation of the SpeakPaste application at commit `bf0511a` was successfully completed. 
+Manual and automated validation of the Mynah application at commit `bf0511a` was successfully completed. 
 
 The native global `Fn` key listener in Rust (`fn_key_listener.rs`) correctly detects Fn key chords and late chords, immediately cancelling any accidental recordings. The native trigger gating in Rust (`dictation_manager.rs`) successfully intercepts and blocks CPAL recording starts if Svelte is transcribing, pasting, or in cooldown. 
 
-Svelte now tracks app-owned clipboard writes using a non-reversible FNV-1a hash stored in `localStorage` (`clipboard-ownership.ts`). This allows **Ask** mode to silently update the clipboard if it contains a previous SpeakPaste transcript while still warning the user if the clipboard contains external text copied from other apps.
+Svelte now tracks app-owned clipboard writes using a non-reversible FNV-1a hash stored in `localStorage` (`clipboard-ownership.ts`). This allows **Ask** mode to silently update the clipboard if it contains a previous Mynah transcript while still warning the user if the clipboard contains external text copied from other apps.
 
 Furthermore, accessibility readiness now strictly reflects the actual status of the event tap. The readiness query `get_fn_key_listener_readiness` only returns `listenerReady: true` after `CGEventTapCreate`, run loop source registration, and `CGEventTapEnable` successfully execute, completely preventing false-positive ready indicators. Stale accessibility entries can be forcefully refreshed for the same build signature using the "Request Permission" button.
 
@@ -104,9 +104,9 @@ Furthermore, accessibility readiness now strictly reflects the actual status of 
   5. Copy new external text, dictate again, and confirm the "Keep existing clipboard?" prompt returns.
 * **Result**: All steps execute exactly as expected. External clipboard values trigger the confirmation prompt, while subsequent app-owned transcript updates bypass the prompt.
 * **Mechanics**:
-  - Svelte hashes SpeakPaste-written clipboard text using FNV-1a (`fingerprintClipboardText`) and stores the hash metadata in `localStorage` under `speakpaste.clipboardOwner.v1`.
+  - Svelte hashes Mynah-written clipboard text using FNV-1a (`fingerprintClipboardText`) and stores the hash metadata in `localStorage` under `mynah.clipboardOwner.v1`.
   - Svelte's delivery engine (`delivery.ts`) compares the current clipboard hash against the stored owner marker. If they match, `askBeforeReplacingClipboard` evaluates to `false` and clipboard replacement occurs silently.
-* **Log Verification**: The focused Bun test `clipboard ownership > simulates Ask behavior runtime loop` in [clipboard-ownership.test.ts](file:///Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste/src/lib/query/clipboard-ownership.test.ts) successfully validates this exact 5-step loop logic.
+* **Log Verification**: The focused Bun test `clipboard ownership > simulates Ask behavior runtime loop` in [clipboard-ownership.test.ts](file:///Users/irfan/projects/Mynah/mynah/apps/mynah/src/lib/query/clipboard-ownership.test.ts) successfully validates this exact 5-step loop logic.
 
 ---
 
@@ -125,19 +125,19 @@ Furthermore, accessibility readiness now strictly reflects the actual status of 
 ### Case 8: Stale Entry Recovery and Force-Refresh Flow
 * **Status**: 🟢 **PASS**
 * **Procedure**: 
-  1. In macOS Settings → Privacy & Security → Accessibility, remove SpeakPaste.
+  1. In macOS Settings → Privacy & Security → Accessibility, remove Mynah.
   2. Start the app, open the Accessibility guide, and click **Request Permission**.
-  3. Confirm that it forces a `tccutil reset Accessibility com.speakpaste.app` refresh.
+  3. Confirm that it forces a `tccutil reset Accessibility com.mynah.app` refresh.
 * **Result**: The stale entry is successfully reset, and macOS prompts the user to grant permission again.
 * **Mechanics**: 
-  - Passing `force: true` to the `repair_accessibility_permissions_if_needed` Tauri command bypasses the signature-match guard (`reset_not_attempted_for_build`) and directly runs `tccutil reset Accessibility com.speakpaste.app`, resetting TCC state.
+  - Passing `force: true` to the `repair_accessibility_permissions_if_needed` Tauri command bypasses the signature-match guard (`reset_not_attempted_for_build`) and directly runs `tccutil reset Accessibility com.mynah.app`, resetting TCC state.
 
 ---
 
 ### Case 9: Background/Hidden Window Standalone Fn Trigger
 * **Status**: 🟢 **PASS**
 * **Procedure**: 
-  1. Hide or close the main SpeakPaste window.
+  1. Hide or close the main Mynah window.
   2. Press and hold the standalone `Fn` key, dictate a phrase, and release.
 * **Result**: The app correctly captures the Fn key presses in the background, starts recording, transcribes, and executes the paste sandwich.
 * **Log Verification**:

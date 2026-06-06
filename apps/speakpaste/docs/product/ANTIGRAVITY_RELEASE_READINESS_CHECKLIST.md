@@ -1,4 +1,4 @@
-# SpeakPaste Release Readiness Checklist
+# Mynah Release Readiness Checklist
 
 - **Branch**: `local-only-product-surface`
 - **Latest Commit Reviewed**: `8366775e57217d2c93319e26c61b1271d0fe11cb`
@@ -13,24 +13,24 @@ Before packaging the production `.app` bundle, the release coordinator (or autom
 ### A. Packaging & Installation Path
 - [ ] **Clean App Sandbox**: Delete all local app support and cached configurations:
   ```bash
-  rm -rf ~/Library/Application\ Support/com.speakpaste.app
-  rm -rf ~/Library/Logs/com.speakpaste.app
+  rm -rf ~/Library/Application\ Support/com.mynah.app
+  rm -rf ~/Library/Logs/com.mynah.app
   ```
 - [ ] **Production Compilation**: Build the release package via Tauri bundler:
   ```bash
   bun run tauri build --bundles app
   ```
-- [ ] **Install Location**: Verify the app is installed to `/Applications/SpeakPaste.app` and that you are NOT running an older version from `/Applications` or target folders.
-- [ ] **No Dev Artifacts**: Confirm there are no `.svelte-kit` folders or dev configurations bundled inside `/Applications/SpeakPaste.app/Contents/Resources`.
+- [ ] **Install Location**: Verify the app is installed to `/Applications/Mynah.app` and that you are NOT running an older version from `/Applications` or target folders.
+- [ ] **No Dev Artifacts**: Confirm there are no `.svelte-kit` folders or dev configurations bundled inside `/Applications/Mynah.app/Contents/Resources`.
 
 ### B. First-Run Permissions
 - [ ] **Onboarding Trigger**: Run the newly installed app. Confirm that macOS prompt dialogs for both **Microphone** and **Accessibility** are correctly triggered on initial launch.
 - [ ] **Accessibility Redirect**: Revoke accessibility permission and verify that clicking the warning redirects the user to the guide screen (`/macos-enable-accessibility`) or System Settings.
-- [ ] **Accessibility Current-App Activation**: Select/check `SpeakPaste` in System Settings and confirm the currently running app reports Accessibility ready only after Rust successfully initializes the Fn listener. If System Settings shows selected but Fn does not work, record as `RB-001`.
-- [ ] **Accessibility Reinstall Recovery**: Replace `/Applications/SpeakPaste.app` with a new build while an old Accessibility row exists. Confirm the app can refresh the stale entry or clearly instruct a quit/reopen recovery path. This is currently blocked by `RB-001`.
+- [ ] **Accessibility Current-App Activation**: Select/check `Mynah` in System Settings and confirm the currently running app reports Accessibility ready only after Rust successfully initializes the Fn listener. If System Settings shows selected but Fn does not work, record as `RB-001`.
+- [ ] **Accessibility Reinstall Recovery**: Replace `/Applications/Mynah.app` with a new build while an old Accessibility row exists. Confirm the app can refresh the stale entry or clearly instruct a quit/reopen recovery path. This is currently blocked by `RB-001`.
 
 ### C. Core Loop Verification
-- [ ] **Foreground Dictation**: Focus Apple Notes, hold `Fn`, say: *"Testing SpeakPaste release readiness."* and release. Confirm text is pasted in under 600ms.
+- [ ] **Foreground Dictation**: Focus Apple Notes, hold `Fn`, say: *"Testing Mynah release readiness."* and release. Confirm text is pasted in under 600ms.
 - [ ] **Hidden-Window Background dictation**: Close the main settings window so that the app only runs in the macOS status menu bar. Focus Apple Notes and trigger the loop via `Fn` key. Verify 100% success (ensures AppNap is bypassed).
 - [ ] **Fallback Hotkey Registration**: Change the fallback global shortcut in settings to `Cmd+Shift+Return`. Close settings. Focus iMessage/Slack, press hotkey, dictate, and press hotkey again. Verify paste succeeds.
 - [ ] **Auto-Paste Toggle**: Turn off Auto-paste in settings. Dictate a phrase. Confirm no text is pasted, but the text is successfully copied to the system clipboard.
@@ -43,7 +43,7 @@ Before packaging the production `.app` bundle, the release coordinator (or autom
 - [ ] **Restart Trigger Sync**: Change the fallback hotkey in settings. Quit the app fully from the menu bar. Relaunch the app. Confirm the reconfigured hotkey registers and triggers recording immediately without opening Settings.
 - [ ] **Local Analytics Persistence**: Check that local diagnostics logs are written correctly:
   ```bash
-  cat ~/Library/Logs/com.speakpaste.app/diagnostics/local-analytics.jsonl
+  cat ~/Library/Logs/com.mynah.app/diagnostics/local-analytics.jsonl
   ```
   Verify the file contains JSONL events with timestamp, latency, and session stats, but **no raw transcripts or audio files**.
 

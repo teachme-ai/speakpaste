@@ -2,7 +2,7 @@ import { Ok, type Result } from 'wellcrafted/result';
 import { defineMutation } from '$lib/query/client';
 import { WhisperingErr, type WhisperingError } from '$lib/result';
 import { desktopServices } from '$lib/services/desktop';
-import type { SpeakPasteTrayState } from '$lib/services/desktop/tray';
+import type { MynahTrayState } from '$lib/services/desktop/tray';
 
 export const tray = {
 	setTrayState: defineMutation({
@@ -10,7 +10,7 @@ export const tray = {
 		mutationFn: async ({
 			state,
 		}: {
-			state: SpeakPasteTrayState;
+			state: MynahTrayState;
 		}): Promise<Result<void, WhisperingError>> => {
 			const { data, error } = await desktopServices.tray.setTrayState(state);
 			if (error) {

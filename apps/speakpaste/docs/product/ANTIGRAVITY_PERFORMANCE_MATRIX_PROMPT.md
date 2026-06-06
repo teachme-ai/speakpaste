@@ -1,8 +1,8 @@
-# Antigravity Task: SpeakPaste Performance Matrix
+# Antigravity Task: Mynah Performance Matrix
 
 ## Purpose
 
-Design a performance matrix and ongoing measurement framework for SpeakPaste so we can evaluate product quality as we continue changing the app.
+Design a performance matrix and ongoing measurement framework for Mynah so we can evaluate product quality as we continue changing the app.
 
 This is not only about speed. It must cover the full local voice-to-cursor loop:
 
@@ -17,7 +17,7 @@ This is not only about speed. It must cover the full local voice-to-cursor loop:
 
 ## Product Context
 
-SpeakPaste is a local-only macOS voice-to-cursor app.
+Mynah is a local-only macOS voice-to-cursor app.
 
 Current primary loop:
 
@@ -41,14 +41,14 @@ We need a matrix that remains useful across:
 
 Write a document to:
 
-`apps/speakpaste/docs/product/ANTIGRAVITY_PERFORMANCE_MATRIX.md`
+`apps/mynah/docs/product/ANTIGRAVITY_PERFORMANCE_MATRIX.md`
 
 ## Required Sections
 
 Use this structure:
 
 ```md
-# SpeakPaste Performance Matrix
+# Mynah Performance Matrix
 
 ## 1. Goals
 

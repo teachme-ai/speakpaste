@@ -6,12 +6,12 @@
 	import { settings } from '$lib/state/settings.svelte';
 </script>
 
-<svelte:head> <title>Sound Settings - SpeakPaste</title> </svelte:head>
+<svelte:head> <title>Sound Settings - Mynah</title> </svelte:head>
 
 <Field.Set>
 	<Field.Legend>Sound</Field.Legend>
 	<Field.Description>
-		Configure your SpeakPaste sound preferences.
+		Configure your Mynah sound preferences.
 	</Field.Description>
 	<Field.Separator />
 	<Field.Group>

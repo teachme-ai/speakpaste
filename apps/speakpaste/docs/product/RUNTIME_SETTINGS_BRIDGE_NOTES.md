@@ -54,12 +54,12 @@ The current Svelte pipeline remains active and validated. Rust trigger ownership
 ## Validation
 
 - `cargo check --offline`
-- `bun test apps/speakpaste/src/lib/state/settings.test.ts`
+- `bun test apps/mynah/src/lib/state/settings.test.ts`
 - `bun run build`
 
 Manual follow-up:
 
-1. Launch SpeakPaste.
+1. Launch Mynah.
 2. Open settings and change a local model, shortcut, auto-paste toggle, or selected text rule.
 3. Confirm `runtime-config.json` updates under the app data directory.
 4. Confirm dictation still records, transcribes, and pastes normally.

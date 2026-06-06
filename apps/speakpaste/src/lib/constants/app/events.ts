@@ -1,7 +1,7 @@
 export const PIPELINE_EVENTS = {
-	STARTED: 'speakpaste:pipeline-started',
-	COMPLETE: 'speakpaste:pipeline-complete',
-	ERROR: 'speakpaste:pipeline-error',
+	STARTED: 'mynah:pipeline-started',
+	COMPLETE: 'mynah:pipeline-complete',
+	ERROR: 'mynah:pipeline-error',
 } as const;
 
 export type PipelineEventName =

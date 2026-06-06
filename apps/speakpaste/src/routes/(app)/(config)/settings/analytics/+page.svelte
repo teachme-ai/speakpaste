@@ -89,7 +89,7 @@
 			</Badge>
 		</div>
 		<SectionHeader.Description class="max-w-2xl">
-			SpeakPaste keeps operational insight on this Mac. Diagnostics are about
+			Mynah keeps operational insight on this Mac. Diagnostics are about
 			app health and performance, not the private words you dictate.
 		</SectionHeader.Description>
 	</SectionHeader.Root>
@@ -231,7 +231,7 @@
 		<Card.Header>
 			<Card.Title class="text-base font-medium">Local disclosure</Card.Title>
 			<Card.Description>
-				If a feature depends on a system permission, SpeakPaste should say so at
+				If a feature depends on a system permission, Mynah should say so at
 				runtime rather than burying the requirement.
 			</Card.Description>
 		</Card.Header>

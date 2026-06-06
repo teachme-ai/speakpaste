@@ -52,7 +52,7 @@
 	}
 </script>
 
-<svelte:head> <title>Captures - SpeakPaste</title> </svelte:head>
+<svelte:head> <title>Captures - Mynah</title> </svelte:head>
 
 <Field.Set>
 	<Field.Legend>Captures</Field.Legend>
@@ -113,7 +113,7 @@
 				</Select.Content>
 			</Select.Root>
 			<Field.Description>
-				Choose whether SpeakPaste keeps all capture records or trims history.
+				Choose whether Mynah keeps all capture records or trims history.
 			</Field.Description>
 		</Field.Field>
 

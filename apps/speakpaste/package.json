@@ -1,12 +1,12 @@
 {
-	"name": "speakpaste",
+	"name": "mynah",
 	"private": true,
 	"version": "0.1.1",
-	"description": "Mac-only local-first voice typing powered by whisper.cpp.",
+	"description": "Mynah — Mac-only local-first voice typing powered by whisper.cpp.",
 	"scripts": {
 		"prepare:build-meta": "bun ./scripts/prepare-build-meta.mjs",
 		"dev:web": "bun run prepare:build-meta && vite dev",
-		"dev": "bun run tauri dev --config '{\"identifier\": \"com.speakpaste.app.dev\"}'",
+		"dev": "bun run tauri dev --config '{\"identifier\": \"com.mynah.app.dev\"}'",
 		"build": "bun run prepare:build-meta && NODE_ENV=production bun --bun vite build",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",

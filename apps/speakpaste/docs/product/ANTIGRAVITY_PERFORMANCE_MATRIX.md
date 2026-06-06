@@ -1,6 +1,6 @@
-# SpeakPaste Performance Matrix
+# Mynah Performance Matrix
 
-This document outlines the performance matrix and ongoing measurement framework for SpeakPaste. It defines operational metrics, test scenarios, measurement methodologies, and release gates to ensure the full local voice-to-cursor loop remains highly reliable as the codebase evolves.
+This document outlines the performance matrix and ongoing measurement framework for Mynah. It defines operational metrics, test scenarios, measurement methodologies, and release gates to ensure the full local voice-to-cursor loop remains highly reliable as the codebase evolves.
 
 ---
 
@@ -27,7 +27,7 @@ We trace and measure 11 core user journeys:
 8. **Paste into Chat Field**: Dictation target is a rapid chat input field (e.g., Slack, iMessage, Discord, WhatsApp Web).
 9. **Paste into Text Editor**: Dictation target is a native document text view (e.g., Apple Notes, TextEdit, VS Code, Google Docs).
 10. **Settings Change Live-Sync**: User changes fallback shortcuts or local technology profiles in Svelte, triggering on-the-fly Rust global shortcut reloads.
-11. **Restart Persistence**: User quits SpeakPaste, restarts the app, and triggers global hotkeys immediately without opening configuration windows.
+11. **Restart Persistence**: User quits Mynah, restarts the app, and triggers global hotkeys immediately without opening configuration windows.
 
 ---
 
@@ -80,7 +80,7 @@ We categorize measurements into 12 core performance dimensions:
 
 ## 5. Test Matrix
 
-To benchmark SpeakPaste, run tests across the following variables:
+To benchmark Mynah, run tests across the following variables:
 
 ```text
 Test Suite
@@ -129,12 +129,12 @@ Use the command-line utility for Xcode Instruments (`xctrace`) to run diagnostic
 * **Profile CPU Bottlenecks (Time Profiler)**:
   Launch the compiled binary in standard profile mode to record CPU call trees:
   ```bash
-  xcrun xctrace record --template 'Time Profiler' --launch -- /Applications/SpeakPaste.app
+  xcrun xctrace record --template 'Time Profiler' --launch -- /Applications/Mynah.app
   ```
 * **Profile Memory Leak & Allocations (Allocations)**:
   Track heap footprint growth and detect leaks over successive dictation cycles:
   ```bash
-  xcrun xctrace record --template 'Allocations' --launch -- /Applications/SpeakPaste.app
+  xcrun xctrace record --template 'Allocations' --launch -- /Applications/Mynah.app
   ```
 * **Process Trace Results**:
   Open the recorded output in the Xcode Instruments app for interactive visualization:
@@ -173,7 +173,7 @@ Write Xcode performance tests targeting the application's Swift/Rust FFI layer t
   ```
 * Execute the target test scheme on connected Intel (`x86_64`) or Apple Silicon (`arm64`) execution destinations:
   ```bash
-  xcodebuild test -project SpeakPaste.xcodeproj -scheme SpeakPasteTests -destination 'platform=macOS,arch=arm64'
+  xcodebuild test -project Mynah.xcodeproj -scheme MynahTests -destination 'platform=macOS,arch=arm64'
   ```
 
 ---
@@ -188,7 +188,7 @@ The app registers log telemetry directly to the local filesystem. Every time a d
 * CPAL logs trigger down to audio open timestamps.
 * `transcribe-rs` measures precise inference times and Whisper performance metrics.
 * Enigo logs paste-complete timestamps.
-These logs are aggregated locally in `~/Library/Logs/com.speakpaste.app/telemetry.log` for developer diagnostics.
+These logs are aggregated locally in `~/Library/Logs/com.mynah.app/telemetry.log` for developer diagnostics.
 
 ### B. Manual QA Protocol
 Because OS permissions and focus target fields are owned outside the app sandbox, the developer must run manual verification tests:
@@ -239,7 +239,7 @@ To certify a build for release, it must satisfy the following gates:
 
 To support ongoing performance evaluation, we recommend adding the following local, non-telemetric instrumentation layers:
 
-1. **FFI-Level Performance Timestamps**: Implement automated `std::time::Instant` measurements in Rust Tauri commands for audio capture start, inference duration, and paste completion. Write these metrics directly to `~/Library/Logs/com.speakpaste.app/telemetry.log`.
+1. **FFI-Level Performance Timestamps**: Implement automated `std::time::Instant` measurements in Rust Tauri commands for audio capture start, inference duration, and paste completion. Write these metrics directly to `~/Library/Logs/com.mynah.app/telemetry.log`.
 2. **Local Session Counters**: Store persistent local session counts and successful pastes to compute historical averages on-device without telemetry.
 3. **Log Rotation & Pruning**: Ensure log directories are size-capped to prevent unbounded local file growth.
 4. **Offline Benchmarking Suite**: A headless binary or command line flag (e.g. `--benchmark`) inside `src-tauri` that feeds pre-recorded WAV samples to the Whisper engine and outputs latency, accuracy, and hallucination scores.
@@ -252,11 +252,11 @@ Every Friday, the engineering team should execute this 15-minute diagnostic benc
 
 ```markdown
 - [ ] **1. Clean Installation Sweep**:
-      - Delete `~/Library/Application Support/com.speakpaste.app` configs.
+      - Delete `~/Library/Application Support/com.mynah.app` configs.
       - Install the latest release `.app` bundle from the main branch.
       - Open the app and verify the microphone and accessibility permission modals trigger correctly.
 - [ ] **2. Diagnostic Performance Runs**:
-      - Open Apple Notes, hold Fn, say: "Testing SpeakPaste local transcription velocity."
+      - Open Apple Notes, hold Fn, say: "Testing Mynah local transcription velocity."
       - Verify paste succeeds, and check `telemetry.log` for latency parameters:
         - Confirm L_trig < 80ms, L_inf < 250ms, and L_paste < 150ms.
 - [ ] **3. Silence & Noise Audit**:

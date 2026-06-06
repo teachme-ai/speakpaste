@@ -1,4 +1,4 @@
-# SpeakPaste Settings Wording Audit
+# Mynah Settings Wording Audit
 
 - **Branch**: `local-only-product-surface`
 - **Latest Commit Reviewed**: `8366775e57217d2c93319e26c61b1271d0fe11cb`
@@ -8,7 +8,7 @@
 
 ## 1. Overview & Wording Goals
 
-SpeakPaste has transitioned from an API-based transcription workspace into a lightweight, local-first macOS dictation utility. The product language must reflect this:
+Mynah has transitioned from an API-based transcription workspace into a lightweight, local-first macOS dictation utility. The product language must reflect this:
 * **Minimize Jargon**: Avoid exposing developers' implementation details (e.g. FFI, CPAL, VAD, Temp, Retention strategies).
 * **Eliminate Surveillance Wording**: Avoid using "recording" or "analytics" heavily. Standardize on **"Dictation"**, **"Captures"**, and **"Privacy"** to reassure users that no audio is permanently archived or transmitted.
 * **Symmetry Across Navigation**: Ensure the sidebar menu title matches the page title and the landing Control Center grid card.
@@ -57,6 +57,6 @@ SpeakPaste has transitioned from an API-based transcription workspace into a lig
    Update `retentionItems` and `maxRecordingItems` arrays to replace "recordings" with "captures". Update legend `<Field.Legend>Local History</Field.Legend>` to `<Field.Legend>Dictation History</Field.Legend>`.
 
 4. **Notification / Toast wording polish**:
-   In `apps/speakpaste/src/routes/(app)/+page.svelte`:
+   In `apps/mynah/src/routes/(app)/+page.svelte`:
    * Update `toast.success('Recording deleted')` -> `toast.success('Capture deleted')`.
    * Update `toast.error('Failed to delete recording')` -> `toast.error('Failed to delete capture')`.

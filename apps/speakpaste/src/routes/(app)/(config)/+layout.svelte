@@ -14,7 +14,7 @@
 	style="view-transition-name: {viewTransition.global.header}"
 >
 	<Button tooltip="Go home" href="/" variant="ghost" class="-ml-4">
-		<span class="text-lg font-bold">SpeakPaste</span>
+		<span class="text-lg font-bold">Mynah</span>
 	</Button>
 </header>
 

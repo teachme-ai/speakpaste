@@ -17,7 +17,7 @@ Latest coordination commit:
 Command:
 
 ```bash
-bun test apps/speakpaste/src/lib/state/settings.test.ts
+bun test apps/mynah/src/lib/state/settings.test.ts
 ```
 
 Result:
@@ -48,13 +48,13 @@ cargo check --offline
 Directory:
 
 ```text
-apps/speakpaste/src-tauri
+apps/mynah/src-tauri
 ```
 
 Result:
 
 - Passed.
-- `speakpaste v0.1.0` compiled in dev-check mode.
+- `mynah v0.1.0` compiled in dev-check mode.
 - No dependency fetch required.
 
 ### Local-Only Surface Sweep
@@ -62,7 +62,7 @@ Result:
 Command:
 
 ```bash
-rg -n "tauri-plugin-updater|plugin-updater|checkForUpdates|UpdateDialog|api-keys|API Keys|Groq|Anthropic|OpenRouter|Mistral|Deepgram|ElevenLabs|Speaches|Aptabase" apps/speakpaste/src apps/speakpaste/src-tauri apps/speakpaste/package.json bun.lock
+rg -n "tauri-plugin-updater|plugin-updater|checkForUpdates|UpdateDialog|api-keys|API Keys|Groq|Anthropic|OpenRouter|Mistral|Deepgram|ElevenLabs|Speaches|Aptabase" apps/mynah/src apps/mynah/src-tauri apps/mynah/package.json bun.lock
 ```
 
 Result:
@@ -88,13 +88,13 @@ bun run build
 Directory:
 
 ```text
-apps/speakpaste
+apps/mynah
 ```
 
 Result:
 
 - Passed.
-- Static site written to `apps/speakpaste/build`.
+- Static site written to `apps/mynah/build`.
 - Build completed with existing Svelte/Vite warnings but no build failure.
 
 Warnings observed:
@@ -124,7 +124,7 @@ Automated checks do not prove the native macOS loop. The user must still test:
 
 Antigravity should use this file as evidence when writing:
 
-`apps/speakpaste/docs/product/ANTIGRAVITY_REVIEW_RUNTIME_VALIDATION.md`
+`apps/mynah/docs/product/ANTIGRAVITY_REVIEW_RUNTIME_VALIDATION.md`
 
 ## Latest Local Install Evidence
 
@@ -142,28 +142,28 @@ Result:
 - The `.app` bundle was produced successfully at:
 
 ```text
-apps/speakpaste/src-tauri/target/release/bundle/macos/SpeakPaste.app
+apps/mynah/src-tauri/target/release/bundle/macos/Mynah.app
 ```
 
 - DMG bundling failed in `bundle_dmg.sh`, so the DMG was not used for runtime validation.
 - Codex installed the built `.app` directly to:
 
 ```text
-/Applications/SpeakPaste.app
+/Applications/Mynah.app
 ```
 
 Installed app metadata:
 
 ```text
-CFBundleName: SpeakPaste
-CFBundleIdentifier: com.speakpaste.app
+CFBundleName: Mynah
+CFBundleIdentifier: com.mynah.app
 CFBundleShortVersionString: 0.1.1
-CFBundleExecutable: speakpaste
+CFBundleExecutable: mynah
 Installed size: 29M
 ```
 
 Signing observations:
 
 - The local build is ad-hoc signed.
-- `spctl --assess --type execute --verbose /Applications/SpeakPaste.app` returned an internal Code Signing subsystem error.
+- `spctl --assess --type execute --verbose /Applications/Mynah.app` returned an internal Code Signing subsystem error.
 - This is noted for distribution/notarization follow-up, but it does not block local runtime validation from `/Applications`.

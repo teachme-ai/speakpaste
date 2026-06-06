@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document archives the current thinking for a future SpeakPaste feature often described as:
+This document archives the current thinking for a future Mynah feature often described as:
 
 - discreet dictation
 - whisper mode
@@ -48,7 +48,7 @@ That means this feature should not be implemented as a simple volume boost.
 
 ---
 
-## Current SpeakPaste Baseline
+## Current Mynah Baseline
 
 The current app uses:
 

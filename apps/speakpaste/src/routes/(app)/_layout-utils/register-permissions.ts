@@ -104,7 +104,7 @@ export function registerAccessibilityPermission() {
 				pollTimer = undefined;
 				toast.dismiss(accessibilityToastId);
 				toast.success('Accessibility permission granted', {
-					description: 'SpeakPaste is ready to listen for the Fn key again.',
+					description: 'Mynah is ready to listen for the Fn key again.',
 				});
 				return;
 			}
@@ -142,22 +142,22 @@ export function registerAccessibilityPermission() {
 			toast.info('Accessibility entry refreshed', {
 				id: `${accessibilityToastId}-reset`,
 				description:
-					'SpeakPaste detected a replaced or reinstalled app and refreshed its stale Accessibility entry in macOS.',
+					'Mynah detected a replaced or reinstalled app and refreshed its stale Accessibility entry in macOS.',
 			});
 		}
 
 		if (repairResult?.needsUserApproval) {
 			showRecoveryToast(
 				repairResult.didReset
-					? 'macOS needs you to approve the refreshed SpeakPaste entry one more time under Privacy & Security > Accessibility.'
-					: 'SpeakPaste needs accessibility permissions to trigger voice typing globally.',
+					? 'macOS needs you to approve the refreshed Mynah entry one more time under Privacy & Security > Accessibility.'
+					: 'Mynah needs accessibility permissions to trigger voice typing globally.',
 			);
 			startPermissionPoll();
 			return;
 		}
 
 		showRecoveryToast(
-			'SpeakPaste needs accessibility permissions to trigger voice typing globally.',
+			'Mynah needs accessibility permissions to trigger voice typing globally.',
 		);
 		startPermissionPoll();
 	})();
@@ -192,7 +192,7 @@ export function registerMicrophonePermission() {
 			// Toast if permission not granted
 			toast.info('Microphone Permission Required', {
 				id: microphoneToastId,
-				description: 'SpeakPaste needs microphone access to record audio',
+				description: 'Mynah needs microphone access to record audio',
 				duration: Number.POSITIVE_INFINITY,
 				action: {
 					label: 'Enable Permission',
@@ -220,7 +220,7 @@ export function registerMicrophonePermission() {
 						toast.warning('Enable microphone in System Settings', {
 							id: microphoneToastId,
 							description:
-								'If no prompt appeared, enable SpeakPaste under Privacy & Security > Microphone, then reopen the app.',
+								'If no prompt appeared, enable Mynah under Privacy & Security > Microphone, then reopen the app.',
 							duration: Number.POSITIVE_INFINITY,
 						});
 					},

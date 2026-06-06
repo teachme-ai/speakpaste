@@ -2,7 +2,7 @@
 
 ## Context
 
-SpeakPaste is a local-only macOS voice-to-cursor app. The current launch-safe fix keeps the Svelte webview alive by hiding the main window instead of destroying it when the user closes the UI. This works, but it is still a bridge fix.
+Mynah is a local-only macOS voice-to-cursor app. The current launch-safe fix keeps the Svelte webview alive by hiding the main window instead of destroying it when the user closes the UI. This works, but it is still a bridge fix.
 
 The product direction is: the UI is only a control surface. The app runtime, global shortcut/Fn handling, recording, transcription, and paste delivery should continue from the menu bar/background runtime even when no visible window is open.
 

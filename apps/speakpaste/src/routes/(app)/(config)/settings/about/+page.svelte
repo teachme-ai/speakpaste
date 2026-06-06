@@ -9,13 +9,13 @@
 </script>
 
 <svelte:head>
-	<title>About & Credits - SpeakPaste</title>
+	<title>About & Credits - Mynah</title>
 </svelte:head>
 
 <Field.Set>
 	<Field.Legend>About & Credits</Field.Legend>
 	<Field.Description>
-		SpeakPaste is a local-first, privacy-first, and system-wide voice typing utility.
+		Mynah is a local-first, privacy-first, and system-wide voice typing utility.
 	</Field.Description>
 	<Field.Separator />
 
@@ -24,7 +24,7 @@
 		<div class="rounded-xl border border-muted bg-card p-6 shadow-sm">
 			<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
 				<div class="space-y-1">
-					<h3 class="text-xl font-bold tracking-tight">🎙️ SpeakPaste</h3>
+					<h3 class="text-xl font-bold tracking-tight">🎙️ Mynah</h3>
 					<p class="text-sm text-muted-foreground">
 						Release {BUILD_INFO.gitCommitCount} · Version {BUILD_INFO.marketingVersion}
 					</p>
@@ -45,7 +45,7 @@
 			</div>
 
 			<div class="mt-4 rounded-lg border border-border bg-background/60 p-3 text-xs text-muted-foreground">
-				<p><strong>Build accountability:</strong> SpeakPaste now advances its release number with Git history, while still stamping every build with the exact commit reference and build time for traceability.</p>
+				<p><strong>Build accountability:</strong> Mynah now advances its release number with Git history, while still stamping every build with the exact commit reference and build time for traceability.</p>
 			</div>
 		</div>
 
@@ -59,7 +59,7 @@
 					<div class="space-y-0.5">
 						<p class="text-xs font-semibold uppercase tracking-wider text-primary/70">Creator</p>
 						<h3 class="text-base font-bold tracking-tight">Khalid Irfan</h3>
-						<p class="text-xs text-muted-foreground">TeachMe AI · SpeakPaste</p>
+						<p class="text-xs text-muted-foreground">TeachMe AI · Mynah</p>
 					</div>
 				</div>
 				<div class="flex flex-col gap-1.5 text-xs sm:items-end">
@@ -87,7 +87,7 @@
 				Upstream Acknowledgements
 			</h4>
 			<p class="text-sm text-muted-foreground leading-relaxed">
-				SpeakPaste stands on the shoulders of giants. We express our deepest gratitude to the creators of the following open-source frameworks and libraries that power the core transcription, audio capturing, and automation features of this application:
+				Mynah stands on the shoulders of giants. We express our deepest gratitude to the creators of the following open-source frameworks and libraries that power the core transcription, audio capturing, and automation features of this application:
 			</p>
 
 			<div class="grid gap-4 sm:grid-cols-2 mt-2">
@@ -146,13 +146,13 @@
 				Branding & Copyright Disclosure
 			</h4>
 			<p class="text-xs text-muted-foreground leading-relaxed">
-				SpeakPaste is adapted from the open-source **Whispering** project, which is part of the **Epicenter** application monorepo created and maintained by **Braden Wong** and contributors.
+				Mynah is adapted from the open-source **Whispering** project, which is part of the **Epicenter** application monorepo created and maintained by **Braden Wong** and contributors.
 			</p>
 			<p class="text-xs text-muted-foreground leading-relaxed">
 				In complete compliance with the **MIT** and **AGPL-3.0** licensing agreements of the upstream source, all original copyrights, framework abstractions, and shared library structures remain owned by their respective authors. We sincerely thank Braden and the Epicenter community for providing the architectural layout that made this utility possible.
 			</p>
 			<div class="flex gap-4 text-xs font-medium mt-1">
-				<Link href="https://speakpaste.online" target="_blank">SpeakPaste Website ↗</Link>
+				<Link href="https://mynah.online" target="_blank">Mynah Website ↗</Link>
 			</div>
 		</div>
 
@@ -160,7 +160,7 @@
 			<h4 class="text-base font-semibold">Permission Recovery</h4>
 			<p class="text-xs text-muted-foreground leading-relaxed">
 				If macOS keeps an old Accessibility entry after you reinstall or replace
-				SpeakPaste, the app now attempts to refresh that stale entry
+				Mynah, the app now attempts to refresh that stale entry
 				automatically in the background and then asks for approval again only if
 				macOS still requires it.
 			</p>

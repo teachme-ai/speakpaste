@@ -7,4 +7,4 @@
 	});
 </script>
 
-<svelte:head> <title>Settings - SpeakPaste</title> </svelte:head>
+<svelte:head> <title>Settings - Mynah</title> </svelte:head>

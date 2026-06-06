@@ -8,11 +8,11 @@
 
 ## 1. Executive Summary
 
-SpeakPaste is currently a **local-first** macOS voice typing utility, but its core runtime remains **frontend-dependent**. In the current release, closing the main window hides it instead of destroying the webview. This prevents the global shortcut and `Fn` key listener from going silent, but it is an accidental architectural dependency.
+Mynah is currently a **local-first** macOS voice typing utility, but its core runtime remains **frontend-dependent**. In the current release, closing the main window hides it instead of destroying the webview. This prevents the global shortcut and `Fn` key listener from going silent, but it is an accidental architectural dependency.
 
 To achieve a true macOS background utility where the webview is *purely a control surface*, we must migrate the dictation lifecycle (hotkey interception, recording streams, whisper.cpp inference, text processing, and paste delivery) entirely into the **Rust backend**.
 
-This proposal outlines the smallest safe path to transition SpeakPaste to a **Rust-owned backend dictation runtime** in a 24–48 hour implementation cycle, ensuring high reliability, zero AppNap sleep issues, and a lightweight background system footprint.
+This proposal outlines the smallest safe path to transition Mynah to a **Rust-owned backend dictation runtime** in a 24–48 hour implementation cycle, ensuring high reliability, zero AppNap sleep issues, and a lightweight background system footprint.
 
 ---
 
@@ -142,12 +142,12 @@ When `fn_key_listener.rs` or the global shortcut detects a trigger, instead of c
    * Change callback targets from Svelte `.emit("fn-key-down")` to calling `dictation_manager::start_dictation()` directly in Rust.
 
 ### ⚡ Svelte Frontend
-1. **`apps/speakpaste/src/lib/state/dictation.svelte.ts` [NEW]**:
+1. **`apps/mynah/src/lib/state/dictation.svelte.ts` [NEW]**:
    * A Svelte 5 reactive store that listens to `"dictation:state-changed"` events and exposes `$state` fields (`status`, `inputLevel`, `latestTranscript`) for visualizers.
-2. **`apps/speakpaste/src/routes/(app)/_components/AppLayout.svelte` [MODIFY]**:
+2. **`apps/mynah/src/routes/(app)/_components/AppLayout.svelte` [MODIFY]**:
    * Remove manual `fn-key-down` event listeners and global shortcuts registers.
    * Hook into the Svelte 5 `dictation` store to drive UI view updates.
-3. **`apps/speakpaste/src/lib/services/desktop/tray.ts` [DELETE]**:
+3. **`apps/mynah/src/lib/services/desktop/tray.ts` [DELETE]**:
    * Delete this file entirely as the system tray is now managed 100% natively in Rust.
 
 ---

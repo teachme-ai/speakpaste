@@ -1,4 +1,4 @@
-# Review of SpeakPaste Settings Redesign & Product Surface
+# Review of Mynah Settings Redesign & Product Surface
 
 **Date**: 2026-06-02  
 **Branch**: `local-only-product-surface`  
@@ -11,7 +11,7 @@
 
 ## 1. Executive Verdict
 
-With the landing of commits `25cc9a0` and `acf9a99`, **SpeakPaste** has successfully shed its heritage as a settings-heavy, multi-platform "Whispering" clone. It has solidified its identity as a focused, premium, local-first macOS voice-to-cursor utility. 
+With the landing of commits `25cc9a0` and `acf9a99`, **Mynah** has successfully shed its heritage as a settings-heavy, multi-platform "Whispering" clone. It has solidified its identity as a focused, premium, local-first macOS voice-to-cursor utility. 
 
 The application of this product audit leads to the following key conclusions:
 
@@ -29,7 +29,7 @@ The application of this product audit leads to the following key conclusions:
 
 ## 2. Remaining Inherited/Complex UX
 
-While the cloud cleanse is complete, SpeakPaste still retains several technical, developer-facing settings layers that clutter the consumer "voice-to-cursor" experience. These configurations are direct holdovers from its parent "settings-heavy Whispering clone" architecture and should be simplified or hidden.
+While the cloud cleanse is complete, Mynah still retains several technical, developer-facing settings layers that clutter the consumer "voice-to-cursor" experience. These configurations are direct holdovers from its parent "settings-heavy Whispering clone" architecture and should be simplified or hidden.
 
 ### 🔴 The FFmpeg Command Builder
 In `settings/recording/+page.svelte` (Voice Capture), selecting the **FFmpeg** recording method displays `FfmpegCommandBuilder.svelte`.
@@ -70,7 +70,7 @@ The raw inputs for FFmpeg recording parameters (`FfmpegCommandBuilder.svelte`) a
 * **Action**: Replace the detailed FFmpeg options with a simple high-level toggle: `[x] Compress audio to save disk space (Recommended)`. Keep the underlying arguments under the hood, and only show the raw parameters if the user explicitly turns on "Developer Mode" in the settings.
 
 ### ⚡ Recommendation 3: Prioritize Global Hotkeys Over Local Hotkeys
-SpeakPaste is designed to run in the background. Users trigger it system-wide.
+Mynah is designed to run in the background. Users trigger it system-wide.
 * **Action**: Remove the split "Local Shortcuts" vs "Global Shortcuts" tabs. Make the **Global Shortcuts** page (specifically the hardware `Fn` key or trigger hotkey selector) the primary shortcuts screen. Collapse or hide local application hotkeys, which are rarely modified by users.
 
 ---
@@ -145,7 +145,7 @@ Before deploying the final local-first version to production, verify the followi
 ### ⚙️ Core Operations (Local Sovereign Pipeline)
 - [ ] **Hardware Fn Mapping**: Pressing the hardware `Fn` key triggers recording successfully.
 - [ ] **Native CPAL Recording**: Audio is recorded flawlessly via the native Rust CPAL module.
-- [ ] **macOS AppNap Immunity**: Recording triggers instantly even when SpeakPaste has been minimized in the background for over an hour.
+- [ ] **macOS AppNap Immunity**: Recording triggers instantly even when Mynah has been minimized in the background for over an hour.
 - [ ] **Whisper C++ Inference**: Transcription is executed 100% locally on-device.
 - [ ] **Enigo Insertion**: Transcribed text is successfully pasted at the active cursor position.
 - [ ] **Deterministic Cleanups**: Active "Text Rules" are applied locally, modifying the clipboard contents before pasting.

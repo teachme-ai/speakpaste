@@ -45,11 +45,11 @@ The app currently uses `transcribe-rs`, which depends on `whisper-rs`, which wra
 
 Relevant files:
 
-- `apps/speakpaste/src-tauri/Cargo.toml`
-- `apps/speakpaste/src-tauri/Cargo.lock`
-- `apps/speakpaste/src-tauri/src/transcription/model_manager.rs`
-- `apps/speakpaste/src-tauri/src/transcription/mod.rs`
-- `apps/speakpaste/src/lib/services/transcription/local/whispercpp.ts`
+- `apps/mynah/src-tauri/Cargo.toml`
+- `apps/mynah/src-tauri/Cargo.lock`
+- `apps/mynah/src-tauri/src/transcription/model_manager.rs`
+- `apps/mynah/src-tauri/src/transcription/mod.rs`
+- `apps/mynah/src/lib/services/transcription/local/whispercpp.ts`
 
 Current model presets:
 

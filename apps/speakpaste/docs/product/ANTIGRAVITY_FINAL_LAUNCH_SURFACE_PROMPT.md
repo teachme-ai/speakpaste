@@ -10,15 +10,15 @@ Use this prompt in Antigravity after the following commits:
 
 ## Prompt
 
-Review the current SpeakPaste launch surface as a final local-only product QA pass.
+Review the current Mynah launch surface as a final local-only product QA pass.
 
 Do not edit code. Inspect the repository and write your findings to:
 
-`apps/speakpaste/docs/product/ANTIGRAVITY_REVIEW_FINAL_LAUNCH_SURFACE.md`
+`apps/mynah/docs/product/ANTIGRAVITY_REVIEW_FINAL_LAUNCH_SURFACE.md`
 
 ## Product Baseline
 
-SpeakPaste is now intended to be a focused macOS local voice-to-cursor product:
+Mynah is now intended to be a focused macOS local voice-to-cursor product:
 
 - Press hotkey or Fn trigger.
 - Record locally through native capture, primarily CPAL on macOS.

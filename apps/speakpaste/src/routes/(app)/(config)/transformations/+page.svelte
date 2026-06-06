@@ -188,7 +188,7 @@
 	);
 </script>
 
-<svelte:head> <title>Text Rules - SpeakPaste</title> </svelte:head>
+<svelte:head> <title>Text Rules - Mynah</title> </svelte:head>
 
 <main class="flex w-full flex-1 flex-col gap-2 px-4 py-4 sm:px-8 mx-auto">
 	<SectionHeader.Root>

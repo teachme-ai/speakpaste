@@ -14,15 +14,15 @@ pub struct BuildInfo {
 
 pub fn current_build_info() -> BuildInfo {
     BuildInfo {
-        marketing_version: env!("SPEAKPASTE_BUILD_MARKETING_VERSION").to_string(),
-        bundle_version: env!("SPEAKPASTE_BUILD_BUNDLE_VERSION").to_string(),
-        git_commit_count: env!("SPEAKPASTE_BUILD_GIT_COMMIT_COUNT")
+        marketing_version: env!("MYNAH_BUILD_MARKETING_VERSION").to_string(),
+        bundle_version: env!("MYNAH_BUILD_BUNDLE_VERSION").to_string(),
+        git_commit_count: env!("MYNAH_BUILD_GIT_COMMIT_COUNT")
             .parse::<u64>()
             .unwrap_or(0),
-        git_commit: env!("SPEAKPASTE_BUILD_GIT_COMMIT").to_string(),
-        git_dirty: env!("SPEAKPASTE_BUILD_GIT_DIRTY") == "true",
-        built_at_iso: env!("SPEAKPASTE_BUILD_AT_ISO").to_string(),
-        build_signature: env!("SPEAKPASTE_BUILD_SIGNATURE").to_string(),
+        git_commit: env!("MYNAH_BUILD_GIT_COMMIT").to_string(),
+        git_dirty: env!("MYNAH_BUILD_GIT_DIRTY") == "true",
+        built_at_iso: env!("MYNAH_BUILD_AT_ISO").to_string(),
+        build_signature: env!("MYNAH_BUILD_SIGNATURE").to_string(),
     }
 }
 

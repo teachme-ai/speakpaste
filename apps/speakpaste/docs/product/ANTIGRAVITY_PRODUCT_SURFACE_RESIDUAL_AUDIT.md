@@ -1,4 +1,4 @@
-# SpeakPaste Product Surface Residual Audit
+# Mynah Product Surface Residual Audit
 
 - **Branch**: `local-only-product-surface`
 - **Latest Commit Reviewed**: `8366775e57217d2c93319e26c61b1271d0fe11cb`
@@ -8,7 +8,7 @@
 
 ## 1. Scope & Objective
 
-As SpeakPaste transitions to a minimal, local-only macOS dictation utility, legacy features, pages, and API routing structures from previous iterations must be decommissioned or hidden. The goal of this audit is to identify all residual routes, menus, and wording that do not fit the current target product surface, and prescribe concrete actions (Keep, Hide, Redirect, Merge, Delete).
+As Mynah transitions to a minimal, local-only macOS dictation utility, legacy features, pages, and API routing structures from previous iterations must be decommissioned or hidden. The goal of this audit is to identify all residual routes, menus, and wording that do not fit the current target product surface, and prescribe concrete actions (Keep, Hide, Redirect, Merge, Delete).
 
 ---
 
@@ -32,7 +32,7 @@ The following files contain legacy names or configurations referencing the origi
 
 ### A. Settings Data Migrations (`src/routes/(app)/(config)/settings/_page.svelte.js` or similar client bundles)
 * **Leftover**: References `whispering-settings` and `whispering-device-config` in local storage keys (lines 2 and 4 in client nodal bundles).
-* **Action**: Keep for backwards-compatibility migrations, but document that settings namespace should move to `speakpaste:*` in the future.
+* **Action**: Keep for backwards-compatibility migrations, but document that settings namespace should move to `mynah:*` in the future.
 
 ### B. Core Database Table Definitions (`src-tauri/src/lib.rs` / `src-tauri/src/local_analytics.rs`)
 * **Leftover**: Internally, database collections are named `recordings` instead of `captures`.

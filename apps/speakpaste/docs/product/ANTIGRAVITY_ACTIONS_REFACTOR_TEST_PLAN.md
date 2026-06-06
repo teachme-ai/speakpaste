@@ -1,4 +1,4 @@
-# SpeakPaste Actions Refactor Test Plan
+# Mynah Actions Refactor Test Plan
 
 > Codex review note, 2026-06-04: this AG test plan was produced against an older branch/commit snapshot. Keep the behavioral scenarios, but verify settings names, line numbers, and clipboard behavior labels against the current implementation before turning these into automated tests.
 
@@ -10,7 +10,7 @@
 
 ## 1. Concurrency & Gating Test Cases
 
-These test cases assert that the state variables (`isRecordingOperationBusy`, `isCooldown`, `isPipelineRunning`) protect SpeakPaste from concurrent command overlaps.
+These test cases assert that the state variables (`isRecordingOperationBusy`, `isCooldown`, `isPipelineRunning`) protect Mynah from concurrent command overlaps.
 
 ### Test Case 1.1: Double-Start Guard (PTT Race Prevention)
 * **Objective**: Ensure that rapid successive start triggers (e.g. key bouncing or rapid clicking) do not initialize multiple recording threads.
@@ -90,7 +90,7 @@ These verify how the system reacts to different transcription results and audio 
   * App status writes `Error / Transcription failed`.
   * Toast displays error details.
   * Database recording record updates `transcriptionStatus` to `FAILED`.
-  * Window event `speakpaste:pipeline-error` is dispatched.
+  * Window event `mynah:pipeline-error` is dispatched.
   * `isPipelineRunning` flag resets to `false` so the user can try again once the model path is corrected.
 
 ### Test Case 2.4: Audio Save Failure

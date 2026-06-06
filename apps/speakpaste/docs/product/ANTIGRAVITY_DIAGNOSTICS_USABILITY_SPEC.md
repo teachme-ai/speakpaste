@@ -1,4 +1,4 @@
-# SpeakPaste Diagnostics Usability Spec
+# Mynah Diagnostics Usability Spec
 
 - **Branch**: `local-only-product-surface`
 - **Latest Commit Reviewed**: `8366775e57217d2c93319e26c61b1271d0fe11cb`
@@ -8,7 +8,7 @@
 
 ## 1. Overview & Principles
 
-In accordance with SpeakPaste’s local-only architecture, the diagnostics system must serve purely as a self-debugging and support utility for the user. It must remain 100% user-respectful and run entirely on-device, adhering to the following core tenets:
+In accordance with Mynah’s local-only architecture, the diagnostics system must serve purely as a self-debugging and support utility for the user. It must remain 100% user-respectful and run entirely on-device, adhering to the following core tenets:
 
 1. **Zero-Cloud Integration**: No diagnostic logs, error reports, or metrics are ever sent to an external server. Any data sharing (e.g. for developer troubleshooting) must be manually initiated by the user.
 2. **Strict Privacy Gating**: Under no circumstances will transcript text, raw audio, selected clipboard text, or application-focus text be logged to the diagnostic file.
@@ -26,7 +26,7 @@ The diagnostics actions belong in the **Privacy & Tech** tab (currently located 
 Privacy
 ─────────────────────────────────────────────────────────────────────────────
 [Device Only Badge]
-SpeakPaste keeps operational insight on this Mac. Diagnostics are about app
+Mynah keeps operational insight on this Mac. Diagnostics are about app
 health and performance, not the private words you dictate.
 
 ┌────────────────────────────────────────┐ ┌────────────────────────────────────────┐
@@ -65,7 +65,7 @@ We will introduce four key frontend actions mapped to Svelte UI button triggers:
 ### C. Export Diagnostics Bundle
 * **Label**: "Export Diagnostics"
 * **Action**: Invokes Tauri FFI to create a compressed `.zip` folder on the user's Desktop.
-* **UX behavior**: Triggers a system dialog confirmation or notification stating: *"Diagnostics bundle saved to Desktop as: SpeakPaste_Diagnostics_178492040.zip"*.
+* **UX behavior**: Triggers a system dialog confirmation or notification stating: *"Diagnostics bundle saved to Desktop as: Mynah_Diagnostics_178492040.zip"*.
 
 ### D. Clear Diagnostics
 * **Label**: "Clear Logs & History"
@@ -78,7 +78,7 @@ We will introduce four key frontend actions mapped to Svelte UI button triggers:
 
 We will add the following endpoints to the Tauri command registry:
 
-### File: `apps/speakpaste/src-tauri/src/local_analytics.rs`
+### File: `apps/mynah/src-tauri/src/local_analytics.rs`
 
 ```rust
 use std::path::PathBuf;
@@ -147,7 +147,7 @@ pub async fn export_diagnostics_bundle(app: tauri::AppHandle) -> Result<String, 
         .unwrap_or_default()
         .as_secs();
     
-    let zip_filename = format!("SpeakPaste_Diagnostics_{}.zip", timestamp);
+    let zip_filename = format!("Mynah_Diagnostics_{}.zip", timestamp);
     let zip_output_path = desktop_dir.join(&zip_filename);
 
     if !diagnostics_dir.exists() {
@@ -175,7 +175,7 @@ pub async fn export_diagnostics_bundle(app: tauri::AppHandle) -> Result<String, 
 
 ## 5. UI Integration Reference
 
-Below is the layout template to replace/insert into the end of `apps/speakpaste/src/routes/(app)/(config)/settings/analytics/+page.svelte`:
+Below is the layout template to replace/insert into the end of `apps/mynah/src/routes/(app)/(config)/settings/analytics/+page.svelte`:
 
 ```svelte
 <script lang="ts">

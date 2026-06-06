@@ -2,13 +2,13 @@
 
 ## Purpose
 
-Run a complete product-surface audit for SpeakPaste after the local-only cleanup work.
+Run a complete product-surface audit for Mynah after the local-only cleanup work.
 
 This audit must catch every old inherited surface, hidden navigation path, confusing entry point, stale copy, or feature affordance that makes the app feel like the previous broad Whispering-style product instead of the focused Mac voice-to-cursor app.
 
 ## Current Product Baseline
 
-SpeakPaste is currently a local-only macOS voice-to-cursor app.
+Mynah is currently a local-only macOS voice-to-cursor app.
 
 The launch promise is:
 
@@ -66,7 +66,7 @@ Also flag:
 
 ## Required Code Search
 
-Run searches over `apps/speakpaste/src` for at least:
+Run searches over `apps/mynah/src` for at least:
 
 ```sh
 rg -n "Chrome|Extension|Desktop App|Download|FFmpeg|CPAL|Navigator|MediaRecorder|VAD|voice activated|hands-free|Upload|recordings|All Recordings|shortcut|updater|update|provider|API key|cloud|account|login"
@@ -79,7 +79,7 @@ Then inspect all matches that are user-visible UI/copy/action paths.
 Produce a route map from:
 
 ```sh
-rg --files apps/speakpaste/src/routes
+rg --files apps/mynah/src/routes
 ```
 
 Group routes into:
@@ -94,7 +94,7 @@ Group routes into:
 
 Use the latest committed branch state.
 
-Build and run the app that would actually be tested locally. If replacing `/Applications/SpeakPaste.app`, state that clearly.
+Build and run the app that would actually be tested locally. If replacing `/Applications/Mynah.app`, state that clearly.
 
 Validate visually:
 
@@ -110,7 +110,7 @@ Validate visually:
 
 Write results to:
 
-`apps/speakpaste/docs/product/ANTIGRAVITY_REVIEW_FULL_PRODUCT_SURFACE_AUDIT.md`
+`apps/mynah/docs/product/ANTIGRAVITY_REVIEW_FULL_PRODUCT_SURFACE_AUDIT.md`
 
 ## Output Format
 

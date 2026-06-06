@@ -4,11 +4,11 @@ Date: 2026-06-02
 
 ## Executive State
 
-SpeakPaste is now launch-stable for the core local dictation loop.
+Mynah is now launch-stable for the core local dictation loop.
 
 Current release blocker:
 
-- `RB-001` in `RELEASE_BLOCKING_ISSUES.md`: macOS Accessibility can appear selected in System Settings but not activate the currently running SpeakPaste app after reinstall/replacement. Treat stale Accessibility self-repair as not release-ready until this is fixed and validated.
+- `RB-001` in `RELEASE_BLOCKING_ISSUES.md`: macOS Accessibility can appear selected in System Settings but not activate the currently running Mynah app after reinstall/replacement. Treat stale Accessibility self-repair as not release-ready until this is fixed and validated.
 
 Validated:
 
@@ -20,7 +20,7 @@ Validated:
 - Rust-owned Fn/native trigger capture handoff
 - Rust-owned primary global shortcut registration
 - live native shortcut reload after settings changes
-- installed `/Applications/SpeakPaste.app` runtime validation
+- installed `/Applications/Mynah.app` runtime validation
 
 The app can now be treated as a working local macOS dictation product, not only a prototype.
 
@@ -30,7 +30,7 @@ The app can now be treated as a working local macOS dictation product, not only 
 
 Status: done.
 
-Docs are committed under `apps/speakpaste/docs/product`.
+Docs are committed under `apps/mynah/docs/product`.
 
 ### Phase 1: Inventory And Remove Cloud Product Surface
 

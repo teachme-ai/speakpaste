@@ -1,8 +1,8 @@
-# SpeakPaste Website Section Rewrite Checklist
+# Mynah Website Section Rewrite Checklist
 
 ## Purpose
 
-This checklist turns the alignment brief into a practical rewrite plan for `speakpaste.online`.
+This checklist turns the alignment brief into a practical rewrite plan for `mynah.online`.
 
 Use it when editing the website so each section moves toward the current product truth.
 
@@ -115,7 +115,7 @@ Some cards still describe the older broad product.
 
 ### Current issue
 
-The current copy makes SpeakPaste sound like a workflow automation product.
+The current copy makes Mynah sound like a workflow automation product.
 
 ### Rewrite target
 

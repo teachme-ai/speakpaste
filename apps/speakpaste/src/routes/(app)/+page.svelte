@@ -146,7 +146,7 @@
 			await loadFsRecordings();
 			toast.success('Recording deleted');
 		} catch (err) {
-			console.error('[SpeakPaste] Failed to delete history item:', err);
+			console.error('[Mynah] Failed to delete history item:', err);
 			toast.error('Failed to delete recording');
 		}
 	}
@@ -156,7 +156,7 @@
 			await navigator.clipboard.writeText(transcript);
 			toast.success('Copied to clipboard');
 		} catch (e) {
-			console.error('[SpeakPaste] Failed to copy:', e);
+			console.error('[Mynah] Failed to copy:', e);
 			toast.error('Failed to copy');
 		}
 	}
@@ -203,9 +203,9 @@
 			fsRecordings = results
 				.filter((r): r is NonNullable<typeof r> => r !== null)
 				.sort((a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime());
-			console.log('[SpeakPaste] WAV recordings loaded:', fsRecordings.length);
+			console.log('[Mynah] WAV recordings loaded:', fsRecordings.length);
 		} catch (e) {
-			console.warn('[SpeakPaste] WAV recordings load failed:', e);
+			console.warn('[Mynah] WAV recordings load failed:', e);
 		} finally {
 			initialLoadComplete = true;
 		}
@@ -216,18 +216,18 @@
 		loadFsRecordings();
 
 		const handleComplete = () => {
-			console.log('[SpeakPaste] pipeline-complete event received, reloading history');
+			console.log('[Mynah] pipeline-complete event received, reloading history');
 			isTranscribingLocal = false;
 			loadFsRecordings();
 		};
 
 		const handleStarted = () => {
-			console.log('[SpeakPaste] pipeline-started event received, setting transcribing active');
+			console.log('[Mynah] pipeline-started event received, setting transcribing active');
 			isTranscribingLocal = true;
 		};
 
 		const handleError = () => {
-			console.log('[SpeakPaste] pipeline-error event received, clearing transcribing state');
+			console.log('[Mynah] pipeline-error event received, clearing transcribing state');
 			isTranscribingLocal = false;
 		};
 
@@ -268,7 +268,7 @@
 
 </script>
 
-<svelte:head><title>SpeakPaste</title></svelte:head>
+<svelte:head><title>Mynah</title></svelte:head>
 
 {#if isOverlay}
 	<OverlayStatusPill {recorderState} {isTranscribing} {justPasted} />

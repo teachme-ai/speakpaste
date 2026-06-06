@@ -5,7 +5,7 @@ Date: 2026-06-01
 
 ## Product Thesis
 
-SpeakPaste is moving toward a sovereign Mac language layer:
+Mynah is moving toward a sovereign Mac language layer:
 
 > Speak naturally, shape locally, keep everything on your Mac.
 

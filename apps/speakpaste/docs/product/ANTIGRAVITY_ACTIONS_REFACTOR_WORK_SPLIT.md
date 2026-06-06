@@ -28,19 +28,19 @@ This is not a feature redesign. It is a behavior-preserving engineering cleanup.
 
 Primary file:
 
-- `apps/speakpaste/src/lib/query/actions.ts`
+- `apps/mynah/src/lib/query/actions.ts`
 
 Related files:
 
-- `apps/speakpaste/src/lib/query/delivery.ts`
-- `apps/speakpaste/src/lib/query/transcription.ts`
-- `apps/speakpaste/src/lib/query/transcription-cleanup.ts`
-- `apps/speakpaste/src/lib/query/recorder.ts`
-- `apps/speakpaste/src/lib/state/dictation-runtime.svelte.ts`
-- `apps/speakpaste/src/lib/constants/app/timing.ts`
-- `apps/speakpaste/src/lib/services/analytics/types.ts`
-- `apps/speakpaste/src/lib/state/settings.test.ts`
-- `apps/speakpaste/src/lib/query/transcription.test.ts`
+- `apps/mynah/src/lib/query/delivery.ts`
+- `apps/mynah/src/lib/query/transcription.ts`
+- `apps/mynah/src/lib/query/transcription-cleanup.ts`
+- `apps/mynah/src/lib/query/recorder.ts`
+- `apps/mynah/src/lib/state/dictation-runtime.svelte.ts`
+- `apps/mynah/src/lib/constants/app/timing.ts`
+- `apps/mynah/src/lib/services/analytics/types.ts`
+- `apps/mynah/src/lib/state/settings.test.ts`
+- `apps/mynah/src/lib/query/transcription.test.ts`
 
 ---
 
@@ -93,7 +93,7 @@ Include:
 
 Output file:
 
-- `apps/speakpaste/docs/product/ANTIGRAVITY_ACTIONS_PIPELINE_SIDE_EFFECT_MAP.md`
+- `apps/mynah/docs/product/ANTIGRAVITY_ACTIONS_PIPELINE_SIDE_EFFECT_MAP.md`
 
 No code changes.
 
@@ -119,7 +119,7 @@ Cover:
 
 Output file:
 
-- `apps/speakpaste/docs/product/ANTIGRAVITY_ACTIONS_REFACTOR_TEST_PLAN.md`
+- `apps/mynah/docs/product/ANTIGRAVITY_ACTIONS_REFACTOR_TEST_PLAN.md`
 
 No code changes.
 
@@ -140,7 +140,7 @@ AG should scan for:
 
 Output:
 
-- `apps/speakpaste/docs/product/ANTIGRAVITY_ACTIONS_CONSTANTS_INVENTORY.md`
+- `apps/mynah/docs/product/ANTIGRAVITY_ACTIONS_CONSTANTS_INVENTORY.md`
 
 AG may propose constants but should not edit code unless explicitly instructed.
 
@@ -170,7 +170,7 @@ For each variable, list:
 
 Output:
 
-- `apps/speakpaste/docs/product/ANTIGRAVITY_ACTIONS_RUNTIME_STATE_AUDIT.md`
+- `apps/mynah/docs/product/ANTIGRAVITY_ACTIONS_RUNTIME_STATE_AUDIT.md`
 
 No code changes.
 
@@ -188,7 +188,7 @@ AG should identify duplicated guard/mutex patterns and propose the smallest reus
 
 Output:
 
-- `apps/speakpaste/docs/product/ANTIGRAVITY_ACTIONS_GUARD_HELPER_REVIEW.md`
+- `apps/mynah/docs/product/ANTIGRAVITY_ACTIONS_GUARD_HELPER_REVIEW.md`
 
 No code changes.
 
@@ -214,7 +214,7 @@ Include:
 
 Output:
 
-- `apps/speakpaste/docs/product/ANTIGRAVITY_ACTIONS_PIPELINE_STAGE_PROPOSAL.md`
+- `apps/mynah/docs/product/ANTIGRAVITY_ACTIONS_PIPELINE_STAGE_PROPOSAL.md`
 
 No code changes.
 
@@ -232,7 +232,7 @@ AG should list all telemetry/analytics calls in the pipeline and recommend a com
 
 Output:
 
-- `apps/speakpaste/docs/product/ANTIGRAVITY_ACTIONS_TELEMETRY_INVENTORY.md`
+- `apps/mynah/docs/product/ANTIGRAVITY_ACTIONS_TELEMETRY_INVENTORY.md`
 
 No code changes.
 
@@ -250,7 +250,7 @@ After Codex completes each code slice, AG should validate against the behavior t
 
 Output:
 
-- `apps/speakpaste/docs/product/ANTIGRAVITY_ACTIONS_REFACTOR_VALIDATION.md`
+- `apps/mynah/docs/product/ANTIGRAVITY_ACTIONS_REFACTOR_VALIDATION.md`
 
 Include:
 
@@ -284,7 +284,7 @@ Include:
 
 Read:
 
-- `apps/speakpaste/docs/product/ANTIGRAVITY_ACTIONS_REFACTOR_WORK_SPLIT.md`
+- `apps/mynah/docs/product/ANTIGRAVITY_ACTIONS_REFACTOR_WORK_SPLIT.md`
 
 Start with:
 

@@ -8,7 +8,7 @@
 			Private voice-to-cursor
 		</p>
 		<h1 class="mt-1 text-2xl font-semibold tracking-tight text-stone-950 dark:text-stone-50">
-			SpeakPaste
+			Mynah
 		</h1>
 		<p class="mt-0.5 text-sm text-stone-600 dark:text-stone-400">
 			Local dictation, shaped on this Mac.

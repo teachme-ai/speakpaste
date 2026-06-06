@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Use the current performance matrix to produce a practical benchmark corpus and repeatable manual QA runbook for SpeakPaste.
+Use the current performance matrix to produce a practical benchmark corpus and repeatable manual QA runbook for Mynah.
 
 This is the next artifact after:
 
@@ -12,7 +12,7 @@ The goal is to convert the matrix into something engineering can actually run re
 
 ## Product Context
 
-SpeakPaste is a local-only macOS voice-to-cursor app.
+Mynah is a local-only macOS voice-to-cursor app.
 
 Current primary flow:
 
@@ -34,14 +34,14 @@ Current runtime priority:
 
 Write a document to:
 
-`apps/speakpaste/docs/product/ANTIGRAVITY_BENCHMARK_CORPUS_RUNBOOK.md`
+`apps/mynah/docs/product/ANTIGRAVITY_BENCHMARK_CORPUS_RUNBOOK.md`
 
 ## Required Sections
 
 Use this structure:
 
 ```md
-# SpeakPaste Benchmark Corpus And QA Runbook
+# Mynah Benchmark Corpus And QA Runbook
 
 ## 1. Purpose
 
@@ -140,11 +140,11 @@ Include:
 ### 1. Preconditions
 
 - app build being tested
-- whether `/Applications/SpeakPaste.app` or dev build is used
+- whether `/Applications/Mynah.app` or dev build is used
 - accessibility permission state
 - microphone permission state
 - target app prepared in foreground
-- whether main SpeakPaste window is visible or hidden
+- whether main Mynah window is visible or hidden
 
 ### 2. Test flows
 

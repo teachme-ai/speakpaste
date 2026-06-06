@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, test } from 'bun:test';
 import {
-	isSpeakPasteOwnedClipboardText,
-	rememberSpeakPasteClipboardText,
+	isMynahOwnedClipboardText,
+	rememberMynahClipboardText,
 } from './clipboard-ownership';
 
 const storage = new Map<string, string>();
@@ -21,18 +21,18 @@ describe('clipboard ownership', () => {
 		storage.clear();
 	});
 
-	test('recognizes text last written by SpeakPaste', () => {
-		rememberSpeakPasteClipboardText('latest dictated transcript');
+	test('recognizes text last written by Mynah', () => {
+		rememberMynahClipboardText('latest dictated transcript');
 
 		expect(
-			isSpeakPasteOwnedClipboardText('latest dictated transcript'),
+			isMynahOwnedClipboardText('latest dictated transcript'),
 		).toBe(true);
 	});
 
 	test('treats different clipboard text as external', () => {
-		rememberSpeakPasteClipboardText('latest dictated transcript');
+		rememberMynahClipboardText('latest dictated transcript');
 
-		expect(isSpeakPasteOwnedClipboardText('copied from another app')).toBe(
+		expect(isMynahOwnedClipboardText('copied from another app')).toBe(
 			false,
 		);
 	});
@@ -43,12 +43,12 @@ describe('clipboard ownership', () => {
 
 		// Svelte check: should ask because it's external text
 		let askBeforeReplacing =
-			clipboard.trim() && !isSpeakPasteOwnedClipboardText(clipboard);
+			clipboard.trim() && !isMynahOwnedClipboardText(clipboard);
 		expect(askBeforeReplacing).toBe(true);
 
 		// Step 2: Choose/copy transcript once
 		const transcript1 = 'Transcript text 1';
-		rememberSpeakPasteClipboardText(transcript1);
+		rememberMynahClipboardText(transcript1);
 		clipboard = transcript1;
 
 		// Step 3: Dictate again without changing clipboard externally
@@ -56,12 +56,12 @@ describe('clipboard ownership', () => {
 		askBeforeReplacing =
 			clipboard.trim() &&
 			clipboard !== transcript2 &&
-			!isSpeakPasteOwnedClipboardText(clipboard);
+			!isMynahOwnedClipboardText(clipboard);
 		// Should not ask because clipboard matches app-owned marker
 		expect(askBeforeReplacing).toBe(false);
 
 		// Silently replaces and remembers new transcript
-		rememberSpeakPasteClipboardText(transcript2);
+		rememberMynahClipboardText(transcript2);
 		clipboard = transcript2;
 
 		// Step 4: Copy new external text
@@ -72,7 +72,7 @@ describe('clipboard ownership', () => {
 		askBeforeReplacing =
 			clipboard.trim() &&
 			clipboard !== transcript3 &&
-			!isSpeakPasteOwnedClipboardText(clipboard);
+			!isMynahOwnedClipboardText(clipboard);
 		expect(askBeforeReplacing).toBe(true);
 	});
 });

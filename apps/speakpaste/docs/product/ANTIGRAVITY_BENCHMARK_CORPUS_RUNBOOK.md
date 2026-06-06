@@ -1,6 +1,6 @@
-# SpeakPaste Benchmark Corpus And QA Runbook
+# Mynah Benchmark Corpus And QA Runbook
 
-This document defines a practical, repeatable benchmark corpus and manual Quality Assurance (QA) runbook for SpeakPaste. It enables engineers to systematically verify performance, accuracy, and background stability across diverse macOS environments as changes are introduced to the codebase.
+This document defines a practical, repeatable benchmark corpus and manual Quality Assurance (QA) runbook for Mynah. It enables engineers to systematically verify performance, accuracy, and background stability across diverse macOS environments as changes are introduced to the codebase.
 
 ---
 
@@ -16,9 +16,9 @@ The purpose of this runbook is to evaluate the end-to-end local voice-to-cursor 
 
 ## 2. Scope
 
-This framework covers the local macOS SpeakPaste application lifecycle.
+This framework covers the local macOS Mynah application lifecycle.
 * **Hardware Scope**: Basic, Pro, Max, and Ultra Apple Silicon chips, and Intel x86_64 Mac configurations.
-* **Software Scope**: Standalone Tauri app bundles (`SpeakPaste.app`) running in foreground or background status-bar modes on macOS 13 (Ventura), 14 (Sonoma), and 15 (Sequoia).
+* **Software Scope**: Standalone Tauri app bundles (`Mynah.app`) running in foreground or background status-bar modes on macOS 13 (Ventura), 14 (Sonoma), and 15 (Sequoia).
 * **Operational Scope**: Latency, word/phrase transcription accuracy, trailing hallucination rates, clipboard pasting correctness, configuration persistence, and global hotkey capture.
 * **Telemetry Boundary**: 100% local. No cloud services, external servers, or network calls are utilized.
 
@@ -54,7 +54,7 @@ Below is the standard inventory table used to run benchmarks:
 | Sample ID | Category | Environment | Utterance Length | Expected Reference Transcript | Trigger Path | Target App Type | Hidden-Window | Test Objective |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **SP-SMOKE-01** | Short Command | Quiet Room | Short | "Copy that." | Fn key | Text Editor | No | Latency & Accuracy |
-| **SP-SMOKE-02** | Natural Speech | Quiet Room | Medium | "Testing SpeakPaste local transcription velocity." | Fn key | Text Editor | Yes | Background & Latency |
+| **SP-SMOKE-02** | Natural Speech | Quiet Room | Medium | "Testing Mynah local transcription velocity." | Fn key | Text Editor | Yes | Background & Latency |
 | **SP-SMOKE-03** | Silence Tail | Quiet Room | None | `[No Text Pasted]` | Fn key | Text Editor | No | Silence Hallucination |
 | **SP-SMOKE-04** | Silence Tail | HVAC Hum | None | `[No Text Pasted]` | Fn key | Chat Input | Yes | Silence Hallucination |
 | **SP-SMOKE-05** | Short Command | Office Noise | Short | "Approved." | Cmd+Shift+F8 | Chat Input | No | Hotkey & Accuracy |
@@ -65,7 +65,7 @@ Below is the standard inventory table used to run benchmarks:
 | **SP-REG-04** | Silence Tail | Quiet Room | Medium | "Open browser." (Followed by 1000ms silence tail before release) | Fn key | Text Editor | Yes | Utterance-End Precision |
 | **SP-REG-05** | Silence Tail | Keyboard Noise | Medium | "Select all." (Followed by 1000ms keyboard typing tail) | Fn key | Chat Input | No | Typing Noise Tail |
 | **SP-REG-06** | Natural Speech | Cafe Noise | Medium | "Let us meet at three PM in the lobby." | Fn key | Chat Input | Yes | Ambient Cafe Noise |
-| **SP-REG-07** | Paragraph | Quiet Room | Long | "Local-only speech recognition offers absolute privacy. By performing all audio recording and Whisper matrix operations entirely on device, SpeakPaste ensures that sensitive data never leaves this Mac." | Fn key | Text Editor | No | Paragraph Accuracy |
+| **SP-REG-07** | Paragraph | Quiet Room | Long | "Local-only speech recognition offers absolute privacy. By performing all audio recording and Whisper matrix operations entirely on device, Mynah ensures that sensitive data never leaves this Mac." | Fn key | Text Editor | No | Paragraph Accuracy |
 | **SP-REG-08** | Paragraph | Office Noise | Long | "This is a longer paragraph dictation designed to stress test the local Tauri background thread, the CPAL audio buffer capacity, and the Whisper CPU peak memory utilization over thirty seconds of continuous speech." | Fn key | Text Editor | Yes | Long Utterance Stability |
 | **SP-REG-09** | Configuration | Quiet Room | Medium | "Reconfigured shortcut live reload check." | Cmd+Shift+F8 (live reloaded) | Text Editor | No | Settings Live-Sync |
 
@@ -95,13 +95,13 @@ To ensure consistent input audio quality during manual tests:
 ### A. Preconditions
 1. **Target Build**: Build the production application bundle:
    ```bash
-   cd apps/speakpaste
+   cd apps/mynah
    bun run tauri build --bundles app
    ```
-2. **Installation**: Drag `/Applications/SpeakPaste.app` from the build directory to the systems `/Applications` folder. Launch it fresh.
+2. **Installation**: Drag `/Applications/Mynah.app` from the build directory to the systems `/Applications` folder. Launch it fresh.
 3. **Permissions Verification**:
-   * Open *System Settings > Privacy & Security > Microphone*. Verify SpeakPaste is authorized.
-   * Open *System Settings > Privacy & Security > Accessibility*. Verify SpeakPaste is authorized.
+   * Open *System Settings > Privacy & Security > Microphone*. Verify Mynah is authorized.
+   * Open *System Settings > Privacy & Security > Accessibility*. Verify Mynah is authorized.
 4. **Target Apps Preparation**:
    * Open *Apple Notes* (native document text editor). Position it on the left.
    * Open a web chat input field (e.g. *Slack* or *iMessage*). Position it on the right.
@@ -114,15 +114,15 @@ To ensure consistent input audio quality during manual tests:
 ### B. Test Flows
 
 #### Flow 1: Foreground Fn Dictation
-1. Open the SpeakPaste main settings page.
+1. Open the Mynah main settings page.
 2. Open Apple Notes and focus the cursor in the document window.
-3. Press and hold the `Fn` key, speak: *"Testing SpeakPaste foreground input."*
+3. Press and hold the `Fn` key, speak: *"Testing Mynah foreground input."*
 4. Release the `Fn` key.
 5. **Pass Criterion**: Text is transcribed and pasted into Apple Notes within 600ms of release. No duplicate phrases.
 6. **Fail Criterion**: Paste fails, takes $> 1500\text{ms}$, or text is truncated.
 
 #### Flow 2: Hidden-Window Fn Dictation
-1. Close all SpeakPaste settings windows. Confirm the app is running in the menu bar.
+1. Close all Mynah settings windows. Confirm the app is running in the menu bar.
 2. Open a Chat Input field and focus the cursor.
 3. Press and hold `Fn`, speak: *"Replying to the design thread now."*
 4. Release the `Fn` key.
@@ -130,7 +130,7 @@ To ensure consistent input audio quality during manual tests:
 6. **Fail Criterion**: No text is pasted, or key press is ignored (AppNap blocked Tauri background).
 
 #### Flow 3: Fallback Shortcut Dictation
-1. Open SpeakPaste settings and navigate to *Trigger*. Configure fallback shortcut to `Cmd+Shift+F8`.
+1. Open Mynah settings and navigate to *Trigger*. Configure fallback shortcut to `Cmd+Shift+F8`.
 2. Close the settings window.
 3. Focus Apple Notes.
 4. Press `Cmd+Shift+F8` to begin recording. Speak: *"Fallback shortcut activated."*
@@ -154,8 +154,8 @@ To ensure consistent input audio quality during manual tests:
 6. **Fail Criterion**: Old hotkey still fires, or the new hotkey is ignored until app restart.
 
 #### Flow 6: Restart Persistence
-1. Fully quit SpeakPaste from the menu bar.
-2. Relaunch SpeakPaste from `/Applications`. Do not open its configuration settings window.
+1. Fully quit Mynah from the menu bar.
+2. Relaunch Mynah from `/Applications`. Do not open its configuration settings window.
 3. Focus Apple Notes, hold `Fn`, speak: *"Testing persistent trigger after boot."* Release `Fn`.
 4. **Pass Criterion**: Dictation works instantly on first launch.
 5. **Fail Criterion**: The trigger fails to record because settings profiles did not reload on initialization.
@@ -168,7 +168,7 @@ When a test flow fails:
 2. Take a screenshot showing where the text was pasted or showing the Svelte router screen if a UI route crashed.
 3. Extract logs from the terminal or the telemetry file:
    ```bash
-   cat ~/Library/Logs/com.speakpaste.app/telemetry.log | tail -n 50
+   cat ~/Library/Logs/com.mynah.app/telemetry.log | tail -n 50
    ```
 4. Save the evidence in your result capture file under the failed scenario ID.
 
@@ -179,7 +179,7 @@ When a test flow fails:
 Copy and paste the markdown template below into a test run log (e.g., `ANTIGRAVITY_REVIEW_BENCHMARK_RUN_<DATE>.md`) for each evaluation:
 
 ```markdown
-# SpeakPaste Run Validation Report
+# Mynah Run Validation Report
 
 * **Date**: YYYY-MM-DD
 * **Branch**: `local-only-product-surface`
@@ -197,7 +197,7 @@ Copy and paste the markdown template below into a test run log (e.g., `ANTIGRAVI
 | Scenario ID | Journey / Scenario | Expected Output | Observed Output | Latency ($L_{e2e}$) | Hallucination? | Status (Pass/Fail) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **SP-SMOKE-01** | Foreground Command | "Copy that." | | | Yes / No | |
-| **SP-SMOKE-02** | Hidden Window Speech | "Testing SpeakPaste local transcription velocity." | | | Yes / No | |
+| **SP-SMOKE-02** | Hidden Window Speech | "Testing Mynah local transcription velocity." | | | Yes / No | |
 | **SP-SMOKE-03** | Silence-Only (Quiet) | `[No Text Pasted]` | | | Yes / No | |
 | **SP-SMOKE-04** | Silence-Only (HVAC) | `[No Text Pasted]` | | | Yes / No | |
 | **SP-SMOKE-05** | Fallback Command | "Approved." | | | Yes / No | |
@@ -238,7 +238,7 @@ To reduce manual effort in future sprints, implement the following roadmap:
 * **WAV File Playback Script**: Write a command-line script in `/scratch` that bypasses physical microphone input and feeds the corpus `.wav` audio files directly to the Rust binary's whisper transcribing module. Measure Word Error Rate ($WER$) and latency programmatically.
 
 ### Phase 2: Instrumented Automation (Requires App Instrumentation)
-* **FFI Metrics Dispatcher**: Add a hidden developer endpoint in Tauri that writes latency measurements to a structured JSON file (`~/Library/Logs/com.speakpaste.app/metrics.json`) after each run. 
+* **FFI Metrics Dispatcher**: Add a hidden developer endpoint in Tauri that writes latency measurements to a structured JSON file (`~/Library/Logs/com.mynah.app/metrics.json`) after each run. 
 * **CI Integration**: Hook the WAV injection benchmark into git pre-commit hooks to run local latency regression tests before code pushes.
 
 ### Phase 3: Long-term Manual Testing

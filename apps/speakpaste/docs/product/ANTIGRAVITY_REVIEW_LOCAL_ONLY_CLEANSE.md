@@ -8,7 +8,7 @@
 
 ## Executive Summary
 
-The transition of **SpeakPaste** to a strictly local-only sovereign Mac language utility is structurally sound and compiles successfully. The most recent commit (`675fef6`) represents an aggressive and thorough "hard-cleanse" of the codebase, removing over 5,000 lines of remote integrations. All cloud providers (OpenAI, Groq, Mistral, Deepgram, ElevenLabs), self-hosted remote transcription backends (Speaches), and API key settings panels have been completely purged from the user interface and service definitions.
+The transition of **Mynah** to a strictly local-only sovereign Mac language utility is structurally sound and compiles successfully. The most recent commit (`675fef6`) represents an aggressive and thorough "hard-cleanse" of the codebase, removing over 5,000 lines of remote integrations. All cloud providers (OpenAI, Groq, Mistral, Deepgram, ElevenLabs), self-hosted remote transcription backends (Speaches), and API key settings panels have been completely purged from the user interface and service definitions.
 
 The application successfully builds in both development and production configurations. Unit tests for the settings schemas pass 100% cleanly. The codebase is highly secure against outbound information leaks: remote analytics are completely stubbed out as no-ops at the API service layer, and prompt-transform pipelines are strictly retired, returning immediate error messages to prevent accidental remote LLM invocation.
 
@@ -20,8 +20,8 @@ This document reviews the current local-only changes, analyzes outstanding runti
 
 * **None**: The application compiles and packages perfectly.
   * **Backend**: `cargo check` inside `src-tauri` builds successfully in **0.58s**.
-  * **Frontend**: `bun run build` inside `apps/speakpaste` successfully packages all static assets in **8.18s** with zero compilation or TypeScript routing errors.
-  * **Tests**: `bun test` inside `apps/speakpaste` runs the full settings suite successfully (**7 passed, 0 failed**).
+  * **Frontend**: `bun run build` inside `apps/mynah` successfully packages all static assets in **8.18s** with zero compilation or TypeScript routing errors.
+  * **Tests**: `bun test` inside `apps/mynah` runs the full settings suite successfully (**7 passed, 0 failed**).
   * No compiler blockers, broken imports, or functional deadlocks prevent startup, CPAL audio capture, local `whisper.cpp` transcription, or Enigo paste injection.
 
 ---
@@ -30,7 +30,7 @@ This document reviews the current local-only changes, analyzes outstanding runti
 
 ### 1. Tauri Updater Active Connections
 * **Risk**: The Tauri Native Auto-Updater is still enabled and initialized. 
-* **Details**: In `src-tauri/src/lib.rs` (line 133), the builder registers `.plugin(tauri_plugin_updater::Builder::new().build())`. Although the `LOCAL_ONLY_BASELINE.md` states *"No auto-updater work in the current phase,"* the updater will still trigger asynchronous HTTP check requests on app startup against the endpoint configured in `tauri.conf.json` (pointing to `https://speakpaste.online`). This represents an outbound network call that violates pure off-grid baseline expectations.
+* **Details**: In `src-tauri/src/lib.rs` (line 133), the builder registers `.plugin(tauri_plugin_updater::Builder::new().build())`. Although the `LOCAL_ONLY_BASELINE.md` states *"No auto-updater work in the current phase,"* the updater will still trigger asynchronous HTTP check requests on app startup against the endpoint configured in `tauri.conf.json` (pointing to `https://mynah.online`). This represents an outbound network call that violates pure off-grid baseline expectations.
 
 ### 2. Local Model Bootstrapping (Outbound Download URLs)
 * **Risk**: High-performance local models still rely on external HTTP download endpoints on first launch.
@@ -38,7 +38,7 @@ This document reviews the current local-only changes, analyzes outstanding runti
   * `local/whispercpp.ts` (lines 27, 39, 51) hardcodes HuggingFace URLs (`https://huggingface.co/ggerganov/whisper.cpp/...`).
   * `local/parakeet.ts` (lines 24, 29, 34, 39, 44) hardcodes GitHub release URLs (`https://github.com/EpicenterHQ/epicenter/releases/download/...`).
   * `local/moonshine.ts` (line 22) hardcodes HuggingFace URLs (`https://huggingface.co/UsefulSensors/moonshine/...`).
-* While necessary to obtain local model files, this establishes an outbound connection path that fails under fully air-gapped environments. If a strict "100% offline" environment is enforced, these fetch calls must fail gracefully with descriptive guides on how to manually place models into `Application Support/com.speakpaste.app/models/`.
+* While necessary to obtain local model files, this establishes an outbound connection path that fails under fully air-gapped environments. If a strict "100% offline" environment is enforced, these fetch calls must fail gracefully with descriptive guides on how to manually place models into `Application Support/com.mynah.app/models/`.
 
 ### 3. Orphaned Package Dependencies
 * **Risk**: Unused remote library packages remain in local filesystems.
@@ -75,17 +75,17 @@ This document reviews the current local-only changes, analyzes outstanding runti
 
 ### 1. Empty Source Folders
 The following directories are completely empty and should be deleted from the Git index:
-* 📁 `apps/speakpaste/src/lib/services/completion/` (the entire LLM completions folder was deleted).
-* 📁 `apps/speakpaste/src/lib/services/transcription/cloud/` (all cloud services deleted).
-* 📁 `apps/speakpaste/src/lib/services/transcription/self-hosted/` (speaches server deleted).
+* 📁 `apps/mynah/src/lib/services/completion/` (the entire LLM completions folder was deleted).
+* 📁 `apps/mynah/src/lib/services/transcription/cloud/` (all cloud services deleted).
+* 📁 `apps/mynah/src/lib/services/transcription/self-hosted/` (speaches server deleted).
 
 ### 2. Technical Readmes & Developer Docs
 Several local developers files still reference remote models and providers:
-* 📝 `apps/speakpaste/src/lib/constants/README.md` (mentions configuration for OpenAI, Groq, Anthropic, Google on line 51).
-* 📝 `apps/speakpaste/src/lib/components/settings/README.md` (mentions `OpenAiApiKeyInput.svelte`, `GroqApiKeyInput.svelte`, etc.).
-* 📝 `apps/speakpaste/src/lib/services/README.md` (mentions cloud models on lines 18, 413, 414).
-* 📝 `apps/speakpaste/README.md` (mentions telemetry and Aptabase integrations on line 35).
-* 📝 `apps/speakpaste/docs/USER_GUIDE.md` (needs a thorough sweep to remove references to API Key settings, docker-based Speaches setups, and cloud integrations).
+* 📝 `apps/mynah/src/lib/constants/README.md` (mentions configuration for OpenAI, Groq, Anthropic, Google on line 51).
+* 📝 `apps/mynah/src/lib/components/settings/README.md` (mentions `OpenAiApiKeyInput.svelte`, `GroqApiKeyInput.svelte`, etc.).
+* 📝 `apps/mynah/src/lib/services/README.md` (mentions cloud models on lines 18, 413, 414).
+* 📝 `apps/mynah/README.md` (mentions telemetry and Aptabase integrations on line 35).
+* 📝 `apps/mynah/docs/USER_GUIDE.md` (needs a thorough sweep to remove references to API Key settings, docker-based Speaches setups, and cloud integrations).
 
 ---
 
@@ -94,9 +94,9 @@ Several local developers files still reference remote models and providers:
 ### Step 1: Prune Empty Directories & Clean lockfiles
 Run a clean script to purge empty directories and update the lockfile:
 ```bash
-rm -rf apps/speakpaste/src/lib/services/completion
-rm -rf apps/speakpaste/src/lib/services/transcription/cloud
-rm -rf apps/speakpaste/src/lib/services/transcription/self-hosted
+rm -rf apps/mynah/src/lib/services/completion
+rm -rf apps/mynah/src/lib/services/transcription/cloud
+rm -rf apps/mynah/src/lib/services/transcription/self-hosted
 bun install
 ```
 
@@ -118,49 +118,49 @@ Update all internal `README.md` and user-facing guide files to align with the st
 ## Exact Files/Lines Referenced
 
 ### 1. Tauri Backend & Plugins
-* **`apps/speakpaste/src-tauri/src/lib.rs`**
+* **`apps/mynah/src-tauri/src/lib.rs`**
   * Lines 100–108: `log_plugin` configuration (removed Aptabase integration).
   * Line 133: `tauri_plugin_updater::Builder::new().build()` (still active).
   * Lines 187–218: `app.run` handler de-instrumented from tracking events.
-* **`apps/speakpaste/src-tauri/Cargo.toml`**
+* **`apps/mynah/src-tauri/Cargo.toml`**
   * Lines 22–55: Pure local dependencies (completely pruned of `tauri-plugin-aptabase`).
   * Lines 60–81: Target-conditional `transcribe-rs` configurations.
-* **`apps/speakpaste/src-tauri/capabilities/default.json`**
+* **`apps/mynah/src-tauri/capabilities/default.json`**
   * Line 87: Removed `aptabase:allow-track-event` capability.
 
 ### 2. Frontend Services & Analytics
-* **`apps/speakpaste/src/lib/services/analytics/index.ts`**
+* **`apps/mynah/src/lib/services/analytics/index.ts`**
   * Lines 5–9: `logEvent` stubbed out completely to return `Ok(undefined)`.
-* **`apps/speakpaste/src/lib/services/transcription/registry.ts`**
+* **`apps/mynah/src/lib/services/transcription/registry.ts`**
   * Lines 31–72: Only local providers (`whispercpp`, `parakeet`, `moonshine`) exist in the active `TRANSCRIPTION_SERVICES` array.
-* **`apps/speakpaste/src/lib/services/transcription/index.ts`**
+* **`apps/mynah/src/lib/services/transcription/index.ts`**
   * Lines 1–11: Exports only local models (`moonshine`, `parakeet`, `whispercpp`).
 
 ### 3. State & Validation
-* **`apps/speakpaste/src/lib/settings/transcription-validation.ts`**
+* **`apps/mynah/src/lib/settings/transcription-validation.ts`**
   * Lines 28–39: Validates only model paths for `whispercpp`, `parakeet`, and `moonshine`.
-* **`apps/speakpaste/src/lib/migration/migrate-settings.ts`**
+* **`apps/mynah/src/lib/migration/migrate-settings.ts`**
   * Lines 181–183: `toLocalTranscriptionService` defaults legacy cloud setups to `whispercpp`.
   * Lines 335–350: Pruned all references to remote API keys from settings mapping schemas.
-* **`apps/speakpaste/src/lib/state/device-config.svelte.ts`**
+* **`apps/mynah/src/lib/state/device-config.svelte.ts`**
   * Lines 24–40: Removed all remote API keys and Base URL config parameters.
-* **`apps/speakpaste/src/lib/state/settings.test.ts`**
+* **`apps/mynah/src/lib/state/settings.test.ts`**
   * Lines 11–26: Suite rewritten to verify that retired keys stay `null`.
   * Lines 90–96: Verified transcription services list contains only `whispercpp`, `parakeet`, and `moonshine`.
 
 ### 4. Workspace Schemas & Database
-* **`apps/speakpaste/src/lib/workspace/definition.ts`**
+* **`apps/mynah/src/lib/workspace/definition.ts`**
   * Lines 87–109: flat union schema for `transformationSteps` keeps legacy parameters as simple `'string'` types for database safety.
   * Lines 245–269: Completely pruned all remote transcription service keys and OpenRouter models.
 
 ### 5. Svelte User Interface
-* **`apps/speakpaste/src/routes/(app)/(config)/settings/SidebarNav.svelte`**
+* **`apps/mynah/src/routes/(app)/(config)/settings/SidebarNav.svelte`**
   * Lines 8–24: "API Keys" and "Analytics" page entries cleanly removed from settings tabs.
-* **`apps/speakpaste/src/routes/(app)/(config)/settings/analytics/+page.svelte`**
+* **`apps/mynah/src/routes/(app)/(config)/settings/analytics/+page.svelte`**
   * Lines 1–100: Re-designed into a local-only disclosure page with no tracking toggles.
-* **`apps/speakpaste/src/routes/(app)/(config)/settings/transcription/+page.svelte`**
+* **`apps/mynah/src/routes/(app)/(config)/settings/transcription/+page.svelte`**
   * Lines 370–445: De-instrumented from all remote/speaches components, displaying only local settings parameters.
-* **`apps/speakpaste/src/lib/components/transformations-editor/Configuration.svelte`**
+* **`apps/mynah/src/lib/components/transformations-editor/Configuration.svelte`**
   * Lines 1–250: Prompt transform options deleted; warn alert triggers on legacy steps.
-* **`apps/speakpaste/src/lib/query/transformer.ts`**
+* **`apps/mynah/src/lib/query/transformer.ts`**
   * Lines 46–48: `handleStep` throws retired error for `prompt_transform` steps.

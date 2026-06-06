@@ -14,7 +14,7 @@
 
 ## 1. Executive Verdict
 
-SpeakPaste is fully ready for runtime validation and final deployment. The series of changes culminating in commit `5f3be5e` have completely transformed the product from an inherited, settings-heavy Whispering clone into a highly focused, premium, local-first macOS voice-to-cursor utility.
+Mynah is fully ready for runtime validation and final deployment. The series of changes culminating in commit `5f3be5e` have completely transformed the product from an inherited, settings-heavy Whispering clone into a highly focused, premium, local-first macOS voice-to-cursor utility.
 
 The settings architecture has achieved a superb balance between consumer simplicity and developer-level transparency. By introducing two high-level switches (`showAdvancedRecordingControls` and `showAdvancedEngineControls`), the app now presents a clean, calm, and approachable surface on first launch, while preserving deep troubleshooting diagnostics and custom CLI configurations for power users.
 
@@ -46,7 +46,7 @@ We executed a comprehensive scan of Svelte service registries, Rust Tauri handle
 * **API Key Configurations**: **Excised**. The `settings/api-keys` view is completely empty. There are no inputs for OpenAI, Anthropic, Speaches, or Google AI.
 * **Outbound Telemetry/Analytics**: **Excised**. The analytics handler (`services/analytics/index.ts`) is completely stubbed as a local no-op. The page displays device-only approximate metrics (session counts, transcription latency) stored only on the local machine.
 * **Remote Transformation Prompts**: **Excised**. All prompt transformations that could call external LLMs are retired. Attempting to run a legacy pipeline step throws a hard local error inside `transformer.ts`.
-* **Model Downloads**: The only active network components are the HuggingFace and GitHub download links for Whisper and ONNX model binary files. These are user-initiated and secure (HTTPS). If executed completely offline, the app handles the failure gracefully and displays explicit instructions on how to manually place models into `~/Library/Application Support/com.speakpaste.app/models/`.
+* **Model Downloads**: The only active network components are the HuggingFace and GitHub download links for Whisper and ONNX model binary files. These are user-initiated and secure (HTTPS). If executed completely offline, the app handles the failure gracefully and displays explicit instructions on how to manually place models into `~/Library/Application Support/com.mynah.app/models/`.
 
 ---
 
@@ -99,24 +99,24 @@ We have verified the following automated validation suite with **100% success**:
 Since the application utilizes low-level macOS system FFI calls, the user should execute this manual desktop test protocol on their Mac:
 
 ### 🎙️ Test A: OS Permission Escalation
-1. Double-click the generated `.dmg` file and drag `SpeakPaste.app` into `/Applications`.
-2. Launch `SpeakPaste.app` from the Applications folder.
+1. Double-click the generated `.dmg` file and drag `Mynah.app` into `/Applications`.
+2. Launch `Mynah.app` from the Applications folder.
 3. Observe if the native **macOS Microphone Permission** dialog triggers upon first opening the app or upon clicking the microphone icon. Grant access.
 4. Press the hardware `Fn` key. Verify that the native **macOS Accessibility Permission** dialog triggers immediately.
-5. Open `System Settings -> Privacy & Security -> Accessibility`, enable `SpeakPaste`, and restart the app.
+5. Open `System Settings -> Privacy & Security -> Accessibility`, enable `Mynah`, and restart the app.
 
 ### ⌨️ Test B: Shortcut -> Record -> Paste Loop
 1. Open any text editor (e.g., Apple Notes, TextEdit, or Slack).
 2. Click inside the text area to focus the cursor.
 3. Tap the hardware `Fn` key (or mapped hotkey). Verify that the system tray chime plays and changes state to `Listening` (or the menu bar indicates recording).
-4. Speak a test sentence (e.g., *"SpeakPaste local dictation test successful"*).
+4. Speak a test sentence (e.g., *"Mynah local dictation test successful"*).
 5. Tap the `Fn` key again to stop.
 6. Verify the tray chimes, indicates `Transcribing`, and that the transcribed text is successfully typed at the cursor position via Enigo.
 7. Open the system clipboard (Cmd+V) and verify that the text was also placed on the clipboard.
 
 ### 🚫 Test C: Air-Gapped Off-Grid Verification
 1. Turn off the Mac's Wi-Fi / disconnect Ethernet (complete offline state).
-2. Launch SpeakPaste.
+2. Launch Mynah.
 3. Trigger the `Fn` key, speak, and stop.
 4. Verify that local Whisper C++ execution transcribes the audio and pastes it flawlessly without experiencing hangs, socket timeouts, or lag.
 

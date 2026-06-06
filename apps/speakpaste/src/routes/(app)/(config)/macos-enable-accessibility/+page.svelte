@@ -39,7 +39,7 @@
 	let isAccessibilityGranted = $state(data.isAccessibilityGranted);
 	let checkInterval: any;
 	const quarantineCommand =
-		'xattr -dr com.apple.quarantine /Applications/SpeakPaste.app';
+		'xattr -dr com.apple.quarantine /Applications/Mynah.app';
 
 	onMount(() => {
 		if (isAccessibilityGranted) {
@@ -52,7 +52,7 @@
 				isAccessibilityGranted = true;
 				clearInterval(checkInterval);
 				toast.success('Accessibility permission granted!', {
-					description: 'SpeakPaste has successfully registered the global Fn key listener.',
+					description: 'Mynah has successfully registered the global Fn key listener.',
 				});
 			}
 		}, 1000);
@@ -76,7 +76,7 @@
 		if (repairResult?.didReset) {
 			toast.info('Accessibility entry refreshed', {
 				description:
-					'SpeakPaste refreshed its stale macOS Accessibility entry after reinstall or replacement.',
+					'Mynah refreshed its stale macOS Accessibility entry after reinstall or replacement.',
 			});
 		}
 
@@ -147,9 +147,9 @@
 		<Card.Header>
 			<Card.Title class="text-xl">MacOS Accessibility</Card.Title>
 			<Card.Description class="leading-7">
-				SpeakPaste will try to refresh stale macOS Accessibility entries
-				automatically after reinstall or replacement. If macOS still needs
-				your approval, follow the steps below.
+				Mynah requires fresh Microphone and Accessibility permissions.
+				Old SpeakPaste permission entries may remain in System Settings and should be removed.
+				Ensure you run Mynah from <code class="text-xs bg-muted px-1.5 py-0.5 rounded">/Applications/Mynah.app</code> and do not reuse the old <code class="text-xs bg-muted px-1.5 py-0.5 rounded">SpeakPaste.app</code>.
 			</Card.Description>
 		</Card.Header>
 		<Card.Content>
@@ -158,7 +158,7 @@
 					class="text-muted-foreground list-inside list-decimal space-y-2 text-sm leading-7"
 				>
 					<li>
-						SpeakPaste may automatically refresh a stale entry in the
+						Mynah may automatically refresh a stale entry in the
 						background. If you still do not see a working Fn trigger, continue
 						with the manual re-approval steps below.
 					</li>
@@ -174,14 +174,14 @@
 					<li>
 						Click on
 						<span class="text-primary font-semibold tracking-tight"
-							>🎙️ SpeakPaste</span
+							>🎙️ Mynah</span
 						>
 						and remove it using the minus icon (-).
 					</li>
 					<li>
-						Re-add SpeakPaste by pressing the plus icon (+) and selecting
+						Re-add Mynah by pressing the plus icon (+) and selecting
 						<span class="text-primary font-semibold tracking-tight"
-							>🎙️ SpeakPaste.app</span
+							>🎙️ Mynah.app</span
 						>
 					</li>
 				</ol>
@@ -194,7 +194,7 @@
 							</h2>
 							<p class="mt-1 text-sm leading-6 text-muted-foreground">
 								For early beta builds, macOS may say Apple cannot verify
-								SpeakPaste. After dragging SpeakPaste to Applications, run this
+								Mynah. After dragging Mynah to Applications, run this
 								Terminal command once and open the app again.
 							</p>
 						</div>

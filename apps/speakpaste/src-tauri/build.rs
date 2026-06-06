@@ -15,7 +15,7 @@ fn main() {
         .and_then(|raw| serde_json::from_str::<serde_json::Value>(&raw).ok());
 
     set_rustc_env(
-        "SPEAKPASTE_BUILD_MARKETING_VERSION",
+        "MYNAH_BUILD_MARKETING_VERSION",
         build_meta
             .as_ref()
             .and_then(|meta| meta.get("marketingVersion"))
@@ -23,7 +23,7 @@ fn main() {
             .unwrap_or(env!("CARGO_PKG_VERSION")),
     );
     set_rustc_env(
-        "SPEAKPASTE_BUILD_BUNDLE_VERSION",
+        "MYNAH_BUILD_BUNDLE_VERSION",
         build_meta
             .as_ref()
             .and_then(|meta| meta.get("bundleVersion"))
@@ -31,7 +31,7 @@ fn main() {
             .unwrap_or(env!("CARGO_PKG_VERSION")),
     );
     set_rustc_env(
-        "SPEAKPASTE_BUILD_GIT_COMMIT_COUNT",
+        "MYNAH_BUILD_GIT_COMMIT_COUNT",
         build_meta
             .as_ref()
             .and_then(|meta| meta.get("gitCommitCount"))
@@ -46,7 +46,7 @@ fn main() {
             .as_str(),
     );
     set_rustc_env(
-        "SPEAKPASTE_BUILD_GIT_COMMIT",
+        "MYNAH_BUILD_GIT_COMMIT",
         build_meta
             .as_ref()
             .and_then(|meta| meta.get("gitCommit"))
@@ -54,7 +54,7 @@ fn main() {
             .unwrap_or("nogit"),
     );
     set_rustc_env(
-        "SPEAKPASTE_BUILD_AT_ISO",
+        "MYNAH_BUILD_AT_ISO",
         build_meta
             .as_ref()
             .and_then(|meta| meta.get("builtAtIso"))
@@ -62,7 +62,7 @@ fn main() {
             .unwrap_or("unknown"),
     );
     set_rustc_env(
-        "SPEAKPASTE_BUILD_SIGNATURE",
+        "MYNAH_BUILD_SIGNATURE",
         build_meta
             .as_ref()
             .and_then(|meta| meta.get("buildSignature"))
@@ -70,7 +70,7 @@ fn main() {
             .unwrap_or(env!("CARGO_PKG_VERSION")),
     );
     set_rustc_env(
-        "SPEAKPASTE_BUILD_GIT_DIRTY",
+        "MYNAH_BUILD_GIT_DIRTY",
         build_meta
             .as_ref()
             .and_then(|meta| meta.get("gitDirty"))

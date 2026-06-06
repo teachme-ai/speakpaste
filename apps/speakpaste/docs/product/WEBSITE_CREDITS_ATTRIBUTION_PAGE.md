@@ -1,4 +1,4 @@
-# SpeakPaste Credits And Attribution Page
+# Mynah Credits And Attribution Page
 
 ## Purpose
 
@@ -12,21 +12,21 @@ Credits
 
 ## Page Subtitle
 
-SpeakPaste is built with excellent open-source technology and adapted from a strong upstream foundation.
+Mynah is built with excellent open-source technology and adapted from a strong upstream foundation.
 
 ---
 
 ## Short Website Version
 
-SpeakPaste uses open-source technologies including whisper.cpp, Tauri, Svelte, CPAL, and Enigo. It is adapted from Whispering, part of the Epicenter project by Braden Wong and contributors.
+Mynah uses open-source technologies including whisper.cpp, Tauri, Svelte, CPAL, and Enigo. It is adapted from Whispering, part of the Epicenter project by Braden Wong and contributors.
 
 ---
 
 ## Full Attribution Copy
 
-SpeakPaste is adapted from the open-source Whispering application, part of the Epicenter project created by Braden Wong and contributors.
+Mynah is adapted from the open-source Whispering application, part of the Epicenter project created by Braden Wong and contributors.
 
-We are grateful for the upstream architecture, shared framework work, and community effort that made this product possible. SpeakPaste narrows that foundation into a focused Mac-first, local-first dictation utility.
+We are grateful for the upstream architecture, shared framework work, and community effort that made this product possible. Mynah narrows that foundation into a focused Mac-first, local-first dictation utility.
 
 All original copyrights, license terms, and upstream ownership remain with their respective authors and projects.
 
@@ -52,7 +52,7 @@ Website:
 
 ### Svelte and SvelteKit
 
-Frontend framework used for the SpeakPaste app interface.
+Frontend framework used for the Mynah app interface.
 
 Website:
 
@@ -76,7 +76,7 @@ Repository:
 
 ### Whispering / Epicenter
 
-Upstream open-source app and monorepo foundation from which SpeakPaste is adapted.
+Upstream open-source app and monorepo foundation from which Mynah is adapted.
 
 Repository:
 
@@ -86,7 +86,7 @@ Repository:
 
 ## Footer Attribution Line
 
-SpeakPaste is adapted from Whispering by Braden Wong and Epicenter contributors, and is built with whisper.cpp, Tauri, Svelte, CPAL, and Enigo.
+Mynah is adapted from Whispering by Braden Wong and Epicenter contributors, and is built with whisper.cpp, Tauri, Svelte, CPAL, and Enigo.
 
 ---
 
@@ -101,5 +101,5 @@ Use this full page for:
 - support transparency
 - trust-building
 
-Do not place a large upstream/comparison section high on the homepage. The homepage should first establish SpeakPaste's own product identity.
+Do not place a large upstream/comparison section high on the homepage. The homepage should first establish Mynah's own product identity.
 

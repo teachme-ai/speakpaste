@@ -10,7 +10,7 @@ Act as a background-runtime lifecycle reviewer.
 
 Do not edit code unless explicitly asked. Inspect the repository and any notes/logs Codex adds, then write findings to:
 
-`apps/speakpaste/docs/product/ANTIGRAVITY_REVIEW_BACKGROUND_RUNTIME.md`
+`apps/mynah/docs/product/ANTIGRAVITY_REVIEW_BACKGROUND_RUNTIME.md`
 
 ## What To Inspect
 

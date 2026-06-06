@@ -50,15 +50,23 @@
 			"recorder-state-icons/*"
 		]
 	},
-	"productName": "SpeakPaste",
-	"version": "../package.json",
-	"identifier": "com.speakpaste.app",
+	"productName": "Mynah",
+	"version": "0.1.1",
+	"identifier": "com.mynah.app",
+	"plugins": {
+		"updater": {
+			"pubkey": "dW51c2VkX3BsYWNlaG9sZGVyX2tleV9mb3JfZGV2ZWxvcG1lbnRfcHVycG9zZXMK",
+			"endpoints": [
+				"https://raw.githubusercontent.com/teachme-ai/speakpaste/main/update.json"
+			]
+		}
+	},
 	"app": {
 		"macOSPrivateApi": true,
 		"windows": [
 			{
 				"resizable": true,
-				"title": "SpeakPaste",
+				"title": "Mynah",
 				"width": 500,
 				"height": 850,
 				"minHeight": 850,
@@ -68,7 +76,7 @@
 			},
 			{
 				"label": "overlay",
-				"title": "SpeakPaste Overlay",
+				"title": "Mynah Overlay",
 				"width": 240,
 				"height": 80,
 				"resizable": false,

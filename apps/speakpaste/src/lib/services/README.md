@@ -4,7 +4,7 @@ Services wrap platform and runtime capabilities behind small, testable interface
 
 ## Current Product Baseline
 
-SpeakPaste is local-only. Service code must not send audio, transcripts, analytics, prompts, usage events, or configuration to external providers.
+Mynah is local-only. Service code must not send audio, transcripts, analytics, prompts, usage events, or configuration to external providers.
 
 Allowed service work includes:
 

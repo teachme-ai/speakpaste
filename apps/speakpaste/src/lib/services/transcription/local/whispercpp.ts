@@ -12,7 +12,7 @@ import { isModelFileSizeValid, type WhisperModelConfig } from './types';
  * These are ggml-format models compatible with whisper.cpp.
  */
 /**
- * SpeakPaste MVP model presets — English-only, Metal-accelerated.
+ * Mynah MVP model presets — English-only, Metal-accelerated.
  * Shown in UI as Fast / Balanced / Better.
  */
 export const WHISPER_MODELS = [

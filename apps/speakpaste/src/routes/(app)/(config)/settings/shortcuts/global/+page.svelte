@@ -7,7 +7,7 @@
 	import ShortcutTable from '../keyboard-shortcut-recorder/ShortcutTable.svelte';
 </script>
 
-<svelte:head> <title>Dictation Trigger - SpeakPaste</title> </svelte:head>
+<svelte:head> <title>Dictation Trigger - Mynah</title> </svelte:head>
 
 {#if window.__TAURI_INTERNALS__}
 	<section>
@@ -39,7 +39,7 @@
 							Accessibility permission is granted.
 						</Field.Description>
 						<Field.Description>
-							If SpeakPaste is reinstalled or replaced, it will try to refresh
+							If Mynah is reinstalled or replaced, it will try to refresh
 							a stale Accessibility entry automatically and guide you back here
 							if macOS still needs approval.
 						</Field.Description>

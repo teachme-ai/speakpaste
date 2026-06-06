@@ -39,12 +39,12 @@
 	});
 </script>
 
-<svelte:head> <title>Local Engine & Models - SpeakPaste</title> </svelte:head>
+<svelte:head> <title>Local Engine & Models - Mynah</title> </svelte:head>
 
 <Field.Set>
 	<Field.Legend>Local Engine & Models</Field.Legend>
 	<Field.Description>
-		Choose the local engine and model files SpeakPaste uses on this Mac.
+		Choose the local engine and model files Mynah uses on this Mac.
 	</Field.Description>
 	<Field.Separator />
 	<Field.Group>
@@ -133,7 +133,7 @@
 							<Field.Description>
 								Models are downloaded from{' '}
 								<Link
-									href="https://github.com/teachme-ai/speakpaste/releases/tag/models/parakeet-tdt-0.6b-v3-int8"
+									href="https://github.com/teachme-ai/mynah/releases/tag/models/parakeet-tdt-0.6b-v3-int8"
 									target="_blank"
 									rel="noopener noreferrer"
 								>

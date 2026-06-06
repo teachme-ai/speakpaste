@@ -1,11 +1,11 @@
-const CLIPBOARD_OWNER_KEY = 'speakpaste.clipboardOwner.v1';
+const CLIPBOARD_OWNER_KEY = 'mynah.clipboardOwner.v1';
 const APP_OWNED_TTL_MS = 24 * 60 * 60 * 1000;
 
 type ClipboardOwnerMarker = {
 	hash: string;
 	length: number;
 	writtenAt: number;
-	source: 'speakpaste';
+	source: 'mynah';
 };
 
 const getStorage = () => {
@@ -22,7 +22,7 @@ export const fingerprintClipboardText = (text: string) => {
 	return hash.toString(16).padStart(8, '0');
 };
 
-export const rememberSpeakPasteClipboardText = (text: string) => {
+export const rememberMynahClipboardText = (text: string) => {
 	const storage = getStorage();
 	if (!storage) return;
 
@@ -30,13 +30,13 @@ export const rememberSpeakPasteClipboardText = (text: string) => {
 		hash: fingerprintClipboardText(text),
 		length: text.length,
 		writtenAt: Date.now(),
-		source: 'speakpaste',
+		source: 'mynah',
 	};
 
 	storage.setItem(CLIPBOARD_OWNER_KEY, JSON.stringify(marker));
 };
 
-export const isSpeakPasteOwnedClipboardText = (text: string | null) => {
+export const isMynahOwnedClipboardText = (text: string | null) => {
 	if (!text) return false;
 
 	const storage = getStorage();
@@ -47,7 +47,7 @@ export const isSpeakPasteOwnedClipboardText = (text: string | null) => {
 
 	try {
 		const marker = JSON.parse(rawMarker) as Partial<ClipboardOwnerMarker>;
-		if (marker.source !== 'speakpaste') return false;
+		if (marker.source !== 'mynah') return false;
 		if (typeof marker.writtenAt !== 'number') return false;
 		if (Date.now() - marker.writtenAt > APP_OWNED_TTL_MS) return false;
 		if (marker.length !== text.length) return false;

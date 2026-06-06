@@ -22,7 +22,7 @@
 	});
 </script>
 
-<svelte:head> <title>SpeakPaste</title> </svelte:head>
+<svelte:head> <title>Mynah</title> </svelte:head>
 
 <QueryClientProvider client={queryClient}>
 	<!-- Uses UI package defaults (300ms delay, 150ms skip) -->

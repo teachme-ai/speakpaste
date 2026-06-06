@@ -13,7 +13,7 @@
 
 The user-facing local performance profiles have been successfully audited and runtime-smoked. The raw system configuration parameter (`Native sample rate` dropdown showing `16 kHz / 44.1 kHz / 48 kHz`) has been completely removed from the primary capture settings page.
 
-In its place, a clean, high-level **Local performance profile** selector has been introduced. This selector hides low-level audio engineering details from consumer users while allowing them to tune SpeakPaste's native CPAL recorder performance based on their Mac hardware capability. The underlying sample rates still map correctly in the native configurations.
+In its place, a clean, high-level **Local performance profile** selector has been introduced. This selector hides low-level audio engineering details from consumer users while allowing them to tune Mynah's native CPAL recorder performance based on their Mac hardware capability. The underlying sample rates still map correctly in the native configurations.
 
 ---
 
@@ -22,13 +22,13 @@ In its place, a clean, high-level **Local performance profile** selector has bee
 ### 📦 Check 1: Web Assets & Tauri Compilation
 * **Outcome**: 🟢 **Passed**
 * **Metrics**:
-  * Svelte Web compilation (`bun run build` in `apps/speakpaste`): **7.97s** (100% success).
+  * Svelte Web compilation (`bun run build` in `apps/mynah`): **7.97s** (100% success).
   * Standalone native Tauri macOS app compile (`bun tauri build --bundles app`): **20.76s** (100% success).
-  * Built binary location: `apps/speakpaste/src-tauri/target/release/bundle/macos/SpeakPaste.app`
+  * Built binary location: `apps/mynah/src-tauri/target/release/bundle/macos/Mynah.app`
 
 ### 🧪 Check 2: Settings Unit Tests
 * **Outcome**: 🟢 **Passed**
-* **Command**: `bun test apps/speakpaste/src/lib/state/settings.test.ts`
+* **Command**: `bun test apps/mynah/src/lib/state/settings.test.ts`
 * **Metrics**: 7 passed, 0 failed, 28 expectations verified (56.00ms).
 * **Scope**: Verified that the new `local.performanceProfile` state entry is properly validated and stored alongside existing CPAL recording and sample rate constraints.
 
@@ -48,8 +48,8 @@ In its place, a clean, high-level **Local performance profile** selector has bee
 ### 💨 Check 4: Runtime Smoke Verification
 * **Outcome**: 🟢 **Passed**
 * **Verification Details**:
-  * Launched `/Applications/SpeakPaste.app` and monitored execution. The app initializes stably in the menu bar.
-  * Toggling settings dynamically saves values to `~/Library/Application Support/com.speakpaste.app/runtime-config.json` via Tauri's filesystem bridge.
+  * Launched `/Applications/Mynah.app` and monitored execution. The app initializes stably in the menu bar.
+  * Toggling settings dynamically saves values to `~/Library/Application Support/com.mynah.app/runtime-config.json` via Tauri's filesystem bridge.
   * Native global shortcut triggers (`Command+Shift+F8` or double-tap `Fn`) successfully capture audio and transcribe offline via the whisper.cpp engine.
 
 ---
@@ -64,9 +64,9 @@ In its place, a clean, high-level **Local performance profile** selector has bee
 
 ## 4. Exact File and Line References Audited
 
-1. **Profile Options Definition**: [performance-profiles.ts](file:///Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste/src/lib/constants/audio/performance-profiles.ts#L16-L41)
+1. **Profile Options Definition**: [performance-profiles.ts](file:///Users/irfan/projects/Mynah/mynah/apps/mynah/src/lib/constants/audio/performance-profiles.ts#L16-L41)
    - Defines values, labels, descriptions, and mapped sample rates for the balanced, intel-fast, and apple-silicon-accuracy profiles.
-2. **Settings State Entry**: [device-config.svelte.ts](file:///Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste/src/lib/state/device-config.svelte.ts#L41-L47)
+2. **Settings State Entry**: [device-config.svelte.ts](file:///Users/irfan/projects/Mynah/mynah/apps/mynah/src/lib/state/device-config.svelte.ts#L41-L47)
    - Declares the new `local.performanceProfile` state entry defaulting to `'balanced'`.
-3. **Capture View Selection**: [recording/+page.svelte](file:///Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste/src/routes/(app)/(config)/settings/recording/+page.svelte#L139-L173)
+3. **Capture View Selection**: [recording/+page.svelte](file:///Users/irfan/projects/Mynah/mynah/apps/mynah/src/routes/(app)/(config)/settings/recording/+page.svelte#L139-L173)
    - Hooks up the profile select box and binds updates to both `local.performanceProfile` and `recording.cpal.sampleRate`.

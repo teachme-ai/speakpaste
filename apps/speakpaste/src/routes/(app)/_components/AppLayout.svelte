@@ -46,7 +46,7 @@
 
 		// Migrate stale/conflicting shortcuts to Command+Shift+Return
 		// Covers: Space, Spacebar, Command+Shift+Space, Command+Option+R, F7, Command+Shift+; (all previous bad defaults)
-		const staleKey = 'speakpaste.device.shortcuts.global.toggleManualRecording';
+		const staleKey = 'mynah.device.shortcuts.global.toggleManualRecording';
 		const stored = localStorage.getItem(staleKey);
 		const BAD_DEFAULTS = ['Space', ';', 'Option+R', 'F7', 'Return', 'F5'];
 		const isStale = stored && BAD_DEFAULTS.some((bad) => stored.includes(bad));
@@ -64,7 +64,7 @@
 			'shortcuts.global.stopVadRecording',
 		];
 		for (const key of retiredGlobalShortcutKeys) {
-			const storageKey = `speakpaste.device.${key}`;
+			const storageKey = `mynah.device.${key}`;
 			if (localStorage.getItem(storageKey)) {
 				console.info('[Shortcuts] removing retired global shortcut:', key);
 				localStorage.removeItem(storageKey);
