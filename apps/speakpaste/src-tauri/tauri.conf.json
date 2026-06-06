@@ -84,7 +84,8 @@
 				"alwaysOnTop": true,
 				"transparent": true,
 				"visible": false,
-				"skipTaskbar": true
+				"skipTaskbar": true,
+				"focusable": false
 			}
 		],
 		"security": {

@@ -219,6 +219,7 @@ pub async fn run() {
             if let Some(overlay) = app.get_webview_window("overlay") {
                 let _ = overlay.set_always_on_top(true);
                 let _ = overlay.set_visible_on_all_workspaces(true);
+                let _ = overlay.set_focusable(false);
             }
             Ok(())
         });
@@ -355,8 +356,11 @@ async fn write_text(app: tauri::AppHandle, text: String) -> Result<String, Strin
         let (modifier, v_key) = (Key::Control, Key::Unicode('v'));
 
         let r1 = enigo.key(modifier, Direction::Press);
+        tokio::time::sleep(tokio::time::Duration::from_millis(20)).await;
         let r2 = enigo.key(v_key, Direction::Press);
+        tokio::time::sleep(tokio::time::Duration::from_millis(20)).await;
         let r3 = enigo.key(v_key, Direction::Release);
+        tokio::time::sleep(tokio::time::Duration::from_millis(20)).await;
         let r4 = enigo.key(modifier, Direction::Release);
 
         r1.and(r2).and(r3).and(r4)
@@ -372,7 +376,7 @@ async fn write_text(app: tauri::AppHandle, text: String) -> Result<String, Strin
     }
 
     // 4. Wait for paste to complete before checking clipboard
-    tokio::time::sleep(tokio::time::Duration::from_millis(150)).await;
+    tokio::time::sleep(tokio::time::Duration::from_millis(800)).await;
 
     info!("[Paste] paste simulation complete");
 
