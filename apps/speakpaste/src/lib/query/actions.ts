@@ -6,7 +6,6 @@ import { rpc } from '$lib/query';
 import { defineMutation } from '$lib/query/client';
 import { WhisperingErr } from '$lib/result';
 import { FsServiceLive } from '$lib/services/desktop/fs';
-import { activityFeed } from '$lib/state/activity-feed.svelte';
 import { deviceConfig } from '$lib/state/device-config.svelte';
 import { dictationRuntime } from '$lib/state/dictation-runtime.svelte';
 import { settings } from '$lib/state/settings.svelte';
@@ -67,7 +66,6 @@ const startManualRecording = defineMutation({
 				}
 
 				const toastId = nanoid();
-				activityFeed.info('Preparing microphone', 'Setting up local capture.');
 
 				const { data: deviceAcquisitionOutcome, error: startRecordingError } =
 					await recorder.startRecording({ toastId });
@@ -80,7 +78,6 @@ const startManualRecording = defineMutation({
 
 				switch (deviceAcquisitionOutcome.outcome) {
 					case 'success': {
-						activityFeed.info('Listening', 'Release Fn to transcribe and paste.');
 						break;
 					}
 					case 'fallback': {
@@ -142,7 +139,6 @@ const stopManualRecording = defineMutation({
 				void dictationRuntime.setStatus('Transcribing', 'Finalizing recording');
 
 				const toastId = nanoid();
-				activityFeed.info('Finalizing audio', 'Preparing your recording.');
 
 				const { data, error: stopRecordingError } = await recorder.stopRecording({
 					toastId,
@@ -162,10 +158,6 @@ const stopManualRecording = defineMutation({
 
 		const { blob, recordingId, toastId } = stoppedRecording;
 
-		activityFeed.info(
-			'Preparing transcription',
-			'Finalizing audio before local transcription.',
-		);
 		console.info('Recording stopped');
 
 		// Log manual recording completion
@@ -345,10 +337,6 @@ export const actions = {
 		}) => {
 			const toastId = nanoid();
 			void dictationRuntime.setStatus('Transcribing', 'Finalizing audio');
-			activityFeed.info(
-				'Finalizing audio',
-				'Preparing the background recording for local transcription.',
-			);
 			const { data: blob, error } = await FsServiceLive.pathToBlob(filePath);
 			if (error) {
 				notify.error({
@@ -411,10 +399,6 @@ export const actions = {
 				},
 				operation: async () => {
 					const toastId = nanoid();
-					activityFeed.info(
-						'Canceling recording',
-						'Cleaning up the recording session.',
-					);
 					const { data: cancelRecordingResult, error: cancelRecordingError } =
 						await recorder.cancelRecording({ toastId });
 
@@ -436,10 +420,6 @@ export const actions = {
 							// Session cleanup is now handled internally by the recorder service
 							// Reset start time if recording was cancelled
 							clearManualRecordingStartTime();
-							activityFeed.success(
-								'Recording canceled',
-								'Ready for the next capture.',
-							);
 							void dictationRuntime.setStatus('Idle', 'Recording cancelled');
 							sound.playSoundIfEnabled('manual-cancel');
 							console.info('Recording cancelled');
@@ -589,10 +569,6 @@ export const actions = {
 
 			// Run transformation
 			const toastId = nanoid();
-			activityFeed.info(
-				'Running text rule',
-				'Applying the selected local rule to clipboard text.',
-			);
 
 			const { data: output, error: transformError } =
 				await transformer.transformInput({

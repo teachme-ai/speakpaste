@@ -36,7 +36,6 @@
 	import PipelineControlDeck from './_home/PipelineControlDeck.svelte';
 	import LastPastedCard from './_home/LastPastedCard.svelte';
 	import RecentHistoryList from './_home/RecentHistoryList.svelte';
-	import ActivityFeed from './_home/ActivityFeed.svelte';
 
 	let showHistory = $state(false);
 	let isOverlay = $state(false);
@@ -266,6 +265,13 @@
 		{ label: 'Pasted',              active: justPasted },
 	]);
 
+	const currentStatus = $derived.by(() => {
+		if (recorderState === 'RECORDING') return 'Listening...';
+		if (isTranscribing) return 'Transcribing on this Mac...';
+		if (justPasted) return 'Pasted';
+		return '';
+	});
+
 </script>
 
 <svelte:head><title>Mynah</title></svelte:head>
@@ -282,14 +288,17 @@
 			<MicButton {recorderState} {isTranscribing} {justPasted} />
 			<div class="flex flex-col items-center gap-4">
 				<HintText />
+				{#if currentStatus}
+					<p class="text-xs font-medium text-stone-500 transition-opacity dark:text-stone-300">
+						{currentStatus}
+					</p>
+				{/if}
 				<EngineBadge {modelLabel} {profileLabel} />
 			</div>
 			<PipelineControlDeck />
 		</div>
 
-		<ActivityFeed />
-
-		<div class="flex justify-center mt-7 mb-5">
+		<div class="flex justify-center mt-2 mb-5">
 			<button class="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/60 px-5 py-2.5 text-sm font-semibold text-stone-900 shadow-sm transition-all hover:bg-white/85 dark:border-white/10 dark:bg-white/10 dark:text-stone-50 dark:hover:bg-white/15" onclick={toggleHistory}>
 				{#if showHistory}
 					<svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>

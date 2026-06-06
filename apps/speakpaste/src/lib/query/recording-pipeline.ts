@@ -2,7 +2,6 @@ import { nanoid } from 'nanoid/non-secure';
 import { PIPELINE_EVENTS, TRIGGER_COOLDOWN_MS } from '$lib/constants/app';
 import { WhisperingErr } from '$lib/result';
 import { services } from '$lib/services';
-import { activityFeed } from '$lib/state/activity-feed.svelte';
 import { dictationRuntime } from '$lib/state/dictation-runtime.svelte';
 import { recordings } from '$lib/state/recordings.svelte';
 import { settings } from '$lib/state/settings.svelte';
@@ -108,7 +107,6 @@ async function runSelectedTransformationStage({
 	}
 
 	const transformationStart = performance.now();
-	activityFeed.info('Running text rule', 'Applying the selected local text rule.');
 	logPipelineStage({
 		type: 'pipeline_stage',
 		stage: 'transformation_started',
@@ -155,7 +153,6 @@ async function runSelectedTransformationStage({
 	}
 
 	sound.playSoundIfEnabled('transformationComplete');
-	activityFeed.success('Text rule complete', 'Local text rule output is ready.');
 
 	await delivery.deliverTransformationResult({
 		text: transformationRun.output,
@@ -216,10 +213,6 @@ async function finalizeRecordingSuccess({
 	const audioSaveStart = performance.now();
 	const { error: saveAudioError } = await saveAudioPromise;
 	if (saveAudioError) {
-		activityFeed.warning(
-			'Audio was not saved',
-			'The transcript was delivered successfully.',
-		);
 		notify.warning({
 			id: toastId,
 			title: '\u26A0\uFE0F Audio not saved',
@@ -266,7 +259,6 @@ async function deliverTranscriptStage({
 }) {
 	sound.playSoundIfEnabled('transcriptionComplete');
 	void dictationRuntime.setStatus('Pasting', 'Writing at cursor');
-	activityFeed.info('Pasting', 'Writing the transcript into the active app.');
 	logPipelineStage({
 		type: 'pipeline_stage',
 		stage: 'delivery_started',
@@ -321,7 +313,6 @@ function prepareTranscriptionStage({
 	transcribeToastId?: string;
 }) {
 	void dictationRuntime.setStatus('Transcribing', 'Transcribing locally');
-	activityFeed.info('Transcribing locally', 'Processing speech on this Mac.');
 
 	recordings.set(recording);
 	recordings.update(recording.id, { transcriptionStatus: 'TRANSCRIBING' });
@@ -391,10 +382,6 @@ async function runTranscriptionStage({
 	});
 
 	if (!transcribeError) {
-		activityFeed.success(
-			'Transcription complete',
-			`${transcribedText.length} characters recognized.`,
-		);
 		logPipelineStage({
 			type: 'pipeline_stage',
 			stage: 'transcription_completed',
@@ -411,7 +398,6 @@ async function runTranscriptionStage({
 	window.dispatchEvent(new CustomEvent(PIPELINE_EVENTS.ERROR));
 	recordings.update(recording.id, { transcriptionStatus: 'FAILED' });
 	if (transcribeError.name === 'WhisperingError') {
-		activityFeed.error('Transcription failed', transcribeError.description);
 		notify.error({ id: transcribeToastId, ...transcribeError });
 		logPipelineStage({
 			type: 'pipeline_stage',
@@ -430,10 +416,6 @@ async function runTranscriptionStage({
 		description: 'Your recording could not be transcribed.',
 		action: { type: 'more-details', error: transcribeError },
 	});
-	activityFeed.error(
-		'Transcription failed',
-		transcribeError instanceof Error ? transcribeError.message : undefined,
-	);
 	logPipelineStage({
 		type: 'pipeline_stage',
 		stage: 'transcription_failed',
@@ -473,10 +455,11 @@ export async function processRecordingPipeline({
 
 	if (transcribedText === '') {
 		console.info('[Pipeline] empty transcription — no speech detected');
-		activityFeed.warning(
-			'No speech detected',
-			'Mynah did not detect any words in the audio.',
-		);
+		notify.info({
+			id: transcribeToastId,
+			title: 'No speech detected',
+			description: 'Mynah did not detect any words in the audio.',
+		});
 		markPipelineFinished();
 		void dictationRuntime.setStatus('Idle', 'Ready');
 		window.dispatchEvent(new CustomEvent(PIPELINE_EVENTS.COMPLETE));

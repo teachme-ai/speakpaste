@@ -3,7 +3,6 @@ import { rpc } from '$lib/query';
 import { defineMutation } from '$lib/query/client';
 import type { WhisperingError } from '$lib/result';
 import type { TextError } from '$lib/services/text';
-import { activityFeed } from '$lib/state/activity-feed.svelte';
 import { settings } from '$lib/state/settings.svelte';
 import {
 	isMynahOwnedClipboardText,
@@ -49,7 +48,6 @@ export const delivery = {
 			// Track what operations succeeded
 			let copied = false;
 			let written = false;
-			let clipboardChoiceOffered = false;
 
 			const clipboardBehavior = settings.get(
 				'output.transcription.clipboardBehavior',
@@ -82,7 +80,6 @@ export const delivery = {
 				onClick: async () => {
 					const copiedTranscript = await copyTranscriptToClipboard();
 					if (!copiedTranscript) return;
-					activityFeed.success('Copied transcript', 'Transcript is now on the clipboard.');
 				},
 			};
 
@@ -110,18 +107,7 @@ export const delivery = {
 
 			// Show appropriate success notification based on what succeeded
 			const showSuccessNotification = () => {
-				if (copied && written) {
-					activityFeed.success(
-						'Pasted and copied',
-						'Text was delivered and kept on the clipboard.',
-					);
-				} else if (copied) {
-					activityFeed.success('Copied transcript', 'Transcript is ready on the clipboard.');
-				} else if (written) {
-					// Only write succeeded
-					if (clipboardChoiceOffered) return;
-					activityFeed.success('Pasted', 'Text was written into the active app.');
-				} else {
+				if (!copied && !written) {
 					// Neither succeeded, offer manual copy
 					offerManualCopy();
 				}
@@ -190,7 +176,6 @@ export const delivery = {
 					);
 				}
 			} else if (clipboardBehavior === 'ask' && askBeforeReplacingClipboard) {
-				clipboardChoiceOffered = true;
 				rpc.notify.info({
 					id: `${toastId}:clipboard-choice`,
 					title: 'Keep existing clipboard?',
@@ -273,10 +258,6 @@ export const delivery = {
 								});
 								return;
 							}
-							activityFeed.success(
-								'Copied transformed text',
-								'The text rule output is now on the clipboard.',
-							);
 						},
 					},
 				});
@@ -305,19 +286,7 @@ export const delivery = {
 
 			// Show appropriate success notification based on what succeeded
 			const showSuccessNotification = () => {
-				if (copied && written) {
-					activityFeed.success(
-						'Text rule delivered',
-						'Output was pasted and copied to the clipboard.',
-					);
-				} else if (copied) {
-					activityFeed.success('Text rule copied', 'Output is ready on the clipboard.');
-				} else if (written) {
-					activityFeed.success(
-						'Text rule pasted',
-						'Output was written into the active app.',
-					);
-				} else {
+				if (!copied && !written) {
 					// Neither succeeded, offer manual copy
 					offerManualCopy();
 				}
