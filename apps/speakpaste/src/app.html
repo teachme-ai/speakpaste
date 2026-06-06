@@ -6,14 +6,21 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>Mynah</title>
 		<script>
-			const mode = localStorage.getItem('mode-watcher-mode') ?? 'dark';
-			const isLight =
-				mode === 'light' ||
-				(mode === 'system' &&
-					matchMedia('(prefers-color-scheme: light)').matches);
-			document.documentElement.classList.toggle('dark', !isLight);
-			document.documentElement.style.colorScheme = isLight ? 'light' : 'dark';
-			localStorage.setItem('mode-watcher-mode', mode);
+			const theme = localStorage.getItem('ui.theme') ?? 'pastel';
+			const html = document.documentElement;
+			if (theme === 'dark') {
+				html.classList.add('dark');
+				html.classList.remove('theme-mynah');
+				html.style.colorScheme = 'dark';
+			} else if (theme === 'mynah') {
+				html.classList.remove('dark');
+				html.classList.add('theme-mynah');
+				html.style.colorScheme = 'light';
+			} else {
+				html.classList.remove('dark');
+				html.classList.remove('theme-mynah');
+				html.style.colorScheme = 'light';
+			}
 		</script>
 		%sveltekit.head%
 	</head>

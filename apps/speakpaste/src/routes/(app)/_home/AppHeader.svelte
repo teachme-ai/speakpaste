@@ -9,13 +9,13 @@
 			alt=""
 			class="mb-3 size-14 rounded-[18px] shadow-lg shadow-black/10 ring-1 ring-black/10 dark:shadow-emerald-950/20 dark:ring-white/10"
 		/>
-		<p class="text-[10px] font-semibold uppercase tracking-[0.34em] text-emerald-700/80 dark:text-emerald-300/80">
+		<p class="text-[10px] font-semibold uppercase tracking-[0.34em] text-primary">
 			Private voice-to-cursor
 		</p>
-		<h1 class="mt-1 text-2xl font-semibold tracking-tight text-stone-950 dark:text-stone-50">
+		<h1 class="mt-1 text-2xl font-semibold tracking-tight text-foreground">
 			Mynah
 		</h1>
-		<p class="mt-0.5 text-sm text-stone-600 dark:text-stone-400">
+		<p class="mt-0.5 text-sm text-muted-foreground">
 			Local dictation, shaped on this Mac.
 		</p>
 	</div>

@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { Toaster } from '@epicenter/ui/sonner';
 	import { QueryClientProvider } from '@tanstack/svelte-query';
-	import { ModeWatcher } from 'mode-watcher';
 	import { onNavigate } from '$app/navigation';
 	import { queryClient } from '$lib/query/client';
 	import '@epicenter/ui/app.css';
 	import * as Tooltip from '@epicenter/ui/tooltip';
 	import { deviceConfig } from '$lib/state/device-config.svelte';
+	import { settings } from '$lib/state/settings.svelte';
 
 	let { children } = $props();
 
@@ -19,6 +19,26 @@
 				await navigation.complete;
 			});
 		});
+	});
+
+	// Apply UI themes reactively
+	$effect(() => {
+		if (typeof document !== 'undefined') {
+			const theme = settings.get('ui.theme');
+			const html = document.documentElement;
+			if (theme === 'dark') {
+				html.classList.add('dark');
+				html.classList.remove('theme-mynah');
+			} else if (theme === 'mynah') {
+				html.classList.remove('dark');
+				html.classList.add('theme-mynah');
+			} else {
+				// 'pastel' (default light theme)
+				html.classList.remove('dark');
+				html.classList.remove('theme-mynah');
+			}
+			localStorage.setItem('ui.theme', theme);
+		}
 	});
 </script>
 
@@ -44,7 +64,6 @@
 		},
 	}}
 />
-<ModeWatcher defaultMode="system" track={true} />
 
 
 <style>

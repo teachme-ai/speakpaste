@@ -41,7 +41,17 @@
 	const quarantineCommand =
 		'xattr -dr com.apple.quarantine /Applications/Mynah.app';
 
-	onMount(() => {
+	onMount(async () => {
+		if (window.__TAURI_INTERNALS__) {
+			try {
+				const { getCurrentWindow, LogicalSize } = await import('@tauri-apps/api/window');
+				const currentWindow = getCurrentWindow();
+				await currentWindow.setSize(new LogicalSize(500, 980));
+			} catch (e) {
+				console.error('Failed to resize window on mount:', e);
+			}
+		}
+
 		if (isAccessibilityGranted) {
 			// Ensure it's initialized if already granted
 			void checkFnKeyReadiness();
@@ -58,9 +68,18 @@
 		}, 1000);
 	});
 
-	onDestroy(() => {
+	onDestroy(async () => {
 		if (checkInterval) {
 			clearInterval(checkInterval);
+		}
+		if (window.__TAURI_INTERNALS__) {
+			try {
+				const { getCurrentWindow, LogicalSize } = await import('@tauri-apps/api/window');
+				const currentWindow = getCurrentWindow();
+				await currentWindow.setSize(new LogicalSize(500, 850));
+			} catch (e) {
+				console.error('Failed to restore window size on destroy:', e);
+			}
 		}
 	});
 

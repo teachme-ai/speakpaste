@@ -1,7 +1,7 @@
 <script lang="ts">
 	import * as Popover from '@epicenter/ui/popover';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
-	import ListIcon from '@lucide/svelte/icons/list';
+	import InfoIcon from '@lucide/svelte/icons/info';
 </script>
 
 <Popover.Root>
@@ -9,7 +9,7 @@
 		{#snippet child({ props })}
 			<button
 				{...props}
-				class="flex size-9 items-center justify-center rounded-full border border-black/10 bg-white/55 text-stone-500 shadow-sm transition-colors hover:bg-white/80 hover:text-stone-900 dark:border-white/10 dark:bg-white/10 dark:text-stone-400 dark:hover:bg-white/15 dark:hover:text-stone-50"
+				class="flex size-9 items-center justify-center rounded-full border border-border bg-card/60 text-muted-foreground shadow-sm transition-colors hover:bg-card/90 hover:text-foreground"
 				aria-label="Settings"
 			>
 				<SettingsIcon class="size-4" />
@@ -26,10 +26,10 @@
 					</div>
 					<svg class="size-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
 				</a>
-				<a href="/settings/captures" class="flex items-center justify-between px-4 py-2.5 hover:bg-muted transition-colors">
+				<a href="/settings/about" class="flex items-center justify-between px-4 py-2.5 hover:bg-muted transition-colors">
 					<div class="flex items-center gap-2.5">
-						<ListIcon class="size-4 text-primary" />
-						<span class="text-sm font-medium text-foreground">Captures</span>
+						<InfoIcon class="size-4 text-primary" />
+						<span class="text-sm font-medium text-foreground">About & Credits</span>
 					</div>
 					<svg class="size-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
 				</a>

@@ -13,11 +13,14 @@
 		},
 		{ title: 'Voice Capture', href: '/settings/recording' },
 		{ title: 'Models', href: '/settings/transcription' },
-		{ title: 'Captures', href: '/settings/captures' },
 		{
 			title: 'System',
 			href: '/settings/system',
 			activePathPrefix: '/settings/system',
+		},
+		{
+			title: 'About & Credits',
+			href: '/settings/about',
 		},
 	] satisfies {
 		title: string;

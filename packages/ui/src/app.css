@@ -32,20 +32,20 @@
 	--font-sans: "Outfit", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 	--radius: 0.75rem;
 	
-	/* Airy Frosted Light Palette */
-	--background: oklch(0.98 0.005 240 / 0.8); /* 80% opacity for solid backdrop under any wallpaper */
+	/* Airy Frosted Light Palette (Prisine and White) */
+	--background: oklch(0.99 0.002 240 / 0.8); /* Crisp off-white */
 	--foreground: oklch(0.25 0.02 260);
-	--card: oklch(1 0 0 / 75%); /* 75% opaque card backgrounds for solid text contrast */
+	--card: oklch(1 0 0 / 80%); /* Pure white card backgrounds */
 	--card-foreground: oklch(0.25 0.02 260);
-	--popover: oklch(1 0 0 / 85%); /* 85% opaque popover backings */
+	--popover: oklch(1 0 0 / 85%);
 	--popover-foreground: oklch(0.25 0.02 260);
 	--primary: oklch(0.55 0.15 250);
 	--primary-foreground: oklch(0.98 0 0);
-	--secondary: oklch(0.96 0.005 240);
+	--secondary: oklch(0.97 0.003 240);
 	--secondary-foreground: oklch(0.25 0.02 260);
-	--muted: oklch(0.96 0.005 240 / 40%);
+	--muted: oklch(0.97 0.003 240 / 40%);
 	--muted-foreground: oklch(0.55 0.02 260);
-	--accent: oklch(0.96 0.005 240 / 70%);
+	--accent: oklch(0.97 0.003 240 / 70%);
 	--accent-foreground: oklch(0.25 0.02 260);
 	--destructive: oklch(0.6 0.2 25);
 	--warning: oklch(0.7 0.15 60);
@@ -54,11 +54,11 @@
 	--input: oklch(0 0 0 / 6%);
 	--ring: oklch(0.55 0.15 250 / 40%);
 	
-	--sidebar: oklch(0.98 0.005 240 / 92%);
+	--sidebar: oklch(0.99 0.002 240 / 92%);
 	--sidebar-foreground: oklch(0.25 0.02 260);
 	--sidebar-primary: oklch(0.55 0.15 250);
 	--sidebar-primary-foreground: oklch(0.98 0 0);
-	--sidebar-accent: oklch(0.96 0.005 240);
+	--sidebar-accent: oklch(0.97 0.003 240);
 	--sidebar-accent-foreground: oklch(0.25 0.02 260);
 	--sidebar-border: oklch(0 0 0 / 6%);
 	--sidebar-ring: oklch(0.55 0.15 250);
@@ -95,6 +95,39 @@
 	--sidebar-accent-foreground: oklch(0.95 0.01 260);
 	--sidebar-border: oklch(1 0 0 / 8%);
 	--sidebar-ring: oklch(0.70 0.20 280);
+}
+
+.theme-mynah {
+	/* Mynah Brand: Noticeably bluer background with vibrant golden/amber accents */
+	--background: oklch(0.91 0.045 245 / 0.8);      /* Noticeably bluer premium background */
+	--foreground: oklch(0.16 0.06 250);           /* Rich dark cobalt slate */
+	--card: oklch(1 0 0 / 90%);                   /* High-contrast crisp white cards */
+	--card-foreground: oklch(0.16 0.06 250);
+	--popover: oklch(1 0 0 / 95%);
+	--popover-foreground: oklch(0.16 0.06 250);
+	--primary: oklch(0.78 0.18 75);               /* Rich brand Golden/Amber */
+	--primary-foreground: oklch(0.12 0.04 250);
+	--secondary: oklch(0.85 0.07 245);            /* Deeper frosted blue-gray details */
+	--secondary-foreground: oklch(0.16 0.06 250);
+	--muted: oklch(0.85 0.07 245 / 50%);
+	--muted-foreground: oklch(0.35 0.06 250);
+	--accent: oklch(0.78 0.18 75 / 30%);          /* Rich golden highlights for selections/hovers */
+	--accent-foreground: oklch(0.16 0.06 250);
+	--destructive: oklch(0.6 0.2 25);
+	--warning: oklch(0.7 0.15 60);
+	--success: oklch(0.65 0.15 145);
+	--border: oklch(0.16 0.06 250 / 14%);          /* Subtly darker borders for better separation */
+	--input: oklch(0.16 0.06 250 / 14%);
+	--ring: oklch(0.78 0.18 75 / 55%);            /* Vibrant golden halo glow */
+
+	--sidebar: oklch(0.91 0.045 245 / 92%);       /* Sidebar matching the blue tint background */
+	--sidebar-foreground: oklch(0.16 0.06 250);
+	--sidebar-primary: oklch(0.78 0.18 75);
+	--sidebar-primary-foreground: oklch(0.12 0.04 250);
+	--sidebar-accent: oklch(0.78 0.18 75 / 35%);  /* Rich golden hover selection in sidebar */
+	--sidebar-accent-foreground: oklch(0.16 0.06 250);
+	--sidebar-border: oklch(0.16 0.06 250 / 14%);
+	--sidebar-ring: oklch(0.78 0.18 75);
 }
 
 @theme inline {

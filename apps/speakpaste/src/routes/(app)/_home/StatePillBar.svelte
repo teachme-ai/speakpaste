@@ -7,16 +7,16 @@
 
 	function pillClasses(pill: { label: string; active: boolean }) {
 		if (!pill.active) {
-			return 'border-black/10 bg-white/35 text-stone-500 dark:border-white/10 dark:bg-white/5 dark:text-stone-400';
+			return 'border-border bg-card/35 text-muted-foreground';
 		}
 
 		switch (pill.label) {
 			case 'Listening':
-				return 'border-emerald-400/40 bg-emerald-500/10 text-emerald-700 shadow-[0_12px_30px_-20px_rgba(52,211,153,0.65)] dark:text-emerald-300';
+				return 'border-destructive/30 bg-destructive/10 text-destructive shadow-[0_12px_30px_-20px_var(--color-red-500)]';
 			case 'Pasted':
-				return 'border-stone-900/20 bg-stone-950 text-stone-50 shadow-[0_12px_30px_-20px_rgba(15,23,42,0.42)] dark:border-white/10';
+				return 'border-primary/20 bg-primary text-primary-foreground shadow-[0_12px_30px_-20px_var(--ring)]';
 			default:
-				return 'border-black/10 bg-white/65 text-stone-900 shadow-sm dark:border-white/10 dark:bg-white/10 dark:text-stone-100';
+				return 'border-border bg-card text-foreground shadow-sm';
 		}
 	}
 </script>

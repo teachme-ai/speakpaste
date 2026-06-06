@@ -22,6 +22,7 @@
 	import { recordings } from '$lib/state/recordings.svelte';
 	import { settings } from '$lib/state/settings.svelte';
 	import { deviceConfig } from '$lib/state/device-config.svelte';
+	import { dictationRuntime } from '$lib/state/dictation-runtime.svelte';
 	import { formatDistanceToNow } from 'date-fns';
 	import { WHISPER_MODELS } from '$lib/services/transcription/local/whispercpp';
 	import { toast } from '@epicenter/ui/sonner';
@@ -94,14 +95,14 @@
 	import { PATHS } from '$lib/constants/paths';
 	import { LOCAL_PERFORMANCE_PROFILE_OPTIONS } from '$lib/constants/audio';
 
-	const getRecorderStateQuery = createQuery(
-		() => rpc.recorder.getRecorderState.options,
+	const recorderState = $derived(
+		dictationRuntime.snapshot.status === 'Recording' ? 'RECORDING' : 'IDLE'
 	);
 
-	const recorderState = $derived(getRecorderStateQuery.data ?? 'IDLE');
-
-	let isTranscribingLocal = $state(false);
-	const isTranscribing = $derived(isTranscribingLocal);
+	const isTranscribing = $derived(
+		dictationRuntime.snapshot.status === 'Transcribing' ||
+		dictationRuntime.snapshot.status === 'Pasting'
+	);
 
 	// Pasted state: fires when a new recording appears on disk
 	let justPasted = $state(false);
@@ -210,34 +211,19 @@
 		}
 	}
 
-	// Reload history and sync transcribing indicators on pipeline events
+	// Reload history on pipeline events
 	onMount(() => {
 		loadFsRecordings();
 
 		const handleComplete = () => {
 			console.log('[Mynah] pipeline-complete event received, reloading history');
-			isTranscribingLocal = false;
 			loadFsRecordings();
 		};
 
-		const handleStarted = () => {
-			console.log('[Mynah] pipeline-started event received, setting transcribing active');
-			isTranscribingLocal = true;
-		};
-
-		const handleError = () => {
-			console.log('[Mynah] pipeline-error event received, clearing transcribing state');
-			isTranscribingLocal = false;
-		};
-
 		window.addEventListener(PIPELINE_EVENTS.COMPLETE, handleComplete);
-		window.addEventListener(PIPELINE_EVENTS.STARTED, handleStarted);
-		window.addEventListener(PIPELINE_EVENTS.ERROR, handleError);
 
 		return () => {
 			window.removeEventListener(PIPELINE_EVENTS.COMPLETE, handleComplete);
-			window.removeEventListener(PIPELINE_EVENTS.STARTED, handleStarted);
-			window.removeEventListener(PIPELINE_EVENTS.ERROR, handleError);
 		};
 	});
 
@@ -289,7 +275,7 @@
 			<div class="flex flex-col items-center gap-4">
 				<HintText />
 				{#if currentStatus}
-					<p class="text-xs font-medium text-stone-500 transition-opacity dark:text-stone-300">
+					<p class="text-xs font-medium text-muted-foreground transition-opacity">
 						{currentStatus}
 					</p>
 				{/if}
@@ -299,7 +285,7 @@
 		</div>
 
 		<div class="flex justify-center mt-2 mb-5">
-			<button class="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white/60 px-5 py-2.5 text-sm font-semibold text-stone-900 shadow-sm transition-all hover:bg-white/85 dark:border-white/10 dark:bg-white/10 dark:text-stone-50 dark:hover:bg-white/15" onclick={toggleHistory}>
+			<button class="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-5 py-2.5 text-sm font-semibold text-foreground shadow-sm transition-all hover:bg-card/90" onclick={toggleHistory}>
 				{#if showHistory}
 					<svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
 					Hide captures
@@ -330,31 +316,16 @@
 
 <style>
 	.home-surface {
-		background:
-			linear-gradient(180deg, oklch(0.985 0.006 95), oklch(0.94 0.012 105));
-		color: oklch(0.22 0.018 240);
+		background: var(--background);
+		color: var(--foreground);
 	}
 
 	.voice-panel {
-		border-color: oklch(0.35 0.02 240 / 0.12);
-		background: oklch(1 0 0 / 0.58);
+		border-color: var(--border);
+		background: var(--card);
 		box-shadow:
-			0 1px 0 oklch(1 0 0 / 0.72) inset,
-			0 18px 48px oklch(0.28 0.018 240 / 0.12);
+			0 1px 0 oklch(1 0 0 / 0.1) inset,
+			0 18px 48px oklch(0 0 0 / 0.05);
 		backdrop-filter: blur(18px);
-	}
-
-	:global(.dark) .home-surface {
-		background:
-			linear-gradient(180deg, oklch(0.19 0.014 245), oklch(0.13 0.012 245));
-		color: oklch(0.96 0.008 90);
-	}
-
-	:global(.dark) .voice-panel {
-		border-color: oklch(1 0 0 / 0.1);
-		background: oklch(0.24 0.018 245 / 0.58);
-		box-shadow:
-			0 1px 0 oklch(1 0 0 / 0.08) inset,
-			0 18px 52px oklch(0 0 0 / 0.26);
 	}
 </style>

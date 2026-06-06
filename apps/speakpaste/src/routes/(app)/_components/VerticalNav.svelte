@@ -6,19 +6,30 @@
 	import MoonIcon from '@lucide/svelte/icons/moon';
 	import LogsIcon from '@lucide/svelte/icons/scroll-text';
 	import SunIcon from '@lucide/svelte/icons/sun';
-	import { toggleMode } from 'mode-watcher';
 	import { page } from '$app/state';
 	import { GithubIcon } from '$lib/components/icons';
 	import { notificationLog } from '$lib/components/NotificationLog.svelte';
 	import { NAV_ITEMS } from '$lib/constants/ui';
 	import MigrationDialog from '$lib/migration/MigrationDialog.svelte';
 	import { migrationDialog } from '$lib/migration/migration-dialog.svelte';
+	import { settings } from '$lib/state/settings.svelte';
 
 	const shouldShowMigrationButton = $derived(
 		import.meta.env.DEV || migrationDialog.isPending,
 	);
 
 	const sidebar = useSidebar();
+
+	function cycleTheme() {
+		const current = settings.get('ui.theme');
+		if (current === 'pastel') {
+			settings.set('ui.theme', 'dark');
+		} else if (current === 'dark') {
+			settings.set('ui.theme', 'mynah');
+		} else {
+			settings.set('ui.theme', 'pastel');
+		}
+	}
 </script>
 
 <Sidebar.Root collapsible="icon">
@@ -77,17 +88,18 @@
 
 	<Sidebar.Footer>
 		<Sidebar.Menu>
-			<!-- Toggle dark mode -->
+			<!-- Toggle theme -->
 			<Sidebar.MenuItem>
 				<Sidebar.MenuButton>
 					{#snippet child({ props })}
-						<button onclick={toggleMode} {...props}>
-							<SunIcon
-								class="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
-							/>
-							<MoonIcon
-								class="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100"
-							/>
+						<button onclick={cycleTheme} {...props}>
+							{#if settings.get('ui.theme') === 'dark'}
+								<MoonIcon class="h-4 w-4" />
+							{:else if settings.get('ui.theme') === 'mynah'}
+								<SunIcon class="h-4 w-4 text-amber-500" />
+							{:else}
+								<SunIcon class="h-4 w-4" />
+							{/if}
 							<span>Toggle theme</span>
 						</button>
 					{/snippet}

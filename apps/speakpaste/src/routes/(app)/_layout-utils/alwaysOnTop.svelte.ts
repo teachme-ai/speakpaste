@@ -1,27 +1,24 @@
-import { createQuery } from '@tanstack/svelte-query';
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { rpc } from '$lib/query';
 import { settings } from '$lib/state/settings.svelte';
+import { dictationRuntime } from '$lib/state/dictation-runtime.svelte';
 import { vadRecorder } from '$lib/state/vad-recorder.svelte';
 
 export function syncWindowAlwaysOnTopWithRecorderState() {
-	const getRecorderStateQuery = createQuery(() => ({
-		...rpc.recorder.getRecorderState.options,
-		enabled: settings.get('recording.mode') === 'manual',
-	}));
-
 	$effect(() => {
 		const setAlwaysOnTop = (value: boolean) =>
 			getCurrentWindow().setAlwaysOnTop(value);
+		const status = dictationRuntime.snapshot.status;
+
 		switch (settings.get('ui.alwaysOnTop')) {
 			case 'Always':
 				setAlwaysOnTop(true);
 				break;
 			case 'When Recording and Transcribing':
 				if (
-					getRecorderStateQuery.data === 'RECORDING' ||
-					vadRecorder.state === 'SPEECH_DETECTED' ||
-					rpc.transcription.isCurrentlyTranscribing()
+					status === 'Recording' ||
+					status === 'Transcribing' ||
+					status === 'Pasting' ||
+					vadRecorder.state === 'SPEECH_DETECTED'
 				) {
 					setAlwaysOnTop(true);
 				} else {
@@ -30,7 +27,7 @@ export function syncWindowAlwaysOnTopWithRecorderState() {
 				break;
 			case 'When Recording':
 				if (
-					getRecorderStateQuery.data === 'RECORDING' ||
+					status === 'Recording' ||
 					vadRecorder.state === 'SPEECH_DETECTED'
 				) {
 					setAlwaysOnTop(true);

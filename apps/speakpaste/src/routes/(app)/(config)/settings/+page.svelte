@@ -66,6 +66,15 @@
 	const disableAutostartMutation = createMutation(
 		() => desktopRpc.autostart.disable.options,
 	);
+
+	const THEME_OPTIONS = [
+		{ value: 'pastel', label: 'Light Pastel' },
+		{ value: 'dark', label: 'Deep Dark' },
+		{ value: 'mynah', label: 'Mynah Brand' },
+	];
+	const selectedThemeLabel = $derived(
+		THEME_OPTIONS.find((t) => t.value === settings.get('ui.theme'))?.label ?? 'Light Pastel'
+	);
 </script>
 
 <svelte:head> <title>Control Center - Mynah</title> </svelte:head>
@@ -322,6 +331,24 @@
 						</Select.Trigger>
 						<Select.Content>
 							{#each ALWAYS_ON_TOP_MODE_OPTIONS as item}
+								<Select.Item value={item.value} label={item.label} />
+							{/each}
+						</Select.Content>
+					</Select.Root>
+				</Field.Field>
+
+				<Field.Field>
+					<Field.Label for="ui-theme">UI Theme</Field.Label>
+					<Select.Root
+						type="single"
+						bind:value={() => settings.get('ui.theme'),
+							(v) => settings.set('ui.theme', v)}
+					>
+						<Select.Trigger id="ui-theme" class="w-full">
+							{selectedThemeLabel}
+						</Select.Trigger>
+						<Select.Content>
+							{#each THEME_OPTIONS as item}
 								<Select.Item value={item.value} label={item.label} />
 							{/each}
 						</Select.Content>

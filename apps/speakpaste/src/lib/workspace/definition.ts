@@ -232,6 +232,10 @@ const output = {
 /** Window behavior and navigation layout preferences. */
 const ui = {
 	'ui.alwaysOnTop': defineKv(type.enumerated(...ALWAYS_ON_TOP_MODES), 'Never'),
+	'ui.theme': defineKv(
+		type("'pastel' | 'dark' | 'mynah'"),
+		'pastel',
+	),
 } as const;
 
 /**

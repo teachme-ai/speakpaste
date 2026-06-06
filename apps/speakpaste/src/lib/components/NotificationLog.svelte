@@ -35,7 +35,7 @@
 	import BellIcon from '@lucide/svelte/icons/bell';
 	import CheckCircle2 from '@lucide/svelte/icons/check-circle-2';
 	import Info from '@lucide/svelte/icons/info';
-	import { mode } from 'mode-watcher';
+	import { settings } from '$lib/state/settings.svelte';
 	import type { UnifiedNotificationOptions } from '$lib/services/notifications/types';
 </script>
 
@@ -49,7 +49,7 @@
 		<ScrollArea
 			class="h-[60vh] overflow-y-auto rounded-md border bg-background p-4"
 			data-sonner-toaster
-			data-theme={mode.current}
+			data-theme={settings.get('ui.theme') === 'dark' ? 'dark' : 'light'}
 			data-rich-colors="true"
 		>
 			{#each notificationLog.logs as log}
