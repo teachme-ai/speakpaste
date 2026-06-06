@@ -169,10 +169,10 @@ const stopManualRecording = defineMutation({
 
 		const { blob, recordingId } = data;
 
-		notify.success({
+		notify.loading({
 			id: toastId,
-			title: '🎙️ Recording stopped',
-			description: 'Your recording has been saved',
+			title: 'Preparing transcription...',
+			description: 'Finalizing audio before local transcription.',
 		});
 		console.info('Recording stopped');
 
@@ -191,6 +191,7 @@ const stopManualRecording = defineMutation({
 			recordingId,
 			source: 'manual',
 			toastId,
+			transcribeToastId: toastId,
 			completionTitle: '✨ Recording Complete!',
 			completionDescription: 'Recording saved and session closed successfully',
 		});
@@ -356,6 +357,12 @@ export const actions = {
 			filePath: string;
 		}) => {
 			const toastId = nanoid();
+			void dictationRuntime.setStatus('Transcribing', 'Finalizing audio');
+			notify.loading({
+				id: toastId,
+				title: 'Finalizing audio...',
+				description: 'Preparing the background recording for local transcription.',
+			});
 			const { data: blob, error } = await FsServiceLive.pathToBlob(filePath);
 			if (error) {
 				notify.error({
@@ -372,6 +379,7 @@ export const actions = {
 				recordingId,
 				source: 'native',
 				toastId,
+				transcribeToastId: toastId,
 				completionTitle: 'Background recording complete',
 				completionDescription: 'Recording captured by the native runtime',
 			});

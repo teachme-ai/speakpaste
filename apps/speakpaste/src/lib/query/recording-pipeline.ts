@@ -27,6 +27,7 @@ export type ProcessRecordingPipelineInput = {
 	recordingId?: string;
 	source: PipelineSource;
 	toastId: string;
+	transcribeToastId?: string;
 	completionTitle: string;
 	completionDescription: string;
 };
@@ -322,13 +323,14 @@ function prepareTranscriptionStage({
 	recording,
 	blob,
 	source,
+	transcribeToastId = nanoid(),
 }: {
 	recording: PipelineRecording;
 	blob: Blob;
 	source: PipelineSource;
+	transcribeToastId?: string;
 }) {
 	void dictationRuntime.setStatus('Transcribing', 'Transcribing locally');
-	const transcribeToastId = nanoid();
 	notify.loading({
 		id: transcribeToastId,
 		title: '📋 Transcribing...',
@@ -455,13 +457,19 @@ export async function processRecordingPipeline({
 	recordingId,
 	source,
 	toastId,
+	transcribeToastId: providedTranscribeToastId,
 	completionTitle,
 	completionDescription,
 }: ProcessRecordingPipelineInput) {
 	const pipelineStart = performance.now();
 	const recording = createRecordingRecord(recordingId);
 	const { saveAudioPromise, transcribePromise, transcribeToastId } =
-		prepareTranscriptionStage({ recording, blob, source });
+		prepareTranscriptionStage({
+			recording,
+			blob,
+			source,
+			transcribeToastId: providedTranscribeToastId,
+		});
 	const transcribedText = await runTranscriptionStage({
 		recording,
 		source,
