@@ -36,24 +36,38 @@ Signed app:
 apps/speakpaste/src-tauri/target/release/bundle/macos/Mynah.app
 ```
 
-Notarized DMG:
+Latest notarized DMG:
 
 ```text
-apps/speakpaste/src-tauri/target/release/bundle/dmg/Mynah_0.1.1_aarch64.dmg
+apps/speakpaste/src-tauri/target/release/bundle/dmg/Mynah_1.0.0_aarch64.dmg
 ```
 
-Notary submission ID from the successful run:
+Latest notary submission ID:
 
 ```text
-97404a1b-52c2-4ded-b1e8-837ccda6f93d
+ad9f5d90-d1de-4ea7-b4e3-fd6ace7bf657
 ```
 
-Successful final checks:
+Notary status:
+
+```text
+Accepted
+```
+
+Required final checks after stapling:
 
 ```text
 spctl DMG: accepted, source=Notarized Developer ID
 stapler validate: The validate action worked!
 spctl app: accepted, source=Notarized Developer ID
+```
+
+Previous proof run:
+
+```text
+Mynah_0.1.1_aarch64.dmg
+Notary submission ID: 97404a1b-52c2-4ded-b1e8-837ccda6f93d
+Status: Accepted, stapled, and Gatekeeper accepted
 ```
 
 ---
@@ -202,7 +216,7 @@ Expected successful build lines:
 Signing with identity "Developer ID Application: Khalid Irfan (99YAK7YU3M)"
 Finished 2 bundles at:
   .../bundle/macos/Mynah.app
-  .../bundle/dmg/Mynah_0.1.1_aarch64.dmg
+  .../bundle/dmg/Mynah_1.0.0_aarch64.dmg
 ```
 
 Tauri may warn:
@@ -276,7 +290,7 @@ Paste the app-specific password when prompted. It will not visibly type.
 Run:
 
 ```bash
-xcrun notarytool submit src-tauri/target/release/bundle/dmg/Mynah_0.1.1_aarch64.dmg \
+xcrun notarytool submit src-tauri/target/release/bundle/dmg/Mynah_1.0.0_aarch64.dmg \
   --apple-id "$APPLE_ID" \
   --team-id "$APPLE_TEAM_ID" \
   --password "$APPLE_APP_SPECIFIC_PASSWORD" \
@@ -347,8 +361,8 @@ Do not guess. Use the notary log.
 After `status: Accepted`, run:
 
 ```bash
-xcrun stapler staple src-tauri/target/release/bundle/dmg/Mynah_0.1.1_aarch64.dmg
-xcrun stapler validate src-tauri/target/release/bundle/dmg/Mynah_0.1.1_aarch64.dmg
+xcrun stapler staple src-tauri/target/release/bundle/dmg/Mynah_1.0.0_aarch64.dmg
+xcrun stapler validate src-tauri/target/release/bundle/dmg/Mynah_1.0.0_aarch64.dmg
 ```
 
 Expected:
@@ -368,13 +382,13 @@ Stapling lets Gatekeeper validate the DMG even when the user is offline.
 Use the primary-signature context for DMGs:
 
 ```bash
-spctl --assess --type open --context context:primary-signature --verbose src-tauri/target/release/bundle/dmg/Mynah_0.1.1_aarch64.dmg
+spctl --assess --type open --context context:primary-signature --verbose src-tauri/target/release/bundle/dmg/Mynah_1.0.0_aarch64.dmg
 ```
 
 Expected:
 
 ```text
-src-tauri/target/release/bundle/dmg/Mynah_0.1.1_aarch64.dmg: accepted
+src-tauri/target/release/bundle/dmg/Mynah_1.0.0_aarch64.dmg: accepted
 source=Notarized Developer ID
 ```
 
@@ -409,7 +423,7 @@ source=Notarized Developer ID
 After signing, notarization, stapling, and Gatekeeper validation pass, the release DMG is:
 
 ```text
-apps/speakpaste/src-tauri/target/release/bundle/dmg/Mynah_0.1.1_aarch64.dmg
+apps/speakpaste/src-tauri/target/release/bundle/dmg/Mynah_1.0.0_aarch64.dmg
 ```
 
 This is the artifact to upload to the website/release host.
@@ -438,7 +452,7 @@ Include:
 Calculate SHA256:
 
 ```bash
-shasum -a 256 src-tauri/target/release/bundle/dmg/Mynah_0.1.1_aarch64.dmg
+shasum -a 256 src-tauri/target/release/bundle/dmg/Mynah_1.0.0_aarch64.dmg
 ```
 
 ---

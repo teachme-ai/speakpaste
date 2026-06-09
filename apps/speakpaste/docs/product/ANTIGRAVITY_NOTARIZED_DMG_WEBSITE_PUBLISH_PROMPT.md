@@ -15,7 +15,7 @@ Product:
 - Name: Mynah
 - Website: `https://mynah.site`
 - Bundle identifier: `com.mynah.app`
-- Version: `0.1.1`
+- Version: `1.0.0`
 - Architecture: Apple Silicon / `aarch64`
 - Pricing: one-time lifetime license, `$29` / `₹1499`
 - Support: `irfan@teachmeai.in`
@@ -23,7 +23,7 @@ Product:
 Notarized DMG artifact:
 
 ```text
-/Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste/src-tauri/target/release/bundle/dmg/Mynah_0.1.1_aarch64.dmg
+/Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste/src-tauri/target/release/bundle/dmg/Mynah_1.0.0_aarch64.dmg
 ```
 
 Website repo:
@@ -51,11 +51,11 @@ Deployment report target:
 The successful run produced these validations:
 
 ```text
-spctl --assess --type open --context context:primary-signature --verbose src-tauri/target/release/bundle/dmg/Mynah_0.1.1_aarch64.dmg
+spctl --assess --type open --context context:primary-signature --verbose src-tauri/target/release/bundle/dmg/Mynah_1.0.0_aarch64.dmg
 => accepted
 => source=Notarized Developer ID
 
-xcrun stapler validate src-tauri/target/release/bundle/dmg/Mynah_0.1.1_aarch64.dmg
+xcrun stapler validate src-tauri/target/release/bundle/dmg/Mynah_1.0.0_aarch64.dmg
 => The validate action worked!
 
 spctl --assess --type execute --verbose src-tauri/target/release/bundle/macos/Mynah.app
@@ -89,7 +89,7 @@ Only modify website files and release/report docs unless explicitly needed.
 Run:
 
 ```bash
-ls -lh /Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste/src-tauri/target/release/bundle/dmg/Mynah_0.1.1_aarch64.dmg
+ls -lh /Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste/src-tauri/target/release/bundle/dmg/Mynah_1.0.0_aarch64.dmg
 ```
 
 Expected:
@@ -105,8 +105,8 @@ Run:
 
 ```bash
 cd /Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste
-xcrun stapler validate src-tauri/target/release/bundle/dmg/Mynah_0.1.1_aarch64.dmg
-spctl --assess --type open --context context:primary-signature --verbose src-tauri/target/release/bundle/dmg/Mynah_0.1.1_aarch64.dmg
+xcrun stapler validate src-tauri/target/release/bundle/dmg/Mynah_1.0.0_aarch64.dmg
+spctl --assess --type open --context context:primary-signature --verbose src-tauri/target/release/bundle/dmg/Mynah_1.0.0_aarch64.dmg
 ```
 
 Expected:
@@ -127,7 +127,7 @@ Run:
 
 ```bash
 cd /Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste
-shasum -a 256 src-tauri/target/release/bundle/dmg/Mynah_0.1.1_aarch64.dmg
+shasum -a 256 src-tauri/target/release/bundle/dmg/Mynah_1.0.0_aarch64.dmg
 ```
 
 Record:
@@ -148,13 +148,13 @@ Recommended for traceability.
 Create or update a GitHub release for:
 
 ```text
-v0.1.1
+v1.0.0
 ```
 
 Attach:
 
 ```text
-Mynah_0.1.1_aarch64.dmg
+Mynah_1.0.0_aarch64.dmg
 ```
 
 Use the final GitHub release asset URL in the website.
@@ -166,7 +166,7 @@ Only use if explicitly preferred.
 Potential path:
 
 ```text
-/downloads/Mynah_0.1.1_aarch64.dmg
+/downloads/Mynah_1.0.0_aarch64.dmg
 ```
 
 Be careful with large binary hosting limits and caching.
@@ -207,7 +207,7 @@ Replace the placeholder artifact list with the final release details:
 ```json
 {
   "product": "Mynah",
-  "version": "0.1.1",
+  "version": "1.0.0",
   "release": null,
   "pricing": {
     "usd": 29,
@@ -218,14 +218,14 @@ Replace the placeholder artifact list with the final release details:
     {
       "arch": "aarch64",
       "label": "Apple Silicon",
-      "filename": "Mynah_0.1.1_aarch64.dmg",
+      "filename": "Mynah_1.0.0_aarch64.dmg",
       "url": "<FINAL_DMG_URL>",
       "sha256": "<SHA256>",
       "notarized": true,
       "signedBy": "Developer ID Application: Khalid Irfan (99YAK7YU3M)"
     }
   ],
-  "status": "Mynah 0.1.1 for Apple Silicon is signed, notarized, stapled, and ready for download."
+  "status": "Mynah 1.0.0 for Apple Silicon is signed, notarized, stapled, and ready for download."
 }
 ```
 
@@ -242,7 +242,7 @@ Remove placeholder language like:
 Replace with:
 
 - direct download button to `<FINAL_DMG_URL>`
-- version `0.1.1`
+- version `1.0.0`
 - architecture `Apple Silicon`
 - notarized status
 - SHA256 checksum
@@ -251,7 +251,7 @@ Replace with:
 Recommended copy:
 
 ```text
-Download Mynah 0.1.1 for Apple Silicon.
+Download Mynah 1.0.0 for Apple Silicon.
 This DMG is signed with Developer ID, notarized by Apple, and stapled for Gatekeeper validation.
 ```
 
@@ -265,7 +265,7 @@ Download Mynah for Apple Silicon
 
 Update facts:
 
-- current version `0.1.1`
+- current version `1.0.0`
 - download status: signed and notarized
 - supported architecture: Apple Silicon / `aarch64`
 
@@ -273,7 +273,7 @@ Update facts:
 
 Update product facts:
 
-- Current version: `0.1.1`
+- Current version: `1.0.0`
 - Apple Silicon DMG URL: `<FINAL_DMG_URL>`
 - Notarized: yes
 - Signed by: `Developer ID Application: Khalid Irfan (99YAK7YU3M)`
