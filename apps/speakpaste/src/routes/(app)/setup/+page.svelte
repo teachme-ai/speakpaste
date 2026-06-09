@@ -17,8 +17,21 @@
 
 	type SetupStatus = 'checking' | 'ready' | 'needed';
 
+	type AccessibilityRepairResult = {
+		trusted: boolean;
+		prompted: boolean;
+		didReset: boolean;
+		installChanged: boolean;
+		needsUserApproval: boolean;
+		recoveryState: string;
+		bundlePath: string | null;
+		buildSignature: string;
+	};
+
 	let accessibilityStatus = $state<SetupStatus>('checking');
 	let microphoneStatus = $state<SetupStatus>('checking');
+	let isOpeningAccessibilitySettings = $state(false);
+	let accessibilitySettingsMessage = $state('');
 	let isRequestingMicrophone = $state(false);
 	let pollTimer: number | undefined;
 
@@ -34,6 +47,31 @@
 	async function openMacPrivacyPane(pane: 'Privacy_Accessibility' | 'Privacy_Microphone') {
 		const { invoke } = await import('@tauri-apps/api/core');
 		await invoke('open_mac_privacy_pane', { pane });
+	}
+
+	async function prepareAccessibilityForSetup() {
+		if (!window.__TAURI_INTERNALS__) return;
+
+		const { invoke } = await import('@tauri-apps/api/core');
+		const isTranslocated = await invoke<boolean>('check_app_translocation');
+		if (isTranslocated) {
+			await goto('/macos-translocation-warning');
+			return;
+		}
+
+		const repairResult = await invoke<AccessibilityRepairResult>(
+			'repair_accessibility_permissions_if_needed',
+		);
+		if (repairResult.trusted) {
+			accessibilityStatus = 'ready';
+			accessibilitySettingsMessage = '';
+			return;
+		}
+
+		accessibilityStatus = 'needed';
+		accessibilitySettingsMessage = repairResult.didReset
+			? 'Mynah refreshed its macOS Accessibility entry. Enable Mynah in System Settings to continue.'
+			: 'Enable Mynah in System Settings > Privacy & Security > Accessibility to continue.';
 	}
 
 	async function checkAccessibility() {
@@ -84,6 +122,24 @@
 		}
 	}
 
+	async function openAccessibilitySettings() {
+		isOpeningAccessibilitySettings = true;
+		accessibilitySettingsMessage = '';
+		try {
+			await prepareAccessibilityForSetup();
+			await openMacPrivacyPane('Privacy_Accessibility');
+			accessibilitySettingsMessage =
+				'In System Settings, open Privacy & Security > Accessibility and enable Mynah.';
+			window.setTimeout(checkAccessibility, 1000);
+		} catch (error) {
+			console.error('[Setup] Failed to open Accessibility settings:', error);
+			accessibilitySettingsMessage =
+				'Open System Settings > Privacy & Security > Accessibility, then enable Mynah.';
+		} finally {
+			isOpeningAccessibilitySettings = false;
+		}
+	}
+
 	async function finishSetup() {
 		if (!allReady) return;
 		localStorage.setItem('mynah.setup.completedAt', new Date().toISOString());
@@ -103,6 +159,12 @@
 			});
 		}
 
+		void prepareAccessibilityForSetup().catch((error) => {
+			console.error('[Setup] Failed to prepare Accessibility permission:', error);
+			accessibilityStatus = 'needed';
+			accessibilitySettingsMessage =
+				'Open System Settings > Privacy & Security > Accessibility, then enable Mynah.';
+		});
 		refreshPermissions();
 		pollTimer = window.setInterval(refreshPermissions, 1500);
 	});
@@ -163,6 +225,11 @@
 								{@render AppIcon()} uses Accessibility so Fn dictation works anywhere you type.
 								The app will try to add and enable itself automatically.
 							</p>
+							{#if accessibilitySettingsMessage}
+								<p class="mt-2 text-xs leading-5 text-muted-foreground">
+									{accessibilitySettingsMessage}
+								</p>
+							{/if}
 						</div>
 					</div>
 					<div class="flex justify-end">
@@ -171,9 +238,14 @@
 						{:else if accessibilityStatus === 'checking'}
 							{@render StatusPending('Checking')}
 						{:else}
-							<Button variant="outline" size="sm" onclick={() => openMacPrivacyPane('Privacy_Accessibility')}>
+							<Button
+								variant="outline"
+								size="sm"
+								onclick={openAccessibilitySettings}
+								disabled={isOpeningAccessibilitySettings}
+							>
 								<SettingsIcon class="size-4" />
-								Open Settings
+								{isOpeningAccessibilitySettings ? 'Opening...' : 'Open Settings'}
 							</Button>
 						{/if}
 					</div>

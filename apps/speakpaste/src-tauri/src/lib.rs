@@ -457,11 +457,69 @@ async fn reset_tcc_permissions(app: tauri::AppHandle) -> Result<bool, String> {
 async fn open_mac_privacy_pane(pane: String) -> Result<bool, String> {
     #[cfg(target_os = "macos")]
     {
-        let url = format!(
-            "x-apple.systemsettings:com.apple.preference.security?{}",
-            pane
-        );
-        let _ = std::process::Command::new("open").arg(&url).spawn();
+        match pane.as_str() {
+            "Privacy_Accessibility" | "Privacy_Microphone" => {}
+            _ => return Err(format!("Unsupported macOS privacy pane: {}", pane)),
+        }
+
+        let urls = [
+            format!(
+                "x-apple.systemsettings:com.apple.preference.security?{}",
+                pane
+            ),
+            format!(
+                "x-apple.systempreferences:com.apple.preference.security?{}",
+                pane
+            ),
+            "x-apple.systemsettings:com.apple.SystemSettings.extension".to_string(),
+        ];
+
+        let mut opened = false;
+        for url in urls {
+            match std::process::Command::new("open").arg(&url).status() {
+                Ok(status) if status.success() => {
+                    opened = true;
+                }
+                Ok(status) => {
+                    warn!(
+                        "[Permissions] Failed to open macOS settings URL {}: status {:?}",
+                        url,
+                        status.code()
+                    );
+                }
+                Err(error) => {
+                    warn!(
+                        "[Permissions] Failed to open macOS settings URL {}: {}",
+                        url, error
+                    );
+                }
+            }
+        }
+
+        match std::process::Command::new("open")
+            .args(["-b", "com.apple.SystemSettings"])
+            .status()
+        {
+            Ok(status) if status.success() => {
+                opened = true;
+            }
+            Ok(status) => {
+                warn!(
+                    "[Permissions] Failed to open System Settings by bundle id: status {:?}",
+                    status.code()
+                );
+            }
+            Err(error) => {
+                warn!(
+                    "[Permissions] Failed to open System Settings by bundle id: {}",
+                    error
+                );
+            }
+        }
+
+        if !opened {
+            return Err("Failed to open macOS System Settings".to_string());
+        }
     }
     Ok(true)
 }
