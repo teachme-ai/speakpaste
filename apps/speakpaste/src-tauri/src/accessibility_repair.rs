@@ -53,6 +53,7 @@ pub struct AccessibilityRepairResult {
 pub async fn repair_accessibility_permissions_if_needed(
     app: AppHandle,
     force: Option<bool>,
+    prompt: Option<bool>,
 ) -> Result<AccessibilityRepairResult, String> {
     #[cfg(not(target_os = "macos"))]
     {
@@ -112,7 +113,7 @@ pub async fn repair_accessibility_permissions_if_needed(
             false
         };
 
-        let prompted = !application_is_trusted();
+        let prompted = prompt.unwrap_or(true) && !application_is_trusted();
         if prompted {
             let _ = application_is_trusted_with_prompt();
         }

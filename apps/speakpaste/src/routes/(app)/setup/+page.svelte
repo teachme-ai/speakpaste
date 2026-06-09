@@ -49,7 +49,7 @@
 		await invoke('open_mac_privacy_pane', { pane });
 	}
 
-	async function prepareAccessibilityForSetup() {
+	async function prepareAccessibilityForSetup(prompt = false) {
 		if (!window.__TAURI_INTERNALS__) return;
 
 		const { invoke } = await import('@tauri-apps/api/core');
@@ -61,6 +61,7 @@
 
 		const repairResult = await invoke<AccessibilityRepairResult>(
 			'repair_accessibility_permissions_if_needed',
+			{ prompt },
 		);
 		if (repairResult.trusted) {
 			accessibilityStatus = 'ready';
@@ -126,7 +127,7 @@
 		isOpeningAccessibilitySettings = true;
 		accessibilitySettingsMessage = '';
 		try {
-			await prepareAccessibilityForSetup();
+			await prepareAccessibilityForSetup(true);
 			await openMacPrivacyPane('Privacy_Accessibility');
 			accessibilitySettingsMessage =
 				'In System Settings, open Privacy & Security > Accessibility and enable Mynah.';
