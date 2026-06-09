@@ -59,7 +59,7 @@ Before running the application locally, make sure you have:
 ```bash
 # 1. Clone the private repository
 Visit the official website for installation instructions and downloads:
-https://mynah.online
+https://mynah.site
 cd mynah
 
 # 2. Install monorepo workspace dependencies

@@ -5,7 +5,7 @@
 This document does two things:
 
 1. captures the current, real product surface of Mynah as it exists in the app today
-2. identifies what should change on `mynah.online` so the website matches the product we are actually shipping
+2. identifies what should change on `mynah.site` so the website matches the product we are actually shipping
 
 This is the source brief to use when rewriting the website.
 
@@ -269,7 +269,7 @@ Website change:
 
 ## 5. Live Website: What Specifically Should Change
 
-The current homepage at `https://mynah.online` has several sections that should be changed.
+The current homepage at `https://mynah.site` has several sections that should be changed.
 
 ### Hero
 
@@ -557,7 +557,7 @@ materials for the rewrite:
 4. [WEBSITE_CREDITS_ATTRIBUTION_PAGE.md](./WEBSITE_CREDITS_ATTRIBUTION_PAGE.md)
    - short and full upstream attribution copy for the website
 5. [WEBSITE_SECTION_REWRITE_CHECKLIST.md](./WEBSITE_SECTION_REWRITE_CHECKLIST.md)
-   - section-by-section rewrite checklist for the current `mynah.online` page
+   - section-by-section rewrite checklist for the current `mynah.site` page
 
 ---
 

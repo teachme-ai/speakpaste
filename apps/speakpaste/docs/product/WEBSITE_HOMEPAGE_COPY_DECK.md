@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This is the one-page copy deck for the next `mynah.online` homepage rewrite. It should be used with `WEBSITE_PRODUCT_ALIGNMENT_BRIEF.md`.
+This is the one-page copy deck for the next `mynah.site` homepage rewrite. It should be used with `WEBSITE_PRODUCT_ALIGNMENT_BRIEF.md`.
 
 The homepage should make Mynah feel like a focused Mac utility, not a broad transcription platform.
 

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This checklist turns the alignment brief into a practical rewrite plan for `mynah.online`.
+This checklist turns the alignment brief into a practical rewrite plan for `mynah.site`.
 
 Use it when editing the website so each section moves toward the current product truth.
 

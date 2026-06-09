@@ -30,7 +30,7 @@ This document reviews the current local-only changes, analyzes outstanding runti
 
 ### 1. Tauri Updater Active Connections
 * **Risk**: The Tauri Native Auto-Updater is still enabled and initialized. 
-* **Details**: In `src-tauri/src/lib.rs` (line 133), the builder registers `.plugin(tauri_plugin_updater::Builder::new().build())`. Although the `LOCAL_ONLY_BASELINE.md` states *"No auto-updater work in the current phase,"* the updater will still trigger asynchronous HTTP check requests on app startup against the endpoint configured in `tauri.conf.json` (pointing to `https://mynah.online`). This represents an outbound network call that violates pure off-grid baseline expectations.
+* **Details**: In `src-tauri/src/lib.rs` (line 133), the builder registers `.plugin(tauri_plugin_updater::Builder::new().build())`. Although the `LOCAL_ONLY_BASELINE.md` states *"No auto-updater work in the current phase,"* the updater will still trigger asynchronous HTTP check requests on app startup against the endpoint configured in `tauri.conf.json` (pointing to `https://mynah.site`). This represents an outbound network call that violates pure off-grid baseline expectations.
 
 ### 2. Local Model Bootstrapping (Outbound Download URLs)
 * **Risk**: High-performance local models still rely on external HTTP download endpoints on first launch.
