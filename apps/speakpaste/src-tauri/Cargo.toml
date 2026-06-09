@@ -2,8 +2,7 @@
 name = "mynah"
 version = "0.1.1"
 description = "Mac-only local-first voice typing powered by whisper.cpp"
-authors = ["you"]
-repository = "https://github.com/irfan1476/speakpaste"
+authors = ["Khalid Irfan"]
 edition = "2021"
 
 [package.metadata]

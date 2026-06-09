@@ -13,7 +13,7 @@
 		"typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"tauri": "bun ./scripts/run-tauri-with-build-meta.mjs"
 	},
-	"license": "MIT",
+	"license": "UNLICENSED",
 	"devDependencies": {
 		"@epicenter/ui": "workspace:*",
 		"@types/bun": "catalog:",

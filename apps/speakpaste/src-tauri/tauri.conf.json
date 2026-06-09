@@ -10,7 +10,7 @@
 		"category": "Productivity",
 		"publisher": "Irfan",
 		"copyright": "Copyright \u00a9 2026 Irfan",
-		"homepage": "https://speakpaste.online",
+		"homepage": "https://mynah.site",
 		"targets": "all",
 		"icon": [
 			"icons/32x32.png",
@@ -26,7 +26,7 @@
 			"entitlements": "entitlements.plist",
 			"hardenedRuntime": true,
 			"minimumSystemVersion": "10.15",
-			"signingIdentity": null
+			"signingIdentity": "Developer ID Application: Khalid Irfan (99YAK7YU3M)"
 		},
 		"linux": {
 			"appimage": {
@@ -57,7 +57,7 @@
 		"updater": {
 			"pubkey": "dW51c2VkX3BsYWNlaG9sZGVyX2tleV9mb3JfZGV2ZWxvcG1lbnRfcHVycG9zZXMK",
 			"endpoints": [
-				"https://raw.githubusercontent.com/teachme-ai/speakpaste/main/update.json"
+				"https://mynah.site/update.json"
 			]
 		}
 	},

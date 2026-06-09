@@ -1,30 +1,17 @@
-cask "mynah" do
-  version "0.1.0"
-  sha256 :no_check # Set to the exact SHA256 checksum of your compiled universal dmg file in production
+# Mynah Homebrew Cask Status
 
-  url "https://github.com/teachme-ai/speakpaste/releases/download/v#{version}/Mynah_#{version}_universal.dmg"
-  name "Mynah"
-  desc "Local-first voice dictation and text-transformation utility"
-  homepage "https://github.com/teachme-ai/speakpaste"
+This cask is intentionally not ready for public distribution.
 
-  depends_on macos: ">= :catalina"
+Mynah is now a paid, direct-download Mac app distributed under a one-time lifetime usage license.
+Do not publish or use a Homebrew cask until the release, licensing, and artifact-hosting strategy is finalized.
 
-  app "Mynah.app"
+Before re-enabling Homebrew distribution, define:
 
-  caveats <<~EOS
-    Mynah is distributed outside the paid Apple Developer Program.
-    To open the application without macOS Gatekeeper warnings, please run:
+- final public release repository or artifact host
+- notarized DMG URL
+- exact SHA256 checksum
+- license terms
+- support policy
+- whether Homebrew distribution is compatible with the paid-license flow
 
-      xattr -d com.apple.quarantine /Applications/Mynah.app
-
-    Alternatively, Right-Click (Control-Click) the application in Finder and select "Open" to permanently authorize execution.
-  EOS
-
-  zap trash: [
-    "~/Library/Application Support/com.mynah.app",
-    "~/Library/Application Support/com.mynah.app.dev",
-    "~/Library/Preferences/com.mynah.app.plist",
-    "~/Library/Saved Application State/com.mynah.app.savedState",
-    "~/Library/Logs/com.mynah.app",
-  ]
-end
+The old SpeakPaste GitHub URLs were deliberately removed to avoid publishing stale product identity or source repository references.
