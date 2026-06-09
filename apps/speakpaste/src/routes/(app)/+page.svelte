@@ -276,7 +276,7 @@
 	<OverlayStatusPill {recorderState} {isTranscribing} {justPasted} />
 {:else}
 <div class="home-surface mac-window-surface relative flex min-h-screen flex-col items-center overflow-y-auto">
-	<div class="w-full max-w-[430px] min-w-0 flex flex-col items-center gap-3 px-4 pb-6">
+	<div class="w-full max-w-[430px] min-w-0 flex flex-col items-center gap-3 px-4 pb-8">
 		<AppHeader />
 		<StatePillBar {pills} />
 
@@ -294,7 +294,7 @@
 			<PipelineControlDeck />
 		</div>
 
-		<div class="flex justify-center mt-0 mb-3">
+		<div class="flex justify-center mt-0 mb-5">
 			<button class="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/70 px-4 py-2 text-[15px] font-medium text-foreground shadow-sm transition-colors hover:bg-accent" onclick={toggleHistory}>
 				{#if showHistory}
 					<svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
