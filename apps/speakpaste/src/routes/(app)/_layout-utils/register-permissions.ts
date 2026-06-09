@@ -8,6 +8,10 @@ function isMacDesktop() {
 	return IS_MACOS && window.__TAURI_INTERNALS__;
 }
 
+function isSetupAssistantActive() {
+	return window.location.pathname === '/setup';
+}
+
 type AccessibilityRepairResult = {
 	trusted: boolean;
 	prompted: boolean;
@@ -73,6 +77,11 @@ export function registerAccessibilityPermission() {
 	const accessibilityToastId = nanoid();
 	let pollTimer: ReturnType<typeof window.setInterval> | undefined;
 
+	const dismissSetupToasts = () => {
+		toast.dismiss(accessibilityToastId);
+		toast.dismiss(`${accessibilityToastId}-reset`);
+	};
+
 	const showRecoveryToast = (
 		description:
 			| string
@@ -80,6 +89,11 @@ export function registerAccessibilityPermission() {
 					text: string;
 			  },
 	) => {
+		if (isSetupAssistantActive()) {
+			dismissSetupToasts();
+			return;
+		}
+
 		toast.warning('Accessibility access needed', {
 			id: accessibilityToastId,
 			description:
@@ -103,9 +117,11 @@ export function registerAccessibilityPermission() {
 				window.clearInterval(pollTimer);
 				pollTimer = undefined;
 				toast.dismiss(accessibilityToastId);
-				toast.success('Accessibility permission granted', {
-					description: 'Mynah is ready to listen for the Fn key again.',
-				});
+				if (!isSetupAssistantActive()) {
+					toast.success('Accessibility permission granted', {
+						description: 'Mynah is ready to listen for the Fn key again.',
+					});
+				}
 				return;
 			}
 		}, 1000);
@@ -139,11 +155,15 @@ export function registerAccessibilityPermission() {
 		}
 
 		if (repairResult?.didReset) {
-			toast.info('Accessibility entry refreshed', {
-				id: `${accessibilityToastId}-reset`,
-				description:
-					'Mynah detected a replaced or reinstalled app and refreshed its stale Accessibility entry in macOS.',
-			});
+			if (isSetupAssistantActive()) {
+				dismissSetupToasts();
+			} else {
+				toast.info('Accessibility entry refreshed', {
+					id: `${accessibilityToastId}-reset`,
+					description:
+						'Mynah detected a replaced or reinstalled app and refreshed its stale Accessibility entry in macOS.',
+				});
+			}
 		}
 
 		if (repairResult?.needsUserApproval) {
@@ -180,6 +200,11 @@ export function registerMicrophonePermission() {
 
 	// Check microphone permission once on mount
 	(async () => {
+		if (isSetupAssistantActive()) {
+			toast.dismiss(microphoneToastId);
+			return;
+		}
+
 		const { data: isMicrophoneGranted, error } =
 			await desktopServices.permissions.microphone.check();
 

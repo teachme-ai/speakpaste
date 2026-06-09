@@ -17,10 +17,10 @@
 
 	type SetupStatus = 'checking' | 'ready' | 'needed';
 
-let accessibilityStatus = $state<SetupStatus>('checking');
-let microphoneStatus = $state<SetupStatus>('checking');
-let isRequestingMicrophone = $state(false);
-let pollTimer: number | undefined;
+	let accessibilityStatus = $state<SetupStatus>('checking');
+	let microphoneStatus = $state<SetupStatus>('checking');
+	let isRequestingMicrophone = $state(false);
+	let pollTimer: number | undefined;
 
 	const modelPath = $derived(deviceConfig.get('transcription.whispercpp.modelPath'));
 	const activeModel = $derived(
@@ -112,7 +112,7 @@ let pollTimer: number | undefined;
 	});
 </script>
 
-<svelte:head><title>Set Up Mynah</title></svelte:head>
+<svelte:head><title>Set Up</title></svelte:head>
 
 <main class="setup-surface mac-window-surface flex min-h-screen w-full flex-col overflow-y-auto">
 	<section class="mx-auto flex w-full max-w-3xl flex-col gap-5 px-5 pb-6 pt-5">
@@ -126,10 +126,10 @@ let pollTimer: number | undefined;
 						First launch
 					</p>
 					<h1 class="mt-1 text-3xl font-semibold tracking-tight">
-						Set up Mynah in 2 minutes.
+						Set up {@render AppIcon()} in 2 minutes.
 					</h1>
 					<p class="mt-2 text-[17px] leading-7 text-muted-foreground">
-						Before your first Fn dictation, Mynah needs three things: Accessibility,
+						Before your first Fn dictation, {@render AppIcon()} needs three things: Accessibility,
 						Microphone, and one local Whisper model. Your voice stays on this Mac.
 					</p>
 				</div>
@@ -142,7 +142,7 @@ let pollTimer: number | undefined;
 					<div>
 						<h2 class="text-xl font-semibold tracking-tight">Setup checklist</h2>
 						<p class="mt-1 text-sm text-muted-foreground">
-							Mynah keeps checking while you move through macOS prompts.
+							{@render AppIcon()} keeps checking while you move through macOS prompts.
 						</p>
 					</div>
 					{#if allReady}
@@ -160,7 +160,7 @@ let pollTimer: number | undefined;
 						<div>
 							<p class="font-semibold">Accessibility</p>
 							<p class="mt-1 text-sm leading-6 text-muted-foreground">
-								Mynah uses Accessibility so Fn dictation works anywhere you type.
+								{@render AppIcon()} uses Accessibility so Fn dictation works anywhere you type.
 								The app will try to add and enable itself automatically.
 							</p>
 						</div>
@@ -187,7 +187,7 @@ let pollTimer: number | undefined;
 						<div>
 							<p class="font-semibold">Microphone</p>
 							<p class="mt-1 text-sm leading-6 text-muted-foreground">
-								macOS asks once so Mynah can record your voice for local transcription.
+								macOS asks once so {@render AppIcon()} can record your voice for local transcription.
 							</p>
 						</div>
 					</div>
@@ -245,7 +245,7 @@ let pollTimer: number | undefined;
 				<div>
 					<p class="font-semibold">
 						{#if allReady}
-							Mynah is ready.
+							{@render AppIcon()} is ready.
 						{:else}
 							Finish these steps before first dictation.
 						{/if}
@@ -255,7 +255,7 @@ let pollTimer: number | undefined;
 					</p>
 				</div>
 				<Button onclick={finishSetup} disabled={!allReady} class="shrink-0">
-					Start Using Mynah
+					Start Using {@render AppIcon()}
 					<ArrowRightIcon class="size-4" />
 				</Button>
 			</div>
@@ -268,6 +268,15 @@ let pollTimer: number | undefined;
 		<CheckIcon class="size-4" />
 		{label}
 	</span>
+{/snippet}
+
+{#snippet AppIcon()}
+	<img
+		src="/apple-touch-icon.png"
+		alt="Mynah"
+		class="inline-app-icon"
+		draggable="false"
+	/>
 {/snippet}
 
 {#snippet StatusPending(label: string)}
@@ -291,5 +300,15 @@ let pollTimer: number | undefined;
 		border-radius: 0.75rem;
 		background: var(--accent);
 		color: var(--accent-foreground);
+	}
+
+	.inline-app-icon {
+		display: inline-block;
+		width: 1.05em;
+		height: 1.05em;
+		margin: 0 0.1em;
+		border-radius: 0.24em;
+		vertical-align: -0.16em;
+		box-shadow: 0 1px 3px oklch(0 0 0 / 0.16);
 	}
 </style>
