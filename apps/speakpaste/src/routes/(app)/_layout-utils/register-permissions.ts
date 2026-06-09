@@ -214,6 +214,11 @@ export function registerMicrophonePermission() {
 		}
 
 		if (!isMicrophoneGranted) {
+			if (isSetupAssistantActive()) {
+				toast.dismiss(microphoneToastId);
+				return;
+			}
+
 			// Toast if permission not granted
 			toast.info('Microphone Permission Required', {
 				id: microphoneToastId,
