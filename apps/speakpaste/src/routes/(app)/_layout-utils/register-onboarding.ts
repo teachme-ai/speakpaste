@@ -19,9 +19,9 @@ export function registerOnboarding() {
 	if (!selectedService) {
 		if (canShowSetupAssistant) {
 			goto('/setup', { replaceState: true });
-			return;
+			return true;
 		}
-		if (alreadyInSetup) return;
+		if (alreadyInSetup) return true;
 
 		rpc.notify.info({
 			title: 'Welcome to Mynah!',
@@ -33,15 +33,15 @@ export function registerOnboarding() {
 			},
 			persist: true,
 		});
-		return;
+		return false;
 	}
 
 	if (!isTranscriptionServiceConfigured(selectedService)) {
 		if (canShowSetupAssistant) {
 			goto('/setup', { replaceState: true });
-			return;
+			return true;
 		}
-		if (alreadyInSetup) return;
+		if (alreadyInSetup) return true;
 
 		rpc.notify.info({
 			title: 'Welcome to Mynah!',
@@ -53,5 +53,8 @@ export function registerOnboarding() {
 			},
 			persist: true,
 		});
+		return false;
 	}
+
+	return false;
 }

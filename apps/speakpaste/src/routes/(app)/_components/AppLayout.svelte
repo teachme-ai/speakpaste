@@ -95,9 +95,11 @@
 
 		syncLocalShortcutsWithSettings();
 		resetLocalShortcutsToDefaultIfDuplicates();
-		registerOnboarding();
-		cleanupAccessibilityPermission = registerAccessibilityPermission();
-		cleanupMicrophonePermission = registerMicrophonePermission();
+		const isSetupAssistantRequired = registerOnboarding();
+		if (!isSetupAssistantRequired) {
+			cleanupAccessibilityPermission = registerAccessibilityPermission();
+			cleanupMicrophonePermission = registerMicrophonePermission();
+		}
 		void dictationRuntime.init().then((cleanup) => {
 			cleanupDictationRuntime = cleanup;
 		});
