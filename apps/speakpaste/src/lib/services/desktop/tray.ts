@@ -31,7 +31,7 @@ export type MynahTrayState =
 const TRAY_ID = 'mynah-tray';
 
 const ICON_PATHS: Record<MynahTrayState, string> = {
-	IDLE:         'recorder-state-icons/studio_microphone.png',
+	IDLE:         'icons/32x32.png',
 	RECORDING:    'recorder-state-icons/green_circle.png',
 	TRANSCRIBING: 'recorder-state-icons/orange_circle.png',
 	PASTED:       'recorder-state-icons/blue_circle.png',
