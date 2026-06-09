@@ -1,29 +1,30 @@
-# Antigravity Prompt: Publish Notarized Mynah DMG On Website
+# Antigravity Prompt: Publish Mynah 1.0.0 Notarized DMG On Website
 
 ## Purpose
 
-Use this prompt in Antigravity to publish the successfully signed, notarized, and stapled Mynah DMG on the Mynah website.
+Use this prompt in Antigravity to publish the final **Mynah 1.0.0** signed, notarized, stapled DMG to the Mynah website.
 
-The release artifact has already passed Developer ID signing, Apple notarization, stapler validation, and Gatekeeper validation.
+Important:
+
+- Do **not** assume the website DMG is already notarized.
+- Do **not** publish the old `Mynah_0.1.1_aarch64.dmg`.
+- Do **not** publish any DMG until fresh local validation passes.
+- The current website has been prepared for 1.0.0, but intentionally leaves the artifact empty until the new notarized DMG is ready.
 
 ---
 
-## Context
+## Current Repo State
 
-Product:
-
-- Name: Mynah
-- Website: `https://mynah.site`
-- Bundle identifier: `com.mynah.app`
-- Version: `1.0.0`
-- Architecture: Apple Silicon / `aarch64`
-- Pricing: one-time lifetime license, `$29` / `₹1499`
-- Support: `irfan@teachmeai.in`
-
-Notarized DMG artifact:
+App repo:
 
 ```text
-/Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste/src-tauri/target/release/bundle/dmg/Mynah_1.0.0_aarch64.dmg
+/Users/irfan/projects/SpeakPaste/speakpaste
+```
+
+Expected app commit baseline:
+
+```text
+f4a5665 Polish macOS UI and bump Mynah to 1.0.0
 ```
 
 Website repo:
@@ -32,13 +33,56 @@ Website repo:
 /Users/irfan/projects/Mynah/website
 ```
 
+Expected website commit baseline:
+
+```text
+ff98a72 Prepare website for Mynah 1.0 launch
+```
+
+Website GitHub repo:
+
+```text
+https://github.com/teachme-ai/mynah-site
+```
+
+Production website:
+
+```text
+https://mynah.site
+```
+
+---
+
+## Product Facts
+
+- Product name: `Mynah`
+- Bundle identifier: `com.mynah.app`
+- Marketing version: `1.0.0`
+- Architecture: Apple Silicon / `aarch64`
+- Minimum macOS: `10.15`
+- Pricing: one-time lifetime license, `$29` / `₹1499`
+- Support: `irfan@teachmeai.in`
+- Distribution: direct download from `mynah.site`, not App Store
+
+Expected DMG filename:
+
+```text
+Mynah_1.0.0_aarch64.dmg
+```
+
+Expected local DMG path after build:
+
+```text
+/Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste/src-tauri/target/release/bundle/dmg/Mynah_1.0.0_aarch64.dmg
+```
+
 Signing/notarization playbook:
 
 ```text
 /Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste/docs/product/MYNAH_SIGNING_NOTARIZATION_PLAYBOOK.md
 ```
 
-Deployment report target:
+Publish report target:
 
 ```text
 /Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste/docs/product/ANTIGRAVITY_NOTARIZED_DMG_WEBSITE_PUBLISH_REPORT.md
@@ -46,41 +90,52 @@ Deployment report target:
 
 ---
 
-## Verified Notarization Status
+## AG Mission
 
-The successful run produced these validations:
+Publish the **new 1.0.0 notarized DMG** to the website release flow and update all public metadata so users, GitHub, Vercel, and AI agents find the correct artifact.
+
+Preferred release hosting:
 
 ```text
-spctl --assess --type open --context context:primary-signature --verbose src-tauri/target/release/bundle/dmg/Mynah_1.0.0_aarch64.dmg
-=> accepted
-=> source=Notarized Developer ID
-
-xcrun stapler validate src-tauri/target/release/bundle/dmg/Mynah_1.0.0_aarch64.dmg
-=> The validate action worked!
-
-spctl --assess --type execute --verbose src-tauri/target/release/bundle/macos/Mynah.app
-=> accepted
-=> source=Notarized Developer ID
+GitHub Releases asset on teachme-ai/mynah-site, tag v1.0.0
 ```
 
-Do not re-notarize unless the DMG has changed.
+Website deployment:
+
+```text
+Automatic Vercel deployment from GitHub push to teachme-ai/mynah-site main
+```
+
+Do not modify Mynah app source code except for the publish report unless explicitly required.
 
 ---
 
-## AG Mission
+## Step 0: Check Clean Baselines
 
-Publish the notarized DMG to the website/release hosting flow and update the website metadata so users and AI agents can find the correct release artifact.
+Run:
 
-You may use:
+```bash
+cd /Users/irfan/projects/SpeakPaste/speakpaste
+git status --short
+git log --oneline -1
 
-- GitHub tooling
-- Vercel MCP
-- Vercel dashboard/CLI if MCP requires fallback
-- terminal commands as needed
+cd /Users/irfan/projects/Mynah/website
+git status --short
+git log --oneline -1
+```
 
-Do not modify Mynah app source code.
+Expected:
 
-Only modify website files and release/report docs unless explicitly needed.
+- app repo is clean or only has the publish report after this workflow
+- app repo version sources already say `1.0.0`
+- website repo may have an untracked `.gitignore`; do not stage it unless asked
+- website repo is at or after `ff98a72`
+
+If the website repo is behind GitHub, run:
+
+```bash
+git pull --ff-only origin main
+```
 
 ---
 
@@ -95,18 +150,59 @@ ls -lh /Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste/src-tauri/tar
 Expected:
 
 - file exists
-- size is around the built DMG size
+- filename is exactly `Mynah_1.0.0_aarch64.dmg`
+- size is around the expected built DMG size
+
+If the file does not exist, stop and report:
+
+```text
+Mynah 1.0.0 DMG is not ready yet.
+```
 
 ---
 
-## Step 2: Confirm Stapled Notarization
+## Step 2: Confirm App Version And Build Metadata
 
 Run:
 
 ```bash
 cd /Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste
+cat package.json | grep '"version"'
+cat src-tauri/tauri.conf.json | grep '"version"'
+cat src-tauri/Cargo.toml | grep '^version'
+cat src-tauri/build-meta.json
+cat src-tauri/tauri.macos.conf.json
+```
+
+Expected:
+
+- marketing version is `1.0.0`
+- `build-meta.json` exists
+- `buildSignature` starts with `1.0.0+r`
+- `bundleVersion` is present
+
+Record:
+
+- marketing version
+- bundle version
+- release number / git commit count
+- build signature
+- git commit
+- builtAtIso
+
+Do **not** hardcode Release 150. Use the current values from the newly built artifact metadata.
+
+---
+
+## Step 3: Fresh Notarization And Gatekeeper Validation
+
+Run from the app directory:
+
+```bash
+cd /Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste
 xcrun stapler validate src-tauri/target/release/bundle/dmg/Mynah_1.0.0_aarch64.dmg
 spctl --assess --type open --context context:primary-signature --verbose src-tauri/target/release/bundle/dmg/Mynah_1.0.0_aarch64.dmg
+spctl --assess --type execute --verbose src-tauri/target/release/bundle/macos/Mynah.app
 ```
 
 Expected:
@@ -115,40 +211,51 @@ Expected:
 The validate action worked!
 accepted
 source=Notarized Developer ID
+accepted
+source=Notarized Developer ID
 ```
 
-If this fails, stop and report. Do not upload a failing DMG.
+If any validation fails:
+
+- stop immediately
+- do not upload the DMG
+- do not update website metadata to `released`
+- report the failing command and output
+
+Do not re-notarize unless explicitly asked.
 
 ---
 
-## Step 3: Generate SHA256
+## Step 4: Generate SHA256 And Size
 
 Run:
 
 ```bash
 cd /Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste
 shasum -a 256 src-tauri/target/release/bundle/dmg/Mynah_1.0.0_aarch64.dmg
+du -h src-tauri/target/release/bundle/dmg/Mynah_1.0.0_aarch64.dmg
 ```
 
 Record:
 
+- filename
 - SHA256 hash
-- file name
+- size label
 
 ---
 
-## Step 4: Decide Hosting Location
+## Step 5: Create Or Update GitHub Release
 
-Preferred options:
-
-### Option A: GitHub Release Asset
-
-Recommended for traceability.
-
-Create or update a GitHub release for:
+Use GitHub release tag:
 
 ```text
 v1.0.0
+```
+
+Release title:
+
+```text
+Mynah 1.0.0
 ```
 
 Attach:
@@ -157,27 +264,45 @@ Attach:
 Mynah_1.0.0_aarch64.dmg
 ```
 
-Use the final GitHub release asset URL in the website.
+Recommended `gh` commands:
 
-### Option B: Vercel Static/Public File
-
-Only use if explicitly preferred.
-
-Potential path:
-
-```text
-/downloads/Mynah_1.0.0_aarch64.dmg
+```bash
+cd /Users/irfan/projects/Mynah/website
+gh release view v1.0.0 --repo teachme-ai/mynah-site
 ```
 
-Be careful with large binary hosting limits and caching.
+If release does not exist:
 
-### Recommendation
+```bash
+gh release create v1.0.0 \
+  /Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste/src-tauri/target/release/bundle/dmg/Mynah_1.0.0_aarch64.dmg \
+  --repo teachme-ai/mynah-site \
+  --title "Mynah 1.0.0" \
+  --notes "Mynah 1.0.0 for Apple Silicon. Signed with Developer ID, notarized by Apple, stapled, and ready for direct Mac installation."
+```
 
-Use GitHub Releases for the DMG and Vercel for the website.
+If release exists, replace the asset:
+
+```bash
+gh release upload v1.0.0 \
+  /Users/irfan/projects/SpeakPaste/speakpaste/apps/speakpaste/src-tauri/target/release/bundle/dmg/Mynah_1.0.0_aarch64.dmg \
+  --repo teachme-ai/mynah-site \
+  --clobber
+```
+
+Final artifact URL should be the GitHub release asset URL, typically:
+
+```text
+https://github.com/teachme-ai/mynah-site/releases/download/v1.0.0/Mynah_1.0.0_aarch64.dmg
+```
+
+Use that URL in website metadata.
+
+Do not copy the DMG to `website/public/` unless explicitly instructed.
 
 ---
 
-## Step 5: Update Website Files
+## Step 6: Update Website Files
 
 Website repo:
 
@@ -185,30 +310,46 @@ Website repo:
 cd /Users/irfan/projects/Mynah/website
 ```
 
-Update:
+Update these files:
 
 ```text
 download/index.html
 downloads.json
 facts/index.html
 llms.txt
-```
-
-Optional:
-
-```text
 index.html
 ```
 
+Optional only if needed:
+
+```text
+sitemap.xml
+```
+
+Do not stage the untracked `.gitignore` unless specifically asked.
+
 ### `downloads.json`
 
-Replace the placeholder artifact list with the final release details:
+Replace the current placeholder:
+
+```json
+"artifacts": [],
+"status": "preparing-1.0.0-notarized-dmg"
+```
+
+with final release metadata:
 
 ```json
 {
   "product": "Mynah",
   "version": "1.0.0",
-  "release": null,
+  "release": {
+    "number": <RELEASE_NUMBER>,
+    "bundleVersion": "<BUNDLE_VERSION>",
+    "buildSignature": "<BUILD_SIGNATURE>",
+    "builtAtIso": "<BUILT_AT_ISO>",
+    "gitCommit": "<GIT_COMMIT>"
+  },
   "pricing": {
     "usd": 29,
     "inr": 1499,
@@ -216,92 +357,131 @@ Replace the placeholder artifact list with the final release details:
   },
   "artifacts": [
     {
+      "platform": "macos",
       "arch": "aarch64",
       "label": "Apple Silicon",
       "filename": "Mynah_1.0.0_aarch64.dmg",
       "url": "<FINAL_DMG_URL>",
+      "size_mb": <SIZE_MB_NUMBER>,
       "sha256": "<SHA256>",
+      "min_os": "10.15",
       "notarized": true,
-      "signedBy": "Developer ID Application: Khalid Irfan (99YAK7YU3M)"
+      "stapled": true,
+      "signedBy": "Developer ID Application: Khalid Irfan (99YAK7YU3M)",
+      "notes": "Apple Silicon. Signed with Developer ID, notarized by Apple, and stapled for Gatekeeper validation."
     }
   ],
-  "status": "Mynah 1.0.0 for Apple Silicon is signed, notarized, stapled, and ready for download."
+  "status": "released"
 }
 ```
 
-If release/build number is known from app metadata, replace `release: null`.
+Use valid JSON. If exact `size_mb` is awkward, use a rounded integer.
 
 ### `download/index.html`
 
-Remove placeholder language like:
-
-- `DMG coming soon`
-- `final DMG link will be published here`
-- `trial/beta download until the final DMG`
-
-Replace with:
-
-- direct download button to `<FINAL_DMG_URL>`
-- version `1.0.0`
-- architecture `Apple Silicon`
-- notarized status
-- SHA256 checksum
-- install steps
-
-Recommended copy:
+Replace the current preparing state:
 
 ```text
-Download Mynah 1.0.0 for Apple Silicon.
-This DMG is signed with Developer ID, notarized by Apple, and stapled for Gatekeeper validation.
+1.0.0 DMG being prepared
+The 1.0.0 notarized DMG and SHA-256 checksum will appear here after final validation.
+```
+
+with:
+
+```text
+Download Mynah 1.0.0 for Apple Silicon
+Version 1.0.0 · Release <RELEASE_NUMBER> · Apple Silicon · macOS 10.15+
+Signed with Developer ID, notarized by Apple, and stapled for Gatekeeper validation.
+SHA-256: <SHA256>
 ```
 
 Button:
 
+```html
+<a class="button button-primary" href="<FINAL_DMG_URL>">Download Mynah for Apple Silicon</a>
+```
+
+Keep the install steps and permission guidance.
+
+### `index.html`
+
+Update launch trust/pricing copy so it no longer says:
+
 ```text
-Download Mynah for Apple Silicon
+Version 1.0.0 is being prepared as the first notarized public release package.
+```
+
+Replace with:
+
+```text
+Version 1.0.0 is signed with Developer ID, notarized by Apple, and ready for direct Mac installation.
 ```
 
 ### `facts/index.html`
 
-Update facts:
+Update:
 
-- current version `1.0.0`
-- download status: signed and notarized
-- supported architecture: Apple Silicon / `aarch64`
+- Current version: `1.0.0`
+- Release status: signed, notarized, stapled, ready for direct download
+- Supported architecture: Apple Silicon / `aarch64`
+- Download URL: `<FINAL_DMG_URL>`
+- SHA256: `<SHA256>`
 
 ### `llms.txt`
 
 Update product facts:
 
 - Current version: `1.0.0`
+- Release number: `<RELEASE_NUMBER>`
+- Build signature: `<BUILD_SIGNATURE>`
 - Apple Silicon DMG URL: `<FINAL_DMG_URL>`
+- SHA256: `<SHA256>`
 - Notarized: yes
+- Stapled: yes
 - Signed by: `Developer ID Application: Khalid Irfan (99YAK7YU3M)`
 
-Do not include the app-specific notarization password or any private credential.
+Do not include Apple app-specific passwords or private credentials.
 
 ---
 
-## Step 6: Validate Website Locally
+## Step 7: Validate Website Locally
 
-Run simple static checks:
+Run:
 
 ```bash
 cd /Users/irfan/projects/Mynah/website
-node -e "JSON.parse(require('fs').readFileSync('downloads.json','utf8')); console.log('downloads.json ok')"
-grep -R "DMG coming soon\\|final DMG link will be published\\|trial/beta" -n index.html download/index.html facts/index.html llms.txt downloads.json || true
+python3 -m json.tool downloads.json >/dev/null
+grep -R "preparing-1.0.0-notarized-dmg\\|DMG being prepared\\|will appear here after final validation\\|trial/beta\\|Mynah_0.1.1\\|0.1.1" -n index.html download/index.html facts/index.html llms.txt downloads.json || true
 grep -R "APPLE_APP_SPECIFIC_PASSWORD\\|ypmh\\|qtmr\\|password" -n . --exclude-dir=.git || true
 ```
 
 Expected:
 
-- `downloads.json ok`
-- no stale placeholder download text, unless intentionally kept for non-Apple-Silicon builds
+- JSON validation passes
+- no stale 1.0.0 preparing text remains on public pages
+- no `0.1.1` release artifact references remain in public release files
 - no private credentials
+
+It is OK if `compare/index.html` mentions competitor free tiers. Do not remove that just because it says `Free`.
+
+Optional static server check:
+
+```bash
+cd /Users/irfan/projects/Mynah/website
+python3 -m http.server 4181
+```
+
+Check:
+
+```text
+http://127.0.0.1:4181/
+http://127.0.0.1:4181/download/
+http://127.0.0.1:4181/downloads.json
+```
 
 ---
 
-## Step 7: Commit Website Update
+## Step 8: Commit And Push Website Update
 
 In website repo:
 
@@ -309,52 +489,62 @@ In website repo:
 cd /Users/irfan/projects/Mynah/website
 git status --short
 git add download/index.html downloads.json facts/index.html llms.txt index.html
-git commit -m "Publish notarized Mynah DMG"
-```
-
-Only stage files that changed.
-
-Push to GitHub:
-
-```bash
+git commit -m "Publish Mynah 1.0 notarized DMG"
 git push origin main
 ```
 
+Only stage files that changed. Do not stage `.gitignore` unless intentionally edited.
+
 ---
 
-## Step 8: Deploy With Vercel
+## Step 9: Push And Let Vercel Auto-Deploy
 
-Use Vercel MCP / configured Vercel deployment flow to deploy the updated site.
+Do **not** manually deploy with Vercel CLI.
 
-Confirm:
+The Mynah website is connected to Vercel through GitHub. Pushing `main` to:
+
+```text
+https://github.com/teachme-ai/mynah-site
+```
+
+triggers the production deployment for:
+
+```text
+https://mynah.site
+```
+
+After `git push origin main`, wait for the Vercel/GitHub deployment to finish, then confirm:
 
 - production deployment succeeded
 - `https://mynah.site/download/` shows the final DMG button
 - `https://mynah.site/downloads.json` has the final artifact URL and SHA256
 - `https://mynah.site/llms.txt` exposes the notarized release facts
 
+If needed, inspect deployment status through GitHub checks, Vercel dashboard, or Vercel CLI read-only inspection. Do not run `vercel --prod --yes` unless the GitHub integration fails and the user explicitly approves a manual fallback.
+
 ---
 
-## Step 9: Fresh Download Test
+## Step 10: Fresh Download Test
 
 After deployment:
 
 1. Open `https://mynah.site/download/`.
-2. Download the DMG using Chrome or Safari.
-3. Open the downloaded DMG.
-4. Drag Mynah to Applications.
-5. Launch `/Applications/Mynah.app`.
-6. Confirm there is no "damaged and can't be opened" warning.
-7. Confirm macOS permission prompts are normal:
+2. Download the DMG from the live site.
+3. Confirm the downloaded file SHA256 matches `<SHA256>`.
+4. Open the downloaded DMG.
+5. Drag Mynah to Applications.
+6. Launch `/Applications/Mynah.app`.
+7. Confirm there is no "damaged and can't be opened" warning.
+8. Confirm macOS permission prompts are normal:
    - Microphone
    - Accessibility
-8. Confirm Fn dictation works in TextEdit or Notes.
+9. Confirm Fn dictation works in TextEdit or Notes.
 
 This is the true user-path validation.
 
 ---
 
-## Step 10: Write Publish Report
+## Step 11: Write Publish Report
 
 Create:
 
@@ -375,6 +565,10 @@ Include:
 - Filename:
 - Size:
 - SHA256:
+- Marketing version:
+- Release number:
+- Bundle version:
+- Build signature:
 - Notarized:
 - Stapled:
 - Gatekeeper DMG result:
@@ -382,7 +576,7 @@ Include:
 
 ## Hosting
 
-- Release host:
+- GitHub release:
 - Artifact URL:
 
 ## Website Updates
@@ -390,6 +584,7 @@ Include:
 - Files changed:
 - Commit:
 - Deployment URL:
+- Deployment trigger: GitHub push to `main`
 
 ## Live Validation
 
@@ -407,8 +602,9 @@ Commit the report in the app repo:
 
 ```bash
 cd /Users/irfan/projects/SpeakPaste/speakpaste
+git status --short
 git add apps/speakpaste/docs/product/ANTIGRAVITY_NOTARIZED_DMG_WEBSITE_PUBLISH_REPORT.md
-git commit -m "Document notarized DMG website publish"
+git commit -m "Document Mynah 1.0 notarized DMG website publish"
 ```
 
 Do not stage unrelated app repo files.
@@ -419,12 +615,16 @@ Do not stage unrelated app repo files.
 
 - Do not upload an unnotarized DMG.
 - Do not upload an unstapled DMG.
+- Do not publish `Mynah_0.1.1_aarch64.dmg`.
+- Do not publish old SpeakPaste artifacts.
 - Do not invent a DMG URL.
 - Do not include Apple app-specific passwords anywhere.
-- Do not publish old SpeakPaste artifacts.
 - Do not claim Intel support unless an Intel/universal DMG is separately built and validated.
-- Do not remove non-App-Store install guidance entirely; keep it as context, but the primary message should now say the DMG is signed and notarized.
 - Do not claim App Store availability.
+- Do not remove non-App-Store install guidance entirely; keep it as context, but the primary message should now say the DMG is signed and notarized.
+- Do not leave `downloads.json` with empty `artifacts` after publishing.
+- Do not manually deploy with Vercel CLI unless GitHub auto-deploy fails and the user explicitly approves a fallback.
+- Do not push the website until local metadata points to the final validated artifact.
 
 ---
 
@@ -434,8 +634,9 @@ Report:
 
 1. final DMG URL
 2. SHA256
-3. website commit hash
-4. Vercel deployment URL
-5. whether `mynah.site/download/` is live
-6. whether fresh download test passed
-7. path to the publish report
+3. release number / bundle version / build signature
+4. website commit hash
+5. Vercel deployment URL
+6. whether `https://mynah.site/download/` is live
+7. whether fresh download test passed
+8. path to the publish report
