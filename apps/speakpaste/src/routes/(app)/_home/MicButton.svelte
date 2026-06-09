@@ -14,25 +14,25 @@
 	const isConfirmed = $derived(justPasted);
 </script>
 
-<div class="flex flex-col items-center justify-center py-6 gap-6">
+<div class="flex flex-col items-center justify-center py-5 gap-5">
 	<div class="relative flex items-center justify-center">
-		<div class="absolute h-[14.5rem] w-[14.5rem] rounded-full bg-border/20"></div>
+		<div class="absolute h-[10.75rem] w-[10.75rem] rounded-full bg-border/20"></div>
 
 		{#if isReady}
-			<div class="glow-soft absolute h-[13rem] w-[13rem] rounded-full border border-primary/20 bg-primary/5"></div>
-			<div class="absolute h-[11.5rem] w-[11.5rem] rounded-full border border-border"></div>
+			<div class="glow-soft absolute h-[9.75rem] w-[9.75rem] rounded-full border border-primary/15 bg-primary/5"></div>
+			<div class="absolute h-[8.75rem] w-[8.75rem] rounded-full border border-border"></div>
 		{/if}
 
 		{#if isListening}
 			<!-- Continuous radiating sonar ripples using the active theme's primary color -->
-			<div class="haptic-sonar absolute h-28 w-28 rounded-full border-2 border-primary/60" style="animation-delay: 0s;"></div>
-			<div class="haptic-sonar absolute h-28 w-28 rounded-full border-2 border-primary/60" style="animation-delay: 0.4s;"></div>
-			<div class="haptic-sonar absolute h-28 w-28 rounded-full border-2 border-primary/60" style="animation-delay: 0.8s;"></div>
+			<div class="haptic-sonar absolute h-20 w-20 rounded-full border border-primary/55" style="animation-delay: 0s;"></div>
+			<div class="haptic-sonar absolute h-20 w-20 rounded-full border border-primary/55" style="animation-delay: 0.4s;"></div>
+			<div class="haptic-sonar absolute h-20 w-20 rounded-full border border-primary/55" style="animation-delay: 0.8s;"></div>
 
-			<div class="ring-breathe absolute h-[14rem] w-[14rem] rounded-full border border-primary/30"></div>
-			<div class="absolute h-[12.25rem] w-[12.25rem] rounded-full border border-primary/25"></div>
+			<div class="ring-breathe absolute h-[10.25rem] w-[10.25rem] rounded-full border border-primary/25"></div>
+			<div class="absolute h-[9.25rem] w-[9.25rem] rounded-full border border-primary/20"></div>
 			<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-				<svg class="h-[12.5rem] w-[12.5rem] opacity-75" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+				<svg class="h-[9.5rem] w-[9.5rem] opacity-70" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
 					<circle cx="100" cy="100" r="74" stroke="var(--primary)" stroke-opacity="0.25" stroke-width="1.5" class="wave-rotate" />
 					<circle cx="100" cy="100" r="58" stroke="var(--primary)" stroke-opacity="0.35" stroke-width="1.5" class="wave-rotate-reverse" />
 					<path d="M48 102 C60 84 72 84 84 102 C96 120 108 120 120 102 C132 84 144 84 156 102" stroke="var(--primary)" stroke-opacity="0.75" stroke-width="3.5" stroke-linecap="round" class="wave-breathe" />
@@ -42,24 +42,24 @@
 		{/if}
 
 		{#if isProcessing}
-			<div class="haptic-ripple-processing absolute h-28 w-28 rounded-full border-2 border-primary"></div>
-			<div class="absolute h-[13.5rem] w-[13.5rem] rounded-full border border-border bg-card/40"></div>
-			<div class="scan-ring absolute h-[12.25rem] w-[12.25rem] rounded-full border border-primary/50"></div>
+			<div class="haptic-ripple-processing absolute h-20 w-20 rounded-full border border-primary"></div>
+			<div class="absolute h-[10rem] w-[10rem] rounded-full border border-border bg-card/40"></div>
+			<div class="scan-ring absolute h-[9rem] w-[9rem] rounded-full border border-primary/40"></div>
 		{/if}
 
 		{#if isConfirmed}
-			<div class="haptic-ripple-success absolute h-28 w-28 rounded-full border-2 border-success"></div>
-			<div class="flash-ring absolute h-[13.75rem] w-[13.75rem] rounded-full bg-success/15"></div>
-			<div class="absolute h-[11.75rem] w-[11.75rem] rounded-full border border-success/30"></div>
+			<div class="haptic-ripple-success absolute h-20 w-20 rounded-full border border-success"></div>
+			<div class="flash-ring absolute h-[10rem] w-[10rem] rounded-full bg-success/15"></div>
+			<div class="absolute h-[8.75rem] w-[8.75rem] rounded-full border border-success/30"></div>
 		{/if}
 
 		<button
 			onclick={() => commandCallbacks.toggleManualRecording()}
-			class="relative z-10 flex h-28 w-28 items-center justify-center rounded-full border border-border bg-card shadow-[0_20px_50px_-32px_rgba(0,0,0,0.25)] transition-transform duration-75 hover:scale-105 active:scale-90"
+			class="relative z-10 flex h-20 w-20 items-center justify-center rounded-full border border-border bg-card shadow-[0_14px_34px_-24px_rgba(0,0,0,0.35)] transition-transform duration-75 hover:scale-[1.03] active:scale-95"
 			aria-label={isListening ? 'Stop recording' : 'Start recording'}
 		>
 			<MicIcon
-				class="h-10 w-10 {isListening ? 'text-primary' : isProcessing ? 'text-primary animate-pulse' : isConfirmed ? 'text-success' : 'text-primary'}"
+				class="h-8 w-8 {isListening ? 'text-primary' : isProcessing ? 'text-primary animate-pulse' : isConfirmed ? 'text-success' : 'text-primary'}"
 				strokeWidth={1.6}
 			/>
 		</button>
@@ -105,7 +105,7 @@
 
 	@keyframes hapticSonar {
 		0% { transform: scale(1); opacity: 0.8; }
-		100% { transform: scale(2.4); opacity: 0; }
+		100% { transform: scale(2.1); opacity: 0; }
 	}
 
 	.glow-soft {
@@ -140,11 +140,6 @@
 
 	.flash-ring {
 		animation: flashRing 1.4s ease-in-out infinite;
-	}
-
-	.haptic-ripple {
-		animation: hapticRipple 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-		pointer-events: none;
 	}
 
 	.haptic-ripple-success {

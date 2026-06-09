@@ -7,7 +7,6 @@
 	import LogsIcon from '@lucide/svelte/icons/scroll-text';
 	import SunIcon from '@lucide/svelte/icons/sun';
 	import { page } from '$app/state';
-	import { GithubIcon } from '$lib/components/icons';
 	import { notificationLog } from '$lib/components/NotificationLog.svelte';
 	import { NAV_ITEMS } from '$lib/constants/ui';
 	import MigrationDialog from '$lib/migration/MigrationDialog.svelte';
@@ -32,7 +31,7 @@
 	}
 </script>
 
-<Sidebar.Root collapsible="icon">
+<Sidebar.Root collapsible="icon" class="backdrop-blur-xl">
 	<Sidebar.Header>
 		<Sidebar.Menu>
 			<Sidebar.MenuItem>
@@ -43,16 +42,16 @@
 					{#snippet child({ props })}
 						<button {...props} onclick={sidebar.toggle}>
 							<div
-								class="bg-sidebar-primary text-sidebar-primary-foreground flex size-8 items-center justify-center rounded-lg"
+								class="flex size-8 items-center justify-center overflow-hidden rounded-lg shadow-sm ring-1 ring-black/10 dark:ring-white/10"
 							>
-								<span class="text-lg">🎙️</span>
+								<img src="/apple-touch-icon.png" alt="" class="size-8" />
 							</div>
 							<div
 								class="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden"
 							>
 								<span class="truncate font-semibold">Mynah</span>
 								<span class="truncate text-xs text-muted-foreground"
-									>Local voice typing</span
+									>Local dictation</span
 								>
 							</div>
 						</button>
@@ -100,25 +99,8 @@
 							{:else}
 								<SunIcon class="h-4 w-4" />
 							{/if}
-							<span>Toggle theme</span>
+							<span>Appearance</span>
 						</button>
-					{/snippet}
-				</Sidebar.MenuButton>
-			</Sidebar.MenuItem>
-
-			<!-- GitHub link -->
-			<Sidebar.MenuItem>
-				<Sidebar.MenuButton>
-					{#snippet child({ props })}
-						<a
-							href="https://github.com/irfan1476/mynah"
-							target="_blank"
-							rel="noopener noreferrer"
-							{...props}
-						>
-							<GithubIcon />
-							<span>GitHub</span>
-						</a>
 					{/snippet}
 				</Sidebar.MenuButton>
 			</Sidebar.MenuItem>

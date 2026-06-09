@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300..700&display=swap');
 /* @import '@fontsource-variable/manrope'; */
 
 @import "tw-animate-css";
@@ -29,105 +28,102 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-	--font-sans: "Outfit", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-	--radius: 0.75rem;
-	
-	/* Airy Frosted Light Palette (Prisine and White) */
-	--background: oklch(0.99 0.002 240 / 0.8); /* Crisp off-white */
-	--foreground: oklch(0.25 0.02 260);
-	--card: oklch(1 0 0 / 80%); /* Pure white card backgrounds */
-	--card-foreground: oklch(0.25 0.02 260);
-	--popover: oklch(1 0 0 / 85%);
-	--popover-foreground: oklch(0.25 0.02 260);
-	--primary: oklch(0.55 0.15 250);
+	--font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+	--radius: 0.625rem;
+
+	--background: oklch(0.974 0.004 255);
+	--foreground: oklch(0.18 0.006 255);
+	--card: oklch(0.998 0 0 / 86%);
+	--card-foreground: oklch(0.18 0.006 255);
+	--popover: oklch(0.998 0 0 / 92%);
+	--popover-foreground: oklch(0.18 0.006 255);
+	--primary: oklch(0.56 0.16 252);
 	--primary-foreground: oklch(0.98 0 0);
-	--secondary: oklch(0.97 0.003 240);
-	--secondary-foreground: oklch(0.25 0.02 260);
-	--muted: oklch(0.97 0.003 240 / 40%);
-	--muted-foreground: oklch(0.55 0.02 260);
-	--accent: oklch(0.97 0.003 240 / 70%);
-	--accent-foreground: oklch(0.25 0.02 260);
-	--destructive: oklch(0.6 0.2 25);
-	--warning: oklch(0.7 0.15 60);
-	--success: oklch(0.65 0.15 145);
-	--border: oklch(0 0 0 / 6%);
-	--input: oklch(0 0 0 / 6%);
-	--ring: oklch(0.55 0.15 250 / 40%);
-	
-	--sidebar: oklch(0.99 0.002 240 / 92%);
-	--sidebar-foreground: oklch(0.25 0.02 260);
-	--sidebar-primary: oklch(0.55 0.15 250);
+	--secondary: oklch(0.94 0.006 255 / 72%);
+	--secondary-foreground: oklch(0.22 0.006 255);
+	--muted: oklch(0.93 0.006 255 / 58%);
+	--muted-foreground: oklch(0.47 0.012 255);
+	--accent: oklch(0.91 0.012 255 / 74%);
+	--accent-foreground: oklch(0.18 0.006 255);
+	--destructive: oklch(0.58 0.2 25);
+	--warning: oklch(0.72 0.14 75);
+	--success: oklch(0.6 0.13 150);
+	--border: oklch(0 0 0 / 9%);
+	--input: oklch(0 0 0 / 10%);
+	--ring: oklch(0.56 0.16 252 / 38%);
+
+	--sidebar: oklch(0.955 0.005 255 / 88%);
+	--sidebar-foreground: oklch(0.2 0.008 255);
+	--sidebar-primary: oklch(0.56 0.16 252);
 	--sidebar-primary-foreground: oklch(0.98 0 0);
-	--sidebar-accent: oklch(0.97 0.003 240);
-	--sidebar-accent-foreground: oklch(0.25 0.02 260);
-	--sidebar-border: oklch(0 0 0 / 6%);
-	--sidebar-ring: oklch(0.55 0.15 250);
+	--sidebar-accent: oklch(0.91 0.012 255 / 78%);
+	--sidebar-accent-foreground: oklch(0.18 0.006 255);
+	--sidebar-border: oklch(0 0 0 / 10%);
+	--sidebar-ring: oklch(0.56 0.16 252);
 }
 
 .dark {
-	/* Luminous Deep Dark Palette */
-	--background: oklch(0.12 0.015 260 / 0.8); /* 80% opacity for solid native dark blur */
-	--foreground: oklch(0.95 0.01 260);
-	--card: oklch(0.20 0.02 260 / 70%); /* 70% opaque dark cards for strong readability */
-	--card-foreground: oklch(0.95 0.01 260);
-	--popover: oklch(0.16 0.02 260 / 80%); /* 80% opaque popover backings */
-	--popover-foreground: oklch(0.95 0.01 260);
-	--primary: oklch(0.70 0.20 280); /* Vibrant glowing neon purple */
+	--background: oklch(0.15 0.005 255);
+	--foreground: oklch(0.94 0.004 255);
+	--card: oklch(0.22 0.006 255 / 82%);
+	--card-foreground: oklch(0.94 0.004 255);
+	--popover: oklch(0.18 0.006 255 / 92%);
+	--popover-foreground: oklch(0.94 0.004 255);
+	--primary: oklch(0.69 0.14 252);
 	--primary-foreground: oklch(0.98 0 0);
-	--secondary: oklch(0.20 0.02 260);
-	--secondary-foreground: oklch(0.95 0.01 260);
-	--muted: oklch(0.20 0.02 260 / 50%);
-	--muted-foreground: oklch(0.65 0.02 260);
-	--accent: oklch(0.20 0.02 260 / 60%);
-	--accent-foreground: oklch(0.95 0.01 260);
-	--destructive: oklch(0.65 0.2 25);
-	--warning: oklch(0.7 0.15 60);
-	--success: oklch(0.65 0.15 145);
-	--border: oklch(1 0 0 / 8%);
-	--input: oklch(1 0 0 / 8%);
-	--ring: oklch(0.70 0.20 280 / 40%);
+	--secondary: oklch(0.26 0.006 255 / 78%);
+	--secondary-foreground: oklch(0.94 0.004 255);
+	--muted: oklch(0.28 0.006 255 / 58%);
+	--muted-foreground: oklch(0.68 0.008 255);
+	--accent: oklch(0.32 0.008 255 / 78%);
+	--accent-foreground: oklch(0.94 0.004 255);
+	--destructive: oklch(0.64 0.2 25);
+	--warning: oklch(0.76 0.13 75);
+	--success: oklch(0.68 0.13 150);
+	--border: oklch(1 0 0 / 12%);
+	--input: oklch(1 0 0 / 13%);
+	--ring: oklch(0.69 0.14 252 / 42%);
 
-	--sidebar: oklch(0.12 0.015 260 / 92%);
-	--sidebar-foreground: oklch(0.95 0.01 260);
-	--sidebar-primary: oklch(0.70 0.20 280);
+	--sidebar: oklch(0.18 0.006 255 / 88%);
+	--sidebar-foreground: oklch(0.92 0.004 255);
+	--sidebar-primary: oklch(0.69 0.14 252);
 	--sidebar-primary-foreground: oklch(0.98 0 0);
-	--sidebar-accent: oklch(0.20 0.02 260);
-	--sidebar-accent-foreground: oklch(0.95 0.01 260);
-	--sidebar-border: oklch(1 0 0 / 8%);
-	--sidebar-ring: oklch(0.70 0.20 280);
+	--sidebar-accent: oklch(0.32 0.008 255 / 78%);
+	--sidebar-accent-foreground: oklch(0.94 0.004 255);
+	--sidebar-border: oklch(1 0 0 / 12%);
+	--sidebar-ring: oklch(0.69 0.14 252);
 }
 
 .theme-mynah {
-	/* Mynah Brand: Noticeably bluer background with vibrant golden/amber accents */
-	--background: oklch(0.91 0.045 245 / 0.8);      /* Noticeably bluer premium background */
-	--foreground: oklch(0.16 0.06 250);           /* Rich dark cobalt slate */
-	--card: oklch(1 0 0 / 90%);                   /* High-contrast crisp white cards */
-	--card-foreground: oklch(0.16 0.06 250);
-	--popover: oklch(1 0 0 / 95%);
-	--popover-foreground: oklch(0.16 0.06 250);
-	--primary: oklch(0.78 0.18 75);               /* Rich brand Golden/Amber */
-	--primary-foreground: oklch(0.12 0.04 250);
-	--secondary: oklch(0.85 0.07 245);            /* Deeper frosted blue-gray details */
-	--secondary-foreground: oklch(0.16 0.06 250);
-	--muted: oklch(0.85 0.07 245 / 50%);
-	--muted-foreground: oklch(0.35 0.06 250);
-	--accent: oklch(0.78 0.18 75 / 30%);          /* Rich golden highlights for selections/hovers */
-	--accent-foreground: oklch(0.16 0.06 250);
-	--destructive: oklch(0.6 0.2 25);
-	--warning: oklch(0.7 0.15 60);
-	--success: oklch(0.65 0.15 145);
-	--border: oklch(0.16 0.06 250 / 14%);          /* Subtly darker borders for better separation */
-	--input: oklch(0.16 0.06 250 / 14%);
-	--ring: oklch(0.78 0.18 75 / 55%);            /* Vibrant golden halo glow */
+	--background: oklch(0.91 0.038 248);
+	--foreground: oklch(0.13 0.055 250);
+	--card: oklch(0.99 0.012 92 / 90%);
+	--card-foreground: oklch(0.13 0.055 250);
+	--popover: oklch(0.99 0.012 92 / 94%);
+	--popover-foreground: oklch(0.13 0.055 250);
+	--primary: oklch(0.78 0.16 84);
+	--primary-foreground: oklch(0.12 0.055 250);
+	--secondary: oklch(0.82 0.05 248 / 78%);
+	--secondary-foreground: oklch(0.13 0.055 250);
+	--muted: oklch(0.82 0.045 248 / 56%);
+	--muted-foreground: oklch(0.32 0.055 250);
+	--accent: oklch(0.84 0.13 86 / 48%);
+	--accent-foreground: oklch(0.13 0.055 250);
+	--destructive: oklch(0.58 0.2 25);
+	--warning: oklch(0.74 0.14 75);
+	--success: oklch(0.62 0.13 150);
+	--border: oklch(0.13 0.055 250 / 16%);
+	--input: oklch(0.13 0.055 250 / 16%);
+	--ring: oklch(0.78 0.16 84 / 52%);
 
-	--sidebar: oklch(0.91 0.045 245 / 92%);       /* Sidebar matching the blue tint background */
-	--sidebar-foreground: oklch(0.16 0.06 250);
-	--sidebar-primary: oklch(0.78 0.18 75);
-	--sidebar-primary-foreground: oklch(0.12 0.04 250);
-	--sidebar-accent: oklch(0.78 0.18 75 / 35%);  /* Rich golden hover selection in sidebar */
-	--sidebar-accent-foreground: oklch(0.16 0.06 250);
-	--sidebar-border: oklch(0.16 0.06 250 / 14%);
-	--sidebar-ring: oklch(0.78 0.18 75);
+	--sidebar: oklch(0.86 0.052 248 / 90%);
+	--sidebar-foreground: oklch(0.13 0.055 250);
+	--sidebar-primary: oklch(0.78 0.16 84);
+	--sidebar-primary-foreground: oklch(0.12 0.055 250);
+	--sidebar-accent: oklch(0.84 0.13 86 / 54%);
+	--sidebar-accent-foreground: oklch(0.13 0.055 250);
+	--sidebar-border: oklch(0.13 0.055 250 / 16%);
+	--sidebar-ring: oklch(0.78 0.16 84);
 }
 
 @theme inline {
@@ -172,15 +168,138 @@
 	/* Custom breakpoints */
 	--breakpoint-xxs: 196px;
 	--breakpoint-xs: 320px;
+	--text-xs: 0.875rem;
+	--text-sm: 1rem;
+	--text-base: 1.125rem;
+	--text-lg: 1.25rem;
+	--text-xl: 1.375rem;
+	--text-2xl: 1.625rem;
+	--text-3xl: 2rem;
+	--text-4xl: 2.5rem;
 }
 
 @layer base {
 	* {
 		@apply border-border outline-ring/50;
 	}
+	html {
+		color-scheme: light;
+	}
+	html.dark {
+		color-scheme: dark;
+	}
 	body {
 		@apply text-foreground;
 		background-color: var(--background) !important;
+		font-feature-settings: "liga" 1, "calt" 1;
+		-webkit-font-smoothing: antialiased;
+		text-rendering: optimizeLegibility;
+	}
+	::selection {
+		background: color-mix(in oklch, var(--primary) 24%, transparent);
+	}
+}
+
+@layer components {
+	.mac-material {
+		background: var(--card);
+		backdrop-filter: blur(28px) saturate(1.45);
+		-webkit-backdrop-filter: blur(28px) saturate(1.45);
+		box-shadow:
+			0 1px 0 oklch(1 0 0 / 0.34) inset,
+			0 18px 42px oklch(0 0 0 / 0.08);
+	}
+
+	.mac-window-surface {
+		background:
+			linear-gradient(180deg, oklch(1 0 0 / 0.28), transparent 96px),
+			var(--background);
+		color: var(--foreground);
+	}
+
+	.mac-toolbar {
+		background: color-mix(in oklch, var(--background) 78%, transparent);
+		backdrop-filter: blur(24px) saturate(1.35);
+		-webkit-backdrop-filter: blur(24px) saturate(1.35);
+		border-color: var(--border);
+	}
+
+	.mac-list-row {
+		border-radius: 0.5rem;
+		transition: background-color 120ms ease, color 120ms ease;
+	}
+
+	.mac-list-row:hover {
+		background: var(--accent);
+	}
+
+	.mac-settings-section {
+		overflow: hidden;
+		border: 1px solid var(--border);
+		border-radius: 0.875rem;
+		background: var(--card);
+		backdrop-filter: blur(24px) saturate(1.35);
+		-webkit-backdrop-filter: blur(24px) saturate(1.35);
+		box-shadow:
+			0 1px 0 oklch(1 0 0 / 0.28) inset,
+			0 12px 32px oklch(0 0 0 / 0.055);
+	}
+
+	.mac-settings-section-header {
+		border-bottom: 1px solid var(--border);
+		padding: 0.875rem 1rem 0.75rem;
+	}
+
+	.mac-settings-row {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(11rem, auto);
+		gap: 1rem;
+		align-items: center;
+		padding: 0.875rem 1rem;
+	}
+
+	.mac-settings-row + .mac-settings-row {
+		border-top: 1px solid var(--border);
+	}
+
+	.mac-settings-row-action {
+		color: inherit;
+		text-decoration: none;
+		transition: background-color 120ms ease;
+	}
+
+	.mac-settings-row-action:hover {
+		background: var(--accent);
+	}
+
+	@media (max-width: 640px) {
+		.mac-settings-row {
+			grid-template-columns: 1fr;
+			gap: 0.625rem;
+		}
+	}
+}
+
+@supports not (backdrop-filter: blur(1px)) {
+	.mac-material,
+	.mac-toolbar {
+		background: var(--card);
+	}
+}
+
+@media (prefers-reduced-transparency: reduce) {
+	:root,
+	.dark,
+	.theme-mynah {
+		--card: var(--background);
+		--popover: var(--background);
+		--sidebar: var(--background);
+	}
+
+	.mac-material,
+	.mac-toolbar {
+		backdrop-filter: none;
+		-webkit-backdrop-filter: none;
 	}
 }
 

@@ -40,6 +40,7 @@
 
 	let showHistory = $state(false);
 	let isOverlay = $state(false);
+	const compactWindowSize = { width: 500, height: 720 };
 
 	async function toggleHistory() {
 		showHistory = !showHistory;
@@ -52,7 +53,10 @@
 					await currentWindow.setSize(new LogicalSize(500, 1100));
 				} else {
 					// Contract to perfect fit
-					await currentWindow.setSize(new LogicalSize(500, 850));
+					await currentWindow.setMinSize(new LogicalSize(460, 700));
+					await currentWindow.setSize(
+						new LogicalSize(compactWindowSize.width, compactWindowSize.height),
+					);
 				}
 			} catch (e) {
 				console.error('Failed to resize window:', e);
@@ -62,9 +66,15 @@
 
 	onMount(() => {
 		if (window.__TAURI_INTERNALS__) {
-			import('@tauri-apps/api/window').then(({ getCurrentWindow }) => {
+			import('@tauri-apps/api/window').then(async ({ getCurrentWindow, LogicalSize }) => {
 				const currentWindow = getCurrentWindow();
 				isOverlay = currentWindow.label === 'overlay';
+				if (!isOverlay && !showHistory) {
+					await currentWindow.setMinSize(new LogicalSize(460, 700));
+					await currentWindow.setSize(
+						new LogicalSize(compactWindowSize.width, compactWindowSize.height),
+					);
+				}
 			});
 		}
 	});
@@ -265,17 +275,17 @@
 {#if isOverlay}
 	<OverlayStatusPill {recorderState} {isTranscribing} {justPasted} />
 {:else}
-<div class="home-surface relative flex min-h-screen flex-col items-center overflow-y-auto">
-	<div class="w-full max-w-md min-w-0 flex flex-col items-center gap-5 px-4 pb-10">
+<div class="home-surface mac-window-surface relative flex min-h-screen flex-col items-center overflow-y-auto">
+	<div class="w-full max-w-[430px] min-w-0 flex flex-col items-center gap-3 px-4 pb-6">
 		<AppHeader />
 		<StatePillBar {pills} />
 
-		<div class="voice-panel w-full rounded-[32px] border px-6 pt-6 pb-5 shadow-sm">
+		<div class="voice-panel mac-material w-full rounded-2xl border px-5 pt-4 pb-3">
 			<MicButton {recorderState} {isTranscribing} {justPasted} />
 			<div class="flex flex-col items-center gap-4">
 				<HintText />
 				{#if currentStatus}
-					<p class="text-xs font-medium text-muted-foreground transition-opacity">
+					<p class="text-[15px] font-medium text-muted-foreground transition-opacity">
 						{currentStatus}
 					</p>
 				{/if}
@@ -284,8 +294,8 @@
 			<PipelineControlDeck />
 		</div>
 
-		<div class="flex justify-center mt-2 mb-5">
-			<button class="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-5 py-2.5 text-sm font-semibold text-foreground shadow-sm transition-all hover:bg-card/90" onclick={toggleHistory}>
+		<div class="flex justify-center mt-0 mb-3">
+			<button class="inline-flex items-center gap-2 rounded-full border border-border bg-secondary/70 px-4 py-2 text-[15px] font-medium text-foreground shadow-sm transition-colors hover:bg-accent" onclick={toggleHistory}>
 				{#if showHistory}
 					<svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"></polyline></svg>
 					Hide captures
@@ -298,7 +308,7 @@
 
 		{#if showHistory}
 			<!-- Cards section -->
-			<div class="flex w-full min-w-0 flex-col gap-3 pt-2 pb-8 mt-2" transition:slide={{ duration: 300 }}>
+			<div class="flex w-full min-w-0 flex-col gap-3 pt-1 pb-4 mt-1" transition:slide={{ duration: 300 }}>
 				{#if !initialLoadComplete}
 					<div class="flex w-full flex-col gap-3">
 						<div class="h-32 rounded-2xl bg-muted animate-pulse"></div>
@@ -316,16 +326,10 @@
 
 <style>
 	.home-surface {
-		background: var(--background);
-		color: var(--foreground);
+		background-color: var(--background);
 	}
 
 	.voice-panel {
 		border-color: var(--border);
-		background: var(--card);
-		box-shadow:
-			0 1px 0 oklch(1 0 0 / 0.1) inset,
-			0 18px 48px oklch(0 0 0 / 0.05);
-		backdrop-filter: blur(18px);
 	}
 </style>

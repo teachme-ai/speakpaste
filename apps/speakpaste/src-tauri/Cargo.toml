@@ -1,6 +1,6 @@
 [package]
 name = "mynah"
-version = "0.1.1"
+version = "1.0.0"
 description = "Mac-only local-first voice typing powered by whisper.cpp"
 authors = ["Khalid Irfan"]
 edition = "2021"

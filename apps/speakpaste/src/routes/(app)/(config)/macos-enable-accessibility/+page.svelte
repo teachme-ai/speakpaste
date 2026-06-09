@@ -76,7 +76,7 @@
 			try {
 				const { getCurrentWindow, LogicalSize } = await import('@tauri-apps/api/window');
 				const currentWindow = getCurrentWindow();
-				await currentWindow.setSize(new LogicalSize(500, 850));
+				await currentWindow.setSize(new LogicalSize(500, 720));
 			} catch (e) {
 				console.error('Failed to restore window size on destroy:', e);
 			}

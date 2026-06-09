@@ -8,13 +8,14 @@
 
 <header
 	class={cn(
-		'border-border/40 bg-background/95 supports-backdrop-filter:bg-background/60 z-30 border-b shadow-xs backdrop-blur-sm',
+		'mac-toolbar z-30 border-b shadow-xs',
 		'flex h-14 w-full items-center justify-between px-4 sm:px-8',
 	)}
 	style="view-transition-name: {viewTransition.global.header}"
+	data-tauri-drag-region
 >
 	<Button tooltip="Go home" href="/" variant="ghost" class="-ml-4">
-		<span class="text-lg font-bold">Mynah</span>
+		<span class="text-[17px] font-semibold">Mynah</span>
 	</Button>
 </header>
 

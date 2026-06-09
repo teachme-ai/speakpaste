@@ -2,6 +2,30 @@
 	import * as Popover from '@epicenter/ui/popover';
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 	import InfoIcon from '@lucide/svelte/icons/info';
+	import PaletteIcon from '@lucide/svelte/icons/palette';
+	import { settings } from '$lib/state/settings.svelte';
+
+	const THEME_OPTIONS = [
+		{ value: 'pastel', label: 'Light' },
+		{ value: 'dark', label: 'Dark' },
+		{ value: 'mynah', label: 'Mynah Blue' },
+	] as const;
+
+	const selectedThemeLabel = $derived(
+		THEME_OPTIONS.find((theme) => theme.value === settings.get('ui.theme'))?.label
+			?? 'Light',
+	);
+
+	function cycleTheme() {
+		const current = settings.get('ui.theme');
+		if (current === 'pastel') {
+			settings.set('ui.theme', 'dark');
+		} else if (current === 'dark') {
+			settings.set('ui.theme', 'mynah');
+		} else {
+			settings.set('ui.theme', 'pastel');
+		}
+	}
 </script>
 
 <Popover.Root>
@@ -22,7 +46,7 @@
 				<a href="/settings" class="flex items-center justify-between px-4 py-2.5 hover:bg-muted transition-colors">
 					<div class="flex items-center gap-2.5">
 						<SettingsIcon class="size-4 text-primary" />
-						<span class="text-sm font-medium text-foreground">Control Center</span>
+						<span class="text-sm font-medium text-foreground">Settings</span>
 					</div>
 					<svg class="size-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
 				</a>
@@ -33,6 +57,19 @@
 					</div>
 					<svg class="size-4 text-muted-foreground" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
 				</a>
+				<button
+					class="flex items-center justify-between px-4 py-2.5 text-left transition-colors hover:bg-muted"
+					onclick={cycleTheme}
+					aria-label="Cycle UI theme. Current theme: {selectedThemeLabel}"
+				>
+					<div class="flex items-center gap-2.5">
+						<PaletteIcon class="size-4 text-primary" />
+						<span class="text-sm font-medium text-foreground">Appearance</span>
+					</div>
+					<span class="rounded-full border border-border bg-secondary/70 px-2 py-0.5 text-xs font-medium text-muted-foreground">
+						{selectedThemeLabel}
+					</span>
+				</button>
 			</div>
 		</div>
 	</Popover.Content>

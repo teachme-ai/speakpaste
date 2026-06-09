@@ -2,7 +2,7 @@
 	"name": "mynah",
 	"type": "module",
 	"private": true,
-	"version": "0.1.0",
+	"version": "1.0.0",
 	"description": "Mynah — Mac-only local-first voice typing powered by whisper.cpp.",
 	"license": "UNLICENSED",
 	"workspaces": {

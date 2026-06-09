@@ -13,19 +13,19 @@
 </script>
 
 {#if recentItems.length > 0}
-	<div class="w-full min-w-0 overflow-hidden rounded-[24px] border border-border bg-card/60 shadow-sm">
+	<div class="mac-material w-full min-w-0 overflow-hidden rounded-xl border border-border">
 		<div class="flex items-center gap-2 border-b border-border px-4 py-3">
 			<ClockIcon class="size-4 text-muted-foreground" />
 			<span class="text-sm font-semibold text-foreground">Recent captures</span>
 		</div>
 		<div class="divide-y divide-border">
 			{#each recentItems as item}
-				<div class="group relative flex min-w-0 items-start gap-3 px-4 py-3.5 transition-colors duration-150 hover:bg-muted/40">
-					<div class="size-7 rounded-full bg-primary/15 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+				<div class="group relative flex min-w-0 items-start gap-3 px-4 py-3 transition-colors duration-150 hover:bg-accent">
+					<div class="size-7 rounded-lg bg-primary/12 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
 						<AudioWaveformIcon class="size-3.5 text-primary" />
 					</div>
 					<div class="flex-1 min-w-0">
-						<p class="truncate text-sm text-foreground/90 select-text">{item.transcript}</p>
+						<p class="truncate text-[15px] text-foreground/90 select-text">{item.transcript}</p>
 					</div>
 					<span class="text-xs text-muted-foreground whitespace-nowrap shrink-0 pr-8">{timeAgo(item.recordedAt)}</span>
 					

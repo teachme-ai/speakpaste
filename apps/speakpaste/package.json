@@ -1,7 +1,7 @@
 {
 	"name": "mynah",
 	"private": true,
-	"version": "0.1.1",
+	"version": "1.0.0",
 	"description": "Mynah — Mac-only local-first voice typing powered by whisper.cpp.",
 	"scripts": {
 		"prepare:build-meta": "bun ./scripts/prepare-build-meta.mjs",

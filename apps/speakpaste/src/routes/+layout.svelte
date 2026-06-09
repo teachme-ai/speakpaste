@@ -29,13 +29,16 @@
 			if (theme === 'dark') {
 				html.classList.add('dark');
 				html.classList.remove('theme-mynah');
+				html.style.colorScheme = 'dark';
 			} else if (theme === 'mynah') {
 				html.classList.remove('dark');
 				html.classList.add('theme-mynah');
+				html.style.colorScheme = 'light';
 			} else {
 				// 'pastel' (default light theme)
 				html.classList.remove('dark');
 				html.classList.remove('theme-mynah');
+				html.style.colorScheme = 'light';
 			}
 			localStorage.setItem('ui.theme', theme);
 		}
