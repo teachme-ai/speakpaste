@@ -1,3 +1,4 @@
+import { goto } from '$app/navigation';
 import { rpc } from '$lib/query';
 import {
 	getSelectedTranscriptionService,
@@ -10,9 +11,18 @@ import {
  */
 export function registerOnboarding() {
 	const selectedService = getSelectedTranscriptionService();
+	const pathname = window.location.pathname;
+	const canShowSetupAssistant = window.__TAURI_INTERNALS__ && pathname === '/';
+	const alreadyInSetup = pathname === '/setup';
 
 	// Check transcription service configuration
 	if (!selectedService) {
+		if (canShowSetupAssistant) {
+			goto('/setup', { replaceState: true });
+			return;
+		}
+		if (alreadyInSetup) return;
+
 		rpc.notify.info({
 			title: 'Welcome to Mynah!',
 			description: 'Please select a transcription service to get started.',
@@ -27,6 +37,12 @@ export function registerOnboarding() {
 	}
 
 	if (!isTranscriptionServiceConfigured(selectedService)) {
+		if (canShowSetupAssistant) {
+			goto('/setup', { replaceState: true });
+			return;
+		}
+		if (alreadyInSetup) return;
+
 		rpc.notify.info({
 			title: 'Welcome to Mynah!',
 			description: `Please configure your ${selectedService.name} model file to get started.`,
