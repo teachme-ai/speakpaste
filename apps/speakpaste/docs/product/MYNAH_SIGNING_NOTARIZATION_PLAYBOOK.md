@@ -349,7 +349,7 @@ Useful diagnostics:
 
 ```bash
 codesign --verify --deep --strict --verbose=4 src-tauri/target/release/bundle/macos/Mynah.app
-codesign -d --entitlements :- src-tauri/target/release/bundle/macos/Mynah.app
+codesign -d --entitlements - src-tauri/target/release/bundle/macos/Mynah.app
 ```
 
 Do not guess. Use the notary log.
