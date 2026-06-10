@@ -157,6 +157,20 @@
 				checkCompressionRecommendation(),
 			]);
 
+			// Eagerly initialize tray icon so the bird icon + menu are attached
+			// to the config-declared tray immediately on startup
+			import('$lib/services/desktop/tray').then(({ TrayIconServiceLive }) => {
+				TrayIconServiceLive.setTrayState('IDLE');
+				logDiagnostic('tray', 'eager_init_triggered');
+			}).catch((error) => {
+				logDiagnostic(
+					'tray',
+					'eager_init_failed',
+					{ error: error instanceof Error ? error.message : String(error) },
+					'error',
+				);
+			});
+
 			// Standalone Fn Key Global Listener
 			import('@tauri-apps/api/event').then(({ listen }) => {
 				listen<{

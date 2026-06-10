@@ -64,6 +64,12 @@
 	},
 	"app": {
 		"macOSPrivateApi": true,
+		"trayIcon": {
+			"id": "mynah-tray",
+			"iconPath": "icons/32x32.png",
+			"tooltip": "Mynah — Ready",
+			"menuOnLeftClick": false
+		},
 		"windows": [
 			{
 				"resizable": true,

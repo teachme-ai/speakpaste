@@ -32,7 +32,7 @@ export type MynahTrayState =
 const TRAY_ID = 'mynah-tray';
 
 const ICON_PATHS: Record<MynahTrayState, string> = {
-	IDLE:         'icons/32x32.png',
+	IDLE:         'recorder-state-icons/mynah_tray.png',
 	RECORDING:    'recorder-state-icons/green_circle.png',
 	TRANSCRIBING: 'recorder-state-icons/orange_circle.png',
 	PASTED:       'recorder-state-icons/blue_circle.png',
@@ -230,12 +230,42 @@ async function buildMenu() {
 
 async function initTray() {
 	logDiagnostic('tray', 'init_started', { trayId: TRAY_ID });
+
+	// Prefer retrieving the tray icon that Tauri created natively from tauri.conf.json.
+	// This tray exists before JS loads, so it's always available.
 	const existingTray = await TrayIcon.getById(TRAY_ID);
 	if (existingTray) {
 		logDiagnostic('tray', 'existing_tray_reused', { trayId: TRAY_ID });
+
+		// Attach menu and click handler to the config-declared tray
+		const trayMenu = await buildMenu();
+		await existingTray.setMenu(trayMenu);
+		await existingTray.setMenuOnLeftClick(false);
+
+		// Set the proper bird icon (the config uses icons/32x32.png, but we want the 22px version)
+		const iconPath = await resolveResource(ICON_PATHS['IDLE']);
+		await existingTray.setIcon(iconPath);
+
+		existingTray.setAction((e) => {
+			if (
+				e.type === 'Click' &&
+				e.button === 'Left' &&
+				e.buttonState === 'Down'
+			) {
+				void getCurrentWindow().show();
+				void getCurrentWindow().setFocus();
+			}
+		});
+
+		logDiagnostic('tray', 'init_completed_from_config', {
+			trayId: TRAY_ID,
+			iconPath,
+		});
 		return existingTray;
 	}
 
+	// Fallback: create tray from JS if config-declared tray is not found
+	logDiagnostic('tray', 'config_tray_not_found_creating_from_js', { trayId: TRAY_ID });
 	const trayMenu = await buildMenu();
 	const iconPath = await resolveResource(ICON_PATHS['IDLE']);
 	logDiagnostic('tray', 'idle_icon_resolved_for_init', {
