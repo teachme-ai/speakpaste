@@ -12,24 +12,19 @@
 	import { createKeyRecorder } from './create-key-recorder.svelte';
 	import KeyboardShortcutRecorder from './KeyboardShortcutRecorder.svelte';
 
-	const {
-		command,
-		placeholder,
-		autoFocus = true,
-		pressedKeys,
-	}: {
+	const props = $props<{
 		command: Command;
 		placeholder?: string;
 		autoFocus?: boolean;
 		pressedKeys: PressedKeys;
-	} = $props();
+	}>();
 
 	const shortcutValue = $derived(
-		deviceConfig.get(`shortcuts.global.${command.id}`),
+		deviceConfig.get(`shortcuts.global.${props.command.id}`),
 	);
 
 	const keyRecorder = createKeyRecorder({
-		pressedKeys,
+		pressedKeys: props.pressedKeys,
 		onRegister: async (keyCombination: KeyboardEventSupportedKey[]) => {
 			if (shortcutValue) {
 				const { error: unregisterError } =
@@ -61,7 +56,7 @@
 
 			const { error: registerError } =
 				await desktopRpc.globalShortcuts.registerCommand({
-					command,
+					command: props.command,
 					accelerator,
 				});
 
@@ -89,11 +84,11 @@
 				return;
 			}
 
-			deviceConfig.set(`shortcuts.global.${command.id}`, accelerator);
+			deviceConfig.set(`shortcuts.global.${props.command.id}`, accelerator);
 
 			rpc.notify.success({
 				title: `Global shortcut set to ${accelerator}`,
-				description: `Press the shortcut to trigger "${command.title}"`,
+				description: `Press the shortcut to trigger "${props.command.title}"`,
 			});
 		},
 		onClear: async () => {
@@ -110,20 +105,20 @@
 				});
 			}
 
-			deviceConfig.set(`shortcuts.global.${command.id}`, null);
+			deviceConfig.set(`shortcuts.global.${props.command.id}`, null);
 
 			rpc.notify.success({
 				title: 'Global shortcut cleared',
-				description: `Please set a new shortcut to trigger "${command.title}"`,
+				description: `Please set a new shortcut to trigger "${props.command.title}"`,
 			});
 		},
 	});
 </script>
 
 <KeyboardShortcutRecorder
-	title={command.title}
-	{placeholder}
-	{autoFocus}
+	title={props.command.title}
+	placeholder={props.placeholder}
+	autoFocus={props.autoFocus}
 	rawKeyCombination={shortcutValue}
 	{keyRecorder}
 />

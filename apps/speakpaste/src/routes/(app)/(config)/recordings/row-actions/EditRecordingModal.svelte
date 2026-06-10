@@ -25,7 +25,7 @@
 	 * reads the prop directly, it may see undefined and throw. Capturing
 	 * the ID here sidesteps the reactive teardown race entirely.
 	 */
-	const recordingIdForCleanup = recording.id;
+	const recordingIdForCleanup = $state.snapshot(recording).id;
 
 	let isDialogOpen = $state(false);
 
