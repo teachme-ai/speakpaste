@@ -206,20 +206,56 @@ pub async fn run() {
         .manage(NativeShortcutManager::new())
         .manage(ModelManager::new())
         .setup(|app| {
+            let build_info = current_build_info();
+            let exe_path = std::env::current_exe()
+                .map(|path| path.to_string_lossy().to_string())
+                .unwrap_or_else(|error| format!("unavailable: {}", error));
+            let app_data_dir = app
+                .path()
+                .app_data_dir()
+                .map(|path| path.to_string_lossy().to_string())
+                .unwrap_or_else(|error| format!("unavailable: {}", error));
+            info!(
+                "[App] setup_started version={} bundle={} commit={} dirty={} signature={} identifier={} exe={} app_data_dir={}",
+                build_info.marketing_version,
+                build_info.bundle_version,
+                build_info.git_commit,
+                build_info.git_dirty,
+                build_info.build_signature,
+                app.config().identifier,
+                exe_path,
+                app_data_dir,
+            );
             install_application_menu(app)?;
+            info!("[App] application_menu_installed");
 
             // Apply macOS vibrancy to main window
             #[cfg(target_os = "macos")]
             if let Some(main_window) = app.get_webview_window("main") {
                 use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
-                let _ = apply_vibrancy(&main_window, NSVisualEffectMaterial::Popover, None, None);
+                match apply_vibrancy(&main_window, NSVisualEffectMaterial::Popover, None, None) {
+                    Ok(_) => info!("[Window] main_vibrancy_applied"),
+                    Err(error) => warn!("[Window] failed_to_apply_main_vibrancy: {}", error),
+                }
             }
 
             // Configure overlay window to float on top of full screen apps
             if let Some(overlay) = app.get_webview_window("overlay") {
-                let _ = overlay.set_always_on_top(true);
-                let _ = overlay.set_visible_on_all_workspaces(true);
-                let _ = overlay.set_focusable(false);
+                match overlay.set_always_on_top(true) {
+                    Ok(_) => info!("[Window] overlay_always_on_top_enabled"),
+                    Err(error) => warn!("[Window] failed_to_enable_overlay_always_on_top: {}", error),
+                }
+                match overlay.set_visible_on_all_workspaces(true) {
+                    Ok(_) => info!("[Window] overlay_all_workspaces_enabled"),
+                    Err(error) => warn!(
+                        "[Window] failed_to_enable_overlay_all_workspaces: {}",
+                        error
+                    ),
+                }
+                match overlay.set_focusable(false) {
+                    Ok(_) => info!("[Window] overlay_focus_disabled"),
+                    Err(error) => warn!("[Window] failed_to_disable_overlay_focus: {}", error),
+                }
             }
             Ok(())
         });
@@ -457,6 +493,7 @@ async fn reset_tcc_permissions(app: tauri::AppHandle) -> Result<bool, String> {
 async fn open_mac_privacy_pane(pane: String) -> Result<bool, String> {
     #[cfg(target_os = "macos")]
     {
+        info!("[Permissions] open_privacy_pane_requested pane={}", pane);
         match pane.as_str() {
             "Privacy_Accessibility" | "Privacy_Microphone" => {}
             _ => return Err(format!("Unsupported macOS privacy pane: {}", pane)),
@@ -478,6 +515,10 @@ async fn open_mac_privacy_pane(pane: String) -> Result<bool, String> {
         for url in urls {
             match std::process::Command::new("open").arg(&url).status() {
                 Ok(status) if status.success() => {
+                    info!(
+                        "[Permissions] Opened macOS settings URL {} successfully",
+                        url
+                    );
                     opened = true;
                 }
                 Ok(status) => {
@@ -501,6 +542,7 @@ async fn open_mac_privacy_pane(pane: String) -> Result<bool, String> {
             .status()
         {
             Ok(status) if status.success() => {
+                info!("[Permissions] Opened System Settings by bundle id successfully");
                 opened = true;
             }
             Ok(status) => {
@@ -518,8 +560,13 @@ async fn open_mac_privacy_pane(pane: String) -> Result<bool, String> {
         }
 
         if !opened {
+            warn!(
+                "[Permissions] open_privacy_pane_failed pane={} all open commands failed",
+                pane
+            );
             return Err("Failed to open macOS System Settings".to_string());
         }
+        info!("[Permissions] open_privacy_pane_completed pane={}", pane);
     }
     Ok(true)
 }

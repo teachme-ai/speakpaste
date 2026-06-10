@@ -87,6 +87,12 @@ pub async fn repair_accessibility_permissions_if_needed(
             state.updated_at_ms = now_ms();
             write_recovery_state(&app, &state)?;
 
+            info!(
+                "[Permissions] accessibility_repair_result trusted=true prompted=false did_reset=false install_changed={} needs_user_approval=false recovery_state=trusted bundle_path={} build_signature={}",
+                install_changed,
+                current.bundle_path,
+                current.build_signature
+            );
             return Ok(AccessibilityRepairResult {
                 trusted: true,
                 prompted: false,
@@ -126,13 +132,26 @@ pub async fn repair_accessibility_permissions_if_needed(
         }
         write_recovery_state(&app, &state)?;
 
+        let recovery_state = repair_state_label(trusted_after, did_reset, install_changed);
+        info!(
+            "[Permissions] accessibility_repair_result trusted={} prompted={} did_reset={} install_changed={} needs_user_approval={} recovery_state={} bundle_path={} build_signature={}",
+            trusted_after,
+            prompted,
+            did_reset,
+            install_changed,
+            !trusted_after,
+            recovery_state,
+            current.bundle_path,
+            current.build_signature
+        );
+
         Ok(AccessibilityRepairResult {
             trusted: trusted_after,
             prompted,
             did_reset,
             install_changed,
             needs_user_approval: !trusted_after,
-            recovery_state: repair_state_label(trusted_after, did_reset, install_changed),
+            recovery_state,
             bundle_path: Some(current.bundle_path),
             build_signature: current.build_signature,
         })

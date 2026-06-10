@@ -1,7 +1,9 @@
 import { toast, toastOnError } from '@epicenter/ui/sonner';
 import { nanoid } from 'nanoid/non-secure';
+import { extractErrorMessage } from 'wellcrafted/error';
 import { goto } from '$app/navigation';
 import { IS_MACOS } from '$lib/constants/platform';
+import { logDiagnostic } from '$lib/diagnostics/runtime-diagnostics';
 import { desktopServices } from '$lib/services/desktop';
 
 function isMacDesktop() {
@@ -41,6 +43,10 @@ async function runOsLevelPermissionFixes() {
 	const { invoke } = await import('@tauri-apps/api/core');
 
 	const isTranslocated = await invoke<boolean>('check_app_translocation');
+	logDiagnostic('permissions', 'translocation_check_completed', {
+		isTranslocated,
+		source: 'global-permission-registration',
+	});
 	if (isTranslocated) {
 		goto('/macos-translocation-warning');
 		return false;
@@ -60,12 +66,20 @@ async function initializeFnKeyListener() {
 				'[FnKeyListener] Standalone Fn key listener is ready.',
 				readiness,
 			);
+			logDiagnostic('fn-listener', 'readiness_check_ready', { readiness });
 			return true;
 		}
 		console.warn('[FnKeyListener] Listener is not ready yet.', readiness);
+		logDiagnostic('fn-listener', 'readiness_check_not_ready', { readiness }, 'warn');
 		return false;
 	} catch (err) {
 		console.error('[FnKeyListener] Failed to check Fn key listener:', err);
+		logDiagnostic(
+			'fn-listener',
+			'readiness_check_failed',
+			{ error: extractErrorMessage(err) },
+			'error',
+		);
 		return false;
 	}
 }
@@ -90,10 +104,14 @@ export function registerAccessibilityPermission() {
 			  },
 	) => {
 		if (isSetupAssistantActive()) {
+			logDiagnostic('permissions', 'accessibility_recovery_toast_suppressed_for_setup');
 			dismissSetupToasts();
 			return;
 		}
 
+		logDiagnostic('permissions', 'accessibility_recovery_toast_shown', {
+			description: typeof description === 'string' ? description : description.text,
+		});
 		toast.warning('Accessibility access needed', {
 			id: accessibilityToastId,
 			description:
@@ -129,14 +147,25 @@ export function registerAccessibilityPermission() {
 
 	// Check accessibility permission once on mount
 	(async () => {
+		logDiagnostic('permissions', 'accessibility_registration_started');
 		const canProceed = await runOsLevelPermissionFixes();
 		if (!canProceed) return;
 
 		const { data: isAccessibilityGranted, error } =
 			await desktopServices.permissions.accessibility.check();
+		logDiagnostic('permissions', 'accessibility_initial_check_completed', {
+			isAccessibilityGranted,
+			hasError: Boolean(error),
+		});
 
 		if (error) {
 			console.error('Failed to check accessibility permissions:', error);
+			logDiagnostic(
+				'permissions',
+				'accessibility_initial_check_failed',
+				{ error: extractErrorMessage(error) },
+				'error',
+			);
 			return;
 		}
 
@@ -147,7 +176,16 @@ export function registerAccessibilityPermission() {
 			'repair_accessibility_permissions_if_needed',
 		).catch((repairError) => {
 			console.error('[Permissions] Failed to run accessibility self-repair:', repairError);
+			logDiagnostic(
+				'permissions',
+				'accessibility_repair_failed',
+				{ error: extractErrorMessage(repairError) },
+				'error',
+			);
 			return null;
+		});
+		logDiagnostic('permissions', 'accessibility_repair_completed', {
+			repairResult,
 		});
 
 		if (repairResult?.trusted) {
@@ -201,25 +239,38 @@ export function registerMicrophonePermission() {
 	// Check microphone permission once on mount
 	(async () => {
 		if (isSetupAssistantActive()) {
+			logDiagnostic('permissions', 'microphone_toast_suppressed_for_setup');
 			toast.dismiss(microphoneToastId);
 			return;
 		}
 
 		const { data: isMicrophoneGranted, error } =
 			await desktopServices.permissions.microphone.check();
+		logDiagnostic('permissions', 'microphone_initial_check_completed', {
+			isMicrophoneGranted,
+			hasError: Boolean(error),
+		});
 
 		if (error) {
 			console.error('Failed to check microphone permissions:', error);
+			logDiagnostic(
+				'permissions',
+				'microphone_initial_check_failed',
+				{ error: extractErrorMessage(error) },
+				'error',
+			);
 			return;
 		}
 
 		if (!isMicrophoneGranted) {
 			if (isSetupAssistantActive()) {
+				logDiagnostic('permissions', 'microphone_toast_suppressed_for_setup_after_check');
 				toast.dismiss(microphoneToastId);
 				return;
 			}
 
 			// Toast if permission not granted
+			logDiagnostic('permissions', 'microphone_toast_shown');
 			toast.info('Microphone Permission Required', {
 				id: microphoneToastId,
 				description: 'Mynah needs microphone access to record audio',

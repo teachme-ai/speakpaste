@@ -7,9 +7,13 @@
 	import SettingsIcon from '@lucide/svelte/icons/settings';
 	import ShieldCheckIcon from '@lucide/svelte/icons/shield-check';
 	import SparklesIcon from '@lucide/svelte/icons/sparkles';
+	import { exists, stat } from '@tauri-apps/plugin-fs';
+	import { extractErrorMessage } from 'wellcrafted/error';
 	import { goto } from '$app/navigation';
 	import LocalModelDownloadCard from '$lib/components/settings/LocalModelDownloadCard.svelte';
+	import { logDiagnostic } from '$lib/diagnostics/runtime-diagnostics';
 	import { WHISPER_MODELS } from '$lib/services/transcription/local/whispercpp';
+	import { isModelFileSizeValid } from '$lib/services/transcription/local/types';
 	import { desktopServices } from '$lib/services/desktop';
 	import { deviceConfig } from '$lib/state/device-config.svelte';
 	import { settings } from '$lib/state/settings.svelte';
@@ -28,11 +32,23 @@
 		buildSignature: string;
 	};
 
+	type FnKeyListenerReadiness = {
+		accessibilityTrusted: boolean;
+		listenerInitializing: boolean;
+		listenerRunning: boolean;
+		listenerReady: boolean;
+		initialized: boolean;
+		message: string | null;
+	};
+
 	let accessibilityStatus = $state<SetupStatus>('checking');
 	let microphoneStatus = $state<SetupStatus>('checking');
 	let isOpeningAccessibilitySettings = $state(false);
 	let accessibilitySettingsMessage = $state('');
 	let isRequestingMicrophone = $state(false);
+	let isRunningPreflight = $state(false);
+	let preflightMessage = $state('');
+	let lastModelDiagnosticKey = '';
 	let pollTimer: number | undefined;
 
 	const modelPath = $derived(deviceConfig.get('transcription.whispercpp.modelPath'));
@@ -44,16 +60,49 @@
 		accessibilityStatus === 'ready' && microphoneStatus === 'ready' && modelReady,
 	);
 
+	function errorMessage(error: unknown) {
+		return extractErrorMessage(error);
+	}
+
+	function updateAccessibilityStatus(nextStatus: SetupStatus, details?: Record<string, unknown>) {
+		if (accessibilityStatus !== nextStatus) {
+			logDiagnostic('permissions', 'setup_accessibility_status_changed', {
+				previousStatus: accessibilityStatus,
+				nextStatus,
+				...details,
+			});
+		}
+		accessibilityStatus = nextStatus;
+	}
+
+	function updateMicrophoneStatus(nextStatus: SetupStatus, details?: Record<string, unknown>) {
+		if (microphoneStatus !== nextStatus) {
+			logDiagnostic('permissions', 'setup_microphone_status_changed', {
+				previousStatus: microphoneStatus,
+				nextStatus,
+				...details,
+			});
+		}
+		microphoneStatus = nextStatus;
+	}
+
 	async function openMacPrivacyPane(pane: 'Privacy_Accessibility' | 'Privacy_Microphone') {
 		const { invoke } = await import('@tauri-apps/api/core');
+		logDiagnostic('permissions', 'open_privacy_pane_requested', { pane, source: 'setup' });
 		await invoke('open_mac_privacy_pane', { pane });
+		logDiagnostic('permissions', 'open_privacy_pane_completed', { pane, source: 'setup' });
 	}
 
 	async function prepareAccessibilityForSetup(prompt = false) {
 		if (!window.__TAURI_INTERNALS__) return;
 
 		const { invoke } = await import('@tauri-apps/api/core');
+		logDiagnostic('permissions', 'setup_accessibility_prepare_started', { prompt });
 		const isTranslocated = await invoke<boolean>('check_app_translocation');
+		logDiagnostic('permissions', 'setup_translocation_check_completed', {
+			isTranslocated,
+			prompt,
+		});
 		if (isTranslocated) {
 			await goto('/macos-translocation-warning');
 			return;
@@ -63,13 +112,27 @@
 			'repair_accessibility_permissions_if_needed',
 			{ prompt },
 		);
+		logDiagnostic('permissions', 'setup_accessibility_repair_completed', {
+			prompt,
+			repairResult,
+		});
 		if (repairResult.trusted) {
-			accessibilityStatus = 'ready';
+			updateAccessibilityStatus('ready', {
+				source: 'repair',
+				prompt,
+				buildSignature: repairResult.buildSignature,
+			});
 			accessibilitySettingsMessage = '';
 			return;
 		}
 
-		accessibilityStatus = 'needed';
+		updateAccessibilityStatus('needed', {
+			source: 'repair',
+			prompt,
+			recoveryState: repairResult.recoveryState,
+			didReset: repairResult.didReset,
+			needsUserApproval: repairResult.needsUserApproval,
+		});
 		accessibilitySettingsMessage = repairResult.didReset
 			? 'Mynah refreshed its macOS Accessibility entry. Enable Mynah in System Settings to continue.'
 			: 'Enable Mynah in System Settings > Privacy & Security > Accessibility to continue.';
@@ -77,32 +140,44 @@
 
 	async function checkAccessibility() {
 		if (!window.__TAURI_INTERNALS__) {
-			accessibilityStatus = 'ready';
+			updateAccessibilityStatus('ready', { source: 'web-fallback' });
 			return;
 		}
 
 		const { data, error } = await desktopServices.permissions.accessibility.check();
 		if (error) {
 			console.error('[Setup] Failed to check Accessibility permission:', error);
-			accessibilityStatus = 'needed';
+			logDiagnostic(
+				'permissions',
+				'setup_accessibility_check_failed',
+				{ error: errorMessage(error) },
+				'error',
+			);
+			updateAccessibilityStatus('needed', { source: 'check-error' });
 			return;
 		}
-		accessibilityStatus = data ? 'ready' : 'needed';
+		updateAccessibilityStatus(data ? 'ready' : 'needed', { source: 'poll' });
 	}
 
 	async function checkMicrophone() {
 		if (!window.__TAURI_INTERNALS__) {
-			microphoneStatus = 'ready';
+			updateMicrophoneStatus('ready', { source: 'web-fallback' });
 			return;
 		}
 
 		const { data, error } = await desktopServices.permissions.microphone.check();
 		if (error) {
 			console.error('[Setup] Failed to check Microphone permission:', error);
-			microphoneStatus = 'needed';
+			logDiagnostic(
+				'permissions',
+				'setup_microphone_check_failed',
+				{ error: errorMessage(error) },
+				'error',
+			);
+			updateMicrophoneStatus('needed', { source: 'check-error' });
 			return;
 		}
-		microphoneStatus = data ? 'ready' : 'needed';
+		updateMicrophoneStatus(data ? 'ready' : 'needed', { source: 'poll' });
 	}
 
 	async function refreshPermissions() {
@@ -111,10 +186,22 @@
 
 	async function requestMicrophone() {
 		isRequestingMicrophone = true;
+		logDiagnostic('permissions', 'setup_microphone_request_started');
 		try {
 			const { error } = await desktopServices.permissions.microphone.request();
-			if (error) return toastOnError(error, 'Failed to request microphone permission');
+			if (error) {
+				logDiagnostic(
+					'permissions',
+					'setup_microphone_request_failed',
+					{ error: errorMessage(error) },
+					'error',
+				);
+				return toastOnError(error, 'Failed to request microphone permission');
+			}
 			await checkMicrophone();
+			logDiagnostic('permissions', 'setup_microphone_request_completed', {
+				microphoneStatus,
+			});
 			if (microphoneStatus !== 'ready') {
 				await openMacPrivacyPane('Privacy_Microphone');
 			}
@@ -126,6 +213,7 @@
 	async function openAccessibilitySettings() {
 		isOpeningAccessibilitySettings = true;
 		accessibilitySettingsMessage = '';
+		logDiagnostic('permissions', 'setup_accessibility_open_settings_started');
 		try {
 			await prepareAccessibilityForSetup(true);
 			await openMacPrivacyPane('Privacy_Accessibility');
@@ -134,6 +222,12 @@
 			window.setTimeout(checkAccessibility, 1000);
 		} catch (error) {
 			console.error('[Setup] Failed to open Accessibility settings:', error);
+			logDiagnostic(
+				'permissions',
+				'setup_accessibility_open_settings_failed',
+				{ error: errorMessage(error) },
+				'error',
+			);
 			accessibilitySettingsMessage =
 				'Open System Settings > Privacy & Security > Accessibility, then enable Mynah.';
 		} finally {
@@ -141,13 +235,157 @@
 		}
 	}
 
+	async function validateWhisperModel() {
+		if (!modelReady || !activeModel) {
+			return {
+				ok: false,
+				reason: 'No Whisper model is selected.',
+			};
+		}
+
+		if (!window.__TAURI_INTERNALS__) {
+			return { ok: true, reason: null };
+		}
+
+		if (!(await exists(modelPath))) {
+			return {
+				ok: false,
+				reason: 'The selected Whisper model file does not exist.',
+			};
+		}
+
+		const modelStats = await stat(modelPath);
+		if (!isModelFileSizeValid(modelStats.size, activeModel.sizeBytes)) {
+			return {
+				ok: false,
+				reason: 'The selected Whisper model file looks incomplete.',
+				size: modelStats.size,
+				expectedSize: activeModel.sizeBytes,
+			};
+		}
+
+		return {
+			ok: true,
+			reason: null,
+			size: modelStats.size,
+			expectedSize: activeModel.sizeBytes,
+		};
+	}
+
+	async function getFnKeyReadiness() {
+		if (!window.__TAURI_INTERNALS__) {
+			return {
+				accessibilityTrusted: true,
+				listenerInitializing: false,
+				listenerRunning: true,
+				listenerReady: true,
+				initialized: false,
+				message: null,
+			} satisfies FnKeyListenerReadiness;
+		}
+
+		const { invoke } = await import('@tauri-apps/api/core');
+		return await invoke<FnKeyListenerReadiness>('get_fn_key_listener_readiness');
+	}
+
+	async function runSetupPreflight() {
+		isRunningPreflight = true;
+		preflightMessage = 'Checking readiness before first dictation...';
+		logDiagnostic('setup', 'preflight_started', {
+			accessibilityStatus,
+			microphoneStatus,
+			modelReady,
+			modelPath,
+			activeModelId: activeModel?.id ?? null,
+		});
+
+		try {
+			await refreshPermissions();
+			const [modelValidation, fnReadiness] = await Promise.all([
+				validateWhisperModel(),
+				getFnKeyReadiness(),
+			]);
+			const passed =
+				accessibilityStatus === 'ready' &&
+				microphoneStatus === 'ready' &&
+				modelValidation.ok &&
+				fnReadiness.listenerReady;
+
+			logDiagnostic(
+				'setup',
+				'preflight_completed',
+				{
+					passed,
+					accessibilityStatus,
+					microphoneStatus,
+					modelValidation,
+					fnReadiness,
+				},
+				passed ? 'info' : 'warn',
+			);
+
+			if (accessibilityStatus !== 'ready') {
+				preflightMessage = 'Enable Accessibility in System Settings before starting.';
+				return false;
+			}
+			if (microphoneStatus !== 'ready') {
+				preflightMessage = 'Allow Microphone access before starting.';
+				return false;
+			}
+			if (!modelValidation.ok) {
+				preflightMessage = `${modelValidation.reason} Download or select a model before starting.`;
+				return false;
+			}
+			if (!fnReadiness.listenerReady) {
+				preflightMessage =
+					fnReadiness.message ??
+					'Mynah is not receiving the Fn key yet. Reopen Accessibility and make sure Mynah is enabled.';
+				return false;
+			}
+
+			preflightMessage = '';
+			return true;
+		} catch (error) {
+			logDiagnostic(
+				'setup',
+				'preflight_failed',
+				{ error: errorMessage(error) },
+				'error',
+			);
+			preflightMessage = 'Mynah could not complete its readiness check. Quit and reopen the app.';
+			return false;
+		} finally {
+			isRunningPreflight = false;
+		}
+	}
+
 	async function finishSetup() {
-		if (!allReady) return;
+		if (!allReady) {
+			logDiagnostic('setup', 'finish_blocked_by_checklist', {
+				accessibilityStatus,
+				microphoneStatus,
+				modelReady,
+				modelPath,
+				activeModelId: activeModel?.id ?? null,
+			});
+			return;
+		}
+		const preflightPassed = await runSetupPreflight();
+		if (!preflightPassed) return;
 		localStorage.setItem('mynah.setup.completedAt', new Date().toISOString());
+		logDiagnostic('setup', 'finish_completed', {
+			modelPath,
+			activeModelId: activeModel?.id ?? null,
+		});
 		await goto('/');
 	}
 
 	onMount(() => {
+		logDiagnostic('setup', 'setup_page_mounted', {
+			initialService: settings.get('transcription.service'),
+			initialModelPath: deviceConfig.get('transcription.whispercpp.modelPath'),
+			setupCompletedAt: localStorage.getItem('mynah.setup.completedAt'),
+		});
 		settings.set('transcription.service', 'whispercpp');
 
 		if (window.__TAURI_INTERNALS__) {
@@ -162,7 +400,13 @@
 
 		void prepareAccessibilityForSetup().catch((error) => {
 			console.error('[Setup] Failed to prepare Accessibility permission:', error);
-			accessibilityStatus = 'needed';
+			logDiagnostic(
+				'permissions',
+				'setup_initial_accessibility_prepare_failed',
+				{ error: errorMessage(error) },
+				'error',
+			);
+			updateAccessibilityStatus('needed', { source: 'initial-prepare-error' });
 			accessibilitySettingsMessage =
 				'Open System Settings > Privacy & Security > Accessibility, then enable Mynah.';
 		});
@@ -172,6 +416,22 @@
 
 	onDestroy(() => {
 		if (pollTimer) window.clearInterval(pollTimer);
+	});
+
+	$effect(() => {
+		const key = JSON.stringify({
+			modelPath,
+			modelReady,
+			activeModelId: activeModel?.id ?? null,
+		});
+		if (key === lastModelDiagnosticKey) return;
+		lastModelDiagnosticKey = key;
+		logDiagnostic('model', 'setup_model_state_changed', {
+			modelPath,
+			modelReady,
+			activeModelId: activeModel?.id ?? null,
+			activeModelName: activeModel?.name ?? null,
+		});
 	});
 </script>
 
@@ -326,9 +586,15 @@
 					<p class="mt-1 text-sm text-muted-foreground">
 						Hold Fn, speak one sentence, then release to paste at your cursor.
 					</p>
+					{#if preflightMessage}
+						<p class="mt-2 text-sm font-medium text-warning">
+							{preflightMessage}
+						</p>
+					{/if}
 				</div>
-				<Button onclick={finishSetup} disabled={!allReady} class="shrink-0">
-					Start Using {@render AppIcon()}
+				<Button onclick={finishSetup} disabled={!allReady || isRunningPreflight} class="shrink-0">
+					{isRunningPreflight ? 'Checking...' : 'Start Using'}
+					{@render AppIcon()}
 					<ArrowRightIcon class="size-4" />
 				</Button>
 			</div>

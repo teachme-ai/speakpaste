@@ -6,6 +6,8 @@
 	import { commandCallbacks } from '$lib/commands';
 	import MoreDetailsDialog from '$lib/components/MoreDetailsDialog.svelte';
 	import NotificationLog from '$lib/components/NotificationLog.svelte';
+	import { logDiagnostic } from '$lib/diagnostics/runtime-diagnostics';
+	import { BUILD_INFO } from '$lib/generated/build-info';
 	import { migrationDialog } from '$lib/migration/migration-dialog.svelte';
 	import { rpc } from '$lib/query';
 	import { services } from '$lib/services';
@@ -43,6 +45,12 @@
 	onMount(() => {
 		window.commands = commandCallbacks;
 		window.goto = goto;
+		logDiagnostic('app', 'layout_mount', {
+			build: BUILD_INFO,
+			userAgent: navigator.userAgent,
+			pathname: window.location.pathname,
+			installedSetupCompletedAt: localStorage.getItem('mynah.setup.completedAt'),
+		});
 
 		// Migrate stale/conflicting shortcuts to Command+Shift+Return
 		// Covers: Space, Spacebar, Command+Shift+Space, Command+Option+R, F7, Command+Shift+; (all previous bad defaults)
@@ -92,16 +100,44 @@
 			console.info('[Recording] using Native Mac Capture for desktop');
 			deviceConfig.set('recording.method', 'cpal');
 		}
+		logDiagnostic('app', 'startup_config_snapshot', {
+			selectedService: settings.get('transcription.service'),
+			whisperModelPath: deviceConfig.get('transcription.whispercpp.modelPath'),
+			hasWhisperModelPath: Boolean(deviceConfig.get('transcription.whispercpp.modelPath')),
+			recordingMethod: deviceConfig.get('recording.method'),
+			recordingMode: settings.get('recording.mode'),
+			autoPaste: settings.get('output.transcription.cursor'),
+			globalToggleShortcut: deviceConfig.get('shortcuts.global.toggleManualRecording'),
+		});
 
 		syncLocalShortcutsWithSettings();
 		resetLocalShortcutsToDefaultIfDuplicates();
 		const isSetupAssistantRequired = registerOnboarding();
+		logDiagnostic('setup', 'onboarding_result', {
+			isSetupAssistantRequired,
+			pathname: window.location.pathname,
+		});
 		if (!isSetupAssistantRequired) {
 			cleanupAccessibilityPermission = registerAccessibilityPermission();
 			cleanupMicrophonePermission = registerMicrophonePermission();
+		} else {
+			logDiagnostic('permissions', 'global_permission_toasts_deferred_for_setup', {
+				pathname: window.location.pathname,
+			});
 		}
 		void dictationRuntime.init().then((cleanup) => {
+			logDiagnostic('runtime', 'dictation_runtime_initialized', {
+				recordingMode: settings.get('recording.mode'),
+				recordingMethod: deviceConfig.get('recording.method'),
+			});
 			cleanupDictationRuntime = cleanup;
+		}).catch((error) => {
+			logDiagnostic(
+				'runtime',
+				'dictation_runtime_init_failed',
+				{ error: error instanceof Error ? error.message : String(error) },
+				'error',
+			);
 		});
 
 		migrationDialog.check();
@@ -127,6 +163,10 @@
 					recordingId: string;
 					filePath: string;
 				}>('dictation:audio-ready', (event) => {
+					logDiagnostic('recording', 'native_audio_ready_event', {
+						recordingId: event.payload.recordingId,
+						filePath: event.payload.filePath,
+					});
 					void rpc.actions.processNativeRecording({
 						recordingId: event.payload.recordingId,
 						filePath: event.payload.filePath,
@@ -137,6 +177,7 @@
 
 				listen('fn-key-down', () => {
 					console.log('[FnKeyListener] fn-key-down event received from backend');
+					logDiagnostic('fn-listener', 'fn_key_down_event_received');
 					commandCallbacks.pushToTalk('Pressed');
 				}).then((unlisten) => {
 					unlistenFnKeyDown = unlisten;
@@ -144,6 +185,7 @@
 
 				listen('fn-key-up', () => {
 					console.log('[FnKeyListener] fn-key-up event received from backend');
+					logDiagnostic('fn-listener', 'fn_key_up_event_received');
 					commandCallbacks.pushToTalk('Released');
 				}).then((unlisten) => {
 					unlistenFnKeyUp = unlisten;

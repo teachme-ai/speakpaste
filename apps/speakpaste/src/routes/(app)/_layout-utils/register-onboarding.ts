@@ -1,4 +1,5 @@
 import { goto } from '$app/navigation';
+import { logDiagnostic } from '$lib/diagnostics/runtime-diagnostics';
 import { rpc } from '$lib/query';
 import {
 	getSelectedTranscriptionService,
@@ -14,9 +15,16 @@ export function registerOnboarding() {
 	const pathname = window.location.pathname;
 	const canShowSetupAssistant = window.__TAURI_INTERNALS__ && pathname === '/';
 	const alreadyInSetup = pathname === '/setup';
+	const selectedServiceId = selectedService?.id ?? null;
 
 	// Check transcription service configuration
 	if (!selectedService) {
+		logDiagnostic('setup', 'onboarding_missing_service', {
+			pathname,
+			canShowSetupAssistant,
+			alreadyInSetup,
+			selectedServiceId,
+		});
 		if (canShowSetupAssistant) {
 			goto('/setup', { replaceState: true });
 			return true;
@@ -37,6 +45,13 @@ export function registerOnboarding() {
 	}
 
 	if (!isTranscriptionServiceConfigured(selectedService)) {
+		logDiagnostic('setup', 'onboarding_missing_model_configuration', {
+			pathname,
+			canShowSetupAssistant,
+			alreadyInSetup,
+			selectedServiceId,
+			serviceName: selectedService.name,
+		});
 		if (canShowSetupAssistant) {
 			goto('/setup', { replaceState: true });
 			return true;
@@ -56,5 +71,10 @@ export function registerOnboarding() {
 		return false;
 	}
 
+	logDiagnostic('setup', 'onboarding_not_required', {
+		pathname,
+		selectedServiceId,
+		serviceName: selectedService.name,
+	});
 	return false;
 }

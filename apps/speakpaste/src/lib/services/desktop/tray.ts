@@ -11,6 +11,7 @@ import {
 } from 'wellcrafted/error';
 import { tryAsync } from 'wellcrafted/result';
 import { goto } from '$app/navigation';
+import { logDiagnostic } from '$lib/diagnostics/runtime-diagnostics';
 
 /**
  * Mynah tray states — drives icon and menu status line.
@@ -79,13 +80,37 @@ export const TrayIconServiceLive = {
 		tryAsync({
 			try: async () => {
 				currentState = state;
+				logDiagnostic('tray', 'set_state_started', {
+					state,
+					iconResource: ICON_PATHS[state],
+				});
 				const iconPath = await resolveResource(ICON_PATHS[state]);
+				logDiagnostic('tray', 'icon_resolved', {
+					state,
+					iconPath,
+				});
 				const tray = await getTray();
 				await tray.setIcon(iconPath);
 				await tray.setTooltip(`Mynah — ${STATE_LABELS[state]}`);
 				console.info(`[Tray] state → ${state} (${STATE_LABELS[state]})`);
+				logDiagnostic('tray', 'set_state_completed', {
+					state,
+					label: STATE_LABELS[state],
+				});
 			},
-			catch: (error) => TrayError.SetIcon({ cause: error }),
+			catch: (error) => {
+				logDiagnostic(
+					'tray',
+					'set_state_failed',
+					{
+						state,
+						iconResource: ICON_PATHS[state],
+						error: extractErrorMessage(error),
+					},
+					'error',
+				);
+				return TrayError.SetIcon({ cause: error });
+			},
 		}),
 
 	/**
@@ -204,11 +229,20 @@ async function buildMenu() {
 }
 
 async function initTray() {
+	logDiagnostic('tray', 'init_started', { trayId: TRAY_ID });
 	const existingTray = await TrayIcon.getById(TRAY_ID);
-	if (existingTray) return existingTray;
+	if (existingTray) {
+		logDiagnostic('tray', 'existing_tray_reused', { trayId: TRAY_ID });
+		return existingTray;
+	}
 
 	const trayMenu = await buildMenu();
 	const iconPath = await resolveResource(ICON_PATHS['IDLE']);
+	logDiagnostic('tray', 'idle_icon_resolved_for_init', {
+		trayId: TRAY_ID,
+		iconPath,
+		iconResource: ICON_PATHS['IDLE'],
+	});
 
 	const tray = await TrayIcon.new({
 		id: TRAY_ID,
@@ -229,5 +263,9 @@ async function initTray() {
 		},
 	});
 
+	logDiagnostic('tray', 'init_completed', {
+		trayId: TRAY_ID,
+		iconPath,
+	});
 	return tray;
 }

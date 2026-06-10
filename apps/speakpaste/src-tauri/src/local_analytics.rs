@@ -1,8 +1,11 @@
 use serde_json::{json, Value};
 use std::fs::{self, OpenOptions};
 use std::io::Write;
+use std::sync::{LazyLock, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::Manager;
+
+static LOCAL_ANALYTICS_LOG_LOCK: LazyLock<Mutex<()>> = LazyLock::new(|| Mutex::new(()));
 
 fn analytics_dir_path(app: &tauri::AppHandle) -> Result<std::path::PathBuf, String> {
     let dir = app
@@ -23,6 +26,9 @@ fn analytics_log_path(app: &tauri::AppHandle) -> Result<std::path::PathBuf, Stri
 
 #[tauri::command]
 pub async fn log_local_analytics_event(app: tauri::AppHandle, event: Value) -> Result<(), String> {
+    let _guard = LOCAL_ANALYTICS_LOG_LOCK
+        .lock()
+        .map_err(|_| "Local analytics log lock is poisoned".to_string())?;
     let path = analytics_log_path(&app)?;
     let mut file = OpenOptions::new()
         .create(true)

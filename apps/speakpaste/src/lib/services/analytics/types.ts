@@ -26,6 +26,16 @@ type SettingsSection =
 	| 'analytics'
 	| 'recording';
 
+type DiagnosticArea =
+	| 'app'
+	| 'setup'
+	| 'permissions'
+	| 'fn-listener'
+	| 'tray'
+	| 'model'
+	| 'runtime'
+	| 'recording';
+
 /**
  * Discriminated union of all loggable events.
  * Each event has a 'type' field and optional additional properties.
@@ -101,6 +111,17 @@ export type Event =
 			original_chars: number;
 			cleaned_chars: number;
 			emptied: boolean;
+	  }
+	| {
+			type: 'diagnostic';
+			area: DiagnosticArea;
+			event: string;
+			level?: 'info' | 'warn' | 'error';
+			sessionId?: string;
+			build?: Record<string, unknown>;
+			route?: { href?: string; pathname?: string };
+			isTauri?: boolean;
+			details?: Record<string, unknown>;
 	  }
 	// Settings events
 	| { type: 'settings_changed'; section: SettingsSection };
