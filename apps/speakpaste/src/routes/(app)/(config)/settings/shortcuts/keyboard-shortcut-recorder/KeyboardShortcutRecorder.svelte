@@ -32,7 +32,7 @@
 
 	let isPopoverOpen = $state(false);
 	let isManualMode = $state(false);
-	let manualValue = $state('');
+	let manualValue = $state($state.snapshot(rawKeyCombination) ?? '');
 
 	$effect(() => {
 		manualValue = rawKeyCombination ?? '';

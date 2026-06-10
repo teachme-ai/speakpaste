@@ -36,13 +36,12 @@
 	};
 
 	let { data } = $props();
-	let isAccessibilityGranted = $state(false);
+	let isAccessibilityGranted = $state($state.snapshot(data).isAccessibilityGranted);
 	let checkInterval: any;
 	const quarantineCommand =
 		'xattr -dr com.apple.quarantine /Applications/Mynah.app';
 
 	onMount(async () => {
-		isAccessibilityGranted = data.isAccessibilityGranted;
 		if (window.__TAURI_INTERNALS__) {
 			try {
 				const { getCurrentWindow, LogicalSize } = await import('@tauri-apps/api/window');
