@@ -11,7 +11,9 @@
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
-		"tauri": "bun ./scripts/run-tauri-with-build-meta.mjs"
+		"tauri": "bun ./scripts/run-tauri-with-build-meta.mjs",
+		"build:all": "bun ./scripts/build-both.mjs",
+		"publish:website": "bun ./scripts/publish-to-website.mjs"
 	},
 	"license": "UNLICENSED",
 	"devDependencies": {

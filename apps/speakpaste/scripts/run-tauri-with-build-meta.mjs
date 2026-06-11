@@ -35,6 +35,7 @@ const result = spawnSync(
 			MYNAH_BUILD_GIT_COMMIT: buildMeta.gitCommit,
 			MYNAH_BUILD_GIT_DIRTY: String(buildMeta.gitDirty),
 			MYNAH_BUILD_SIGNATURE: buildMeta.buildSignature,
+			MYNAH_TRIAL_MODE: String(buildMeta.isTrialMode ?? false),
 		},
 	},
 );

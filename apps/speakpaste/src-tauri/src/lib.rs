@@ -83,6 +83,9 @@ use dictation_runtime::{
 pub mod runtime_config;
 use runtime_config::{read_runtime_config, write_runtime_config};
 
+pub mod trial_license;
+use trial_license::{get_trial_status, initialize_trial_if_needed};
+
 pub mod dictation_manager;
 use dictation_manager::{
     cancel_native_dictation, start_native_dictation, stop_native_dictation,
@@ -229,6 +232,15 @@ pub async fn run() {
             install_application_menu(app)?;
             info!("[App] application_menu_installed");
 
+            // Initialize trial keychain record if needed asynchronously
+            tauri::async_runtime::spawn(async {
+                if let Err(err) = initialize_trial_if_needed().await {
+                    log::warn!("[App] failed_to_initialize_trial: {}", err);
+                } else {
+                    log::info!("[App] trial_license_initialized");
+                }
+            });
+
             // Apply macOS vibrancy to main window
             #[cfg(target_os = "macos")]
             if let Some(main_window) = app.get_webview_window("main") {
@@ -319,6 +331,7 @@ pub async fn run() {
         repair_accessibility_permissions_if_needed,
         reset_tcc_permissions,
         open_mac_privacy_pane,
+        get_trial_status,
     ]);
 
     let app = builder

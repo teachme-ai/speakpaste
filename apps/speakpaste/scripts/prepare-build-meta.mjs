@@ -59,6 +59,7 @@ function generateBuildMeta(marketingVersion) {
 		.length > 0;
 	const bundleVersion = gitCommitCount;
 	const buildSignature = `${marketingVersion}+r${gitCommitCount}.${gitCommit}${gitDirty ? '.dirty' : ''}`;
+	const isTrialMode = process.env.MYNAH_TRIAL_MODE === 'true';
 
 	return {
 		marketingVersion,
@@ -68,6 +69,7 @@ function generateBuildMeta(marketingVersion) {
 		gitCommit,
 		gitDirty,
 		buildSignature,
+		isTrialMode,
 	};
 }
 
@@ -101,5 +103,6 @@ function readBuildMetaFromEnv() {
 		gitCommit: MYNAH_BUILD_GIT_COMMIT,
 		gitDirty: MYNAH_BUILD_GIT_DIRTY === 'true',
 		buildSignature: MYNAH_BUILD_SIGNATURE,
+		isTrialMode: process.env.MYNAH_TRIAL_MODE === 'true',
 	};
 }
