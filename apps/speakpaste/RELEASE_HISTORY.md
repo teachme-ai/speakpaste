@@ -44,3 +44,17 @@ This file tracks all successfully completed production DMG builds, including the
 
 ---
 
+## Build 177 (1.0.0) — 2026-06-11
+- **Release Version**: `1.0.0`
+- **Build Number**: `177`
+- **Git Commit**: `4b22a4809fcc`
+- **Timestamp**: `2026-06-11T16:09:58.496Z`
+- **Description**: Commit 6432337: Added core event and path capabilities (core:event:allow-unlisten, core:path:* permissions) to the Tauri configuration (
+- **Artifacts**:
+  - `Mynah_Trial_1.0.0_b177_macos_aarch64.dmg` (SHA-256: `f95924916b5f9274502dbc9519cf4bea0a356e2e901a66746cdd8b6bb611b1b4`)
+  - `Mynah_Lifetime_1.0.0_b177_macos_aarch64.dmg` (SHA-256: `205acd1d2940aed159eae7e90ae09f1eac7ab2bb7b9354644af2784d56ffa870`)
+  - `Mynah_Trial_1.0.0_b177_macos_x86_64.dmg` (SHA-256: `50fe4139cb0e531777e1e2675699f6b0f88fd1346ce9d7024845b0ee12b25f50`)
+  - `Mynah_Lifetime_1.0.0_b177_macos_x86_64.dmg` (SHA-256: `6b8791a483e80e2f279ca7166bdd3b96f5b559c27b9e4274c884f7a60212c905`)
+
+---
+
