@@ -1,0 +1,46 @@
+# Mynah Release and Build History
+
+This file tracks all successfully completed production DMG builds, including their version, build number, and specific fixes/changes.
+
+## Build 171 (1.0.0) — 2026-06-11
+- **Release Version**: `1.0.0`
+- **Build Number**: `171`
+- **Git Commit**: `9d97375323a5` (dirty)
+- **Timestamp**: `2026-06-11T06:13:31.468Z`
+- **Description**: fix the script.. gpt is so dumb
+- **Artifacts**:
+  - `Mynah_Trial_1.0.0_b171_macos_aarch64.dmg` (SHA-256: `5cb05b1887874e4c8f79c933a1b6a2b52e4e5352cb3038123caad7fab5481790`)
+  - `Mynah_Lifetime_1.0.0_b171_macos_aarch64.dmg` (SHA-256: `c95f10ed13c0ec474cbdc2e6f6c28c88b9943a1b43708f2b9361926207158066`)
+  - `Mynah_Trial_1.0.0_b171_macos_x86_64.dmg` (SHA-256: `30c989920bdb805e44fd3790b30d9a5f9e3bd4d8fde56ce3138a3e24f97f120e`)
+  - `Mynah_Lifetime_1.0.0_b171_macos_x86_64.dmg` (SHA-256: `e48a5289b705c80d8ac8bb577e81a911cc62bd637eaf04a4ac1d9185d405eb79`)
+
+---
+
+## Build 172 (1.0.0) — 2026-06-11
+- **Release Version**: `1.0.0`
+- **Build Number**: `172`
+- **Git Commit**: `8fd72f72a1a9`
+- **Timestamp**: `2026-06-11T07:46:29.991Z`
+- **Description**: intel related fixes - performance and model selection related changes. -
+- **Artifacts**:
+  - `Mynah_Trial_1.0.0_b172_macos_aarch64.dmg` (SHA-256: `45b2b63b1169aef1bdc4778f37e01e0c2c04ccc2a10f854fdd5acd624f161cbc`)
+  - `Mynah_Lifetime_1.0.0_b172_macos_aarch64.dmg` (SHA-256: `d56fe820e54003631252e4aeb86ac075df127aedfcf16d1c8b97e9653e313ef3`)
+  - `Mynah_Trial_1.0.0_b172_macos_x86_64.dmg` (SHA-256: `f83b11cce60f127d786e659c520c77c00e9667271795afc83541666c9bb5d6a4`)
+  - `Mynah_Lifetime_1.0.0_b172_macos_x86_64.dmg` (SHA-256: `5e2aac89405f1ac67de61a83faa9b089387a89e3e691a84fd05a481f0d4b2e0d`)
+
+---
+
+## Build 174 (1.0.0) — 2026-06-11
+- **Release Version**: `1.0.0`
+- **Build Number**: `174`
+- **Git Commit**: `bb57f81925eb`
+- **Timestamp**: `2026-06-11T09:53:15.745Z`
+- **Description**: improvements for intel performance using greedy approach
+- **Artifacts**:
+  - `Mynah_Trial_1.0.0_b174_macos_aarch64.dmg` (SHA-256: `91a420426022a1572f6bbe1784719eebc035f5686a91b2c81dae81bed137718d`)
+  - `Mynah_Lifetime_1.0.0_b174_macos_aarch64.dmg` (SHA-256: `2deb2b954981077c654cc468660f7b85de391a0f664c72da1fee87f32bc62617`)
+  - `Mynah_Trial_1.0.0_b174_macos_x86_64.dmg` (SHA-256: `d8aad43f8921435998ca2478359a4ce288adcded2b0cc22e1fdc52f1a5e5686c`)
+  - `Mynah_Lifetime_1.0.0_b174_macos_x86_64.dmg` (SHA-256: `54b110db2ef2aec05b389cea984b288e4456569cdc6dcf12b715b3c2f4038d48`)
+
+---
+

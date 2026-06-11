@@ -188,9 +188,20 @@ function main() {
 			factsHtml = factsHtml.slice(0, listEndIndex) + '</div>\n' + listBlock + '\n    ' + factsHtml.slice(listEndIndex);
 		}
 	}
-	
 	writeFileSync(factsHtmlPath, factsHtml, 'utf8');
 	console.log("[website-sync] Updated facts/index.html");
+	
+	// 8. Update llms.txt
+	const llmsTxtPath = path.join(websiteRoot, 'llms.txt');
+	if (existsSync(llmsTxtPath)) {
+		let llmsTxt = readFileSync(llmsTxtPath, 'utf8');
+		llmsTxt = llmsTxt.replace(/- Release number: \d+/, `- Release number: ${build}`);
+		llmsTxt = llmsTxt.replace(/- Build signature: \S+/, `- Build signature: ${buildMeta.buildSignature}`);
+		llmsTxt = llmsTxt.replace(/- Apple Silicon DMG URL: \S+/, `- Apple Silicon DMG URL: ${primaryDmg.url}`);
+		llmsTxt = llmsTxt.replace(/- SHA256: \S+/, `- SHA256: ${primaryDmg.sha256}`);
+		writeFileSync(llmsTxtPath, llmsTxt, 'utf8');
+		console.log("[website-sync] Updated llms.txt");
+	}
 	
 	console.log("\n==================================================");
 	console.log("Website sync completed successfully!");
