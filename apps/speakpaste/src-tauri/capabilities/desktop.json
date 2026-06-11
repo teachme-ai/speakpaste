@@ -18,6 +18,11 @@
     "global-shortcut:allow-unregister",
     "global-shortcut:allow-register-all",
     "global-shortcut:allow-unregister-all",
+    "core:event:allow-unlisten",
+    "core:path:default",
+    "core:path:allow-resolve-directory",
+    "core:path:allow-resolve",
+    "core:path:allow-join",
     "log:default"
   ]
 }

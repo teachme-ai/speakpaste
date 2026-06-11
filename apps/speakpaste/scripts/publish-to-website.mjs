@@ -139,6 +139,15 @@ function main() {
 		/Version\s+[0-9.]+\s+·\s+Build\s+[0-9]+\s+·\s+macOS/i,
 		`Version ${version} · Build ${build} · macOS`
 	);
+	downloadHtml = downloadHtml.replace(
+		/Signed with Developer ID, notarized by Apple, and stapled for Gatekeeper validation\.<br>\s*(?:Trial status is securely initialized upon first launch\.|Apple Silicon is recommended for best local transcription speed\. Intel is supported; choose the Fast model for best performance\.)/,
+		`Signed with Developer ID, notarized by Apple, and stapled for Gatekeeper validation.<br>
+        Apple Silicon is recommended for best local transcription speed. Intel is supported; choose the Fast model for best performance.`
+	);
+	downloadHtml = downloadHtml.replace(
+		/Filename:\s*Mynah_[^<]+\.dmg\s*·\s*SHA-256 checksum published above\./,
+		'Apple Silicon and Intel DMGs are published with SHA-256 checksums on the facts page.'
+	);
 	
 	writeFileSync(downloadHtmlPath, downloadHtml, 'utf8');
 	console.log("[website-sync] Updated download/index.html");
