@@ -11,7 +11,7 @@ use std::path::PathBuf;
 #[cfg(not(target_os = "windows"))]
 use transcribe_rs::engines::moonshine::MoonshineModelParams;
 #[cfg(not(target_os = "windows"))]
-use transcribe_rs::engines::whisper::WhisperInferenceParams;
+use transcribe_rs::engines::whisper::{WhisperInferenceParams, WhisperSamplingStrategy};
 use transcribe_rs::{
     engines::parakeet::{ParakeetInferenceParams, TimestampGranularity},
     TranscriptionEngine,
@@ -604,6 +604,15 @@ pub async fn transcribe_audio_whisper(
     params.suppress_blank = true;
     params.suppress_non_speech_tokens = true;
     params.no_speech_thold = 0.2;
+    if crate::build_info::current_build_info().target_arch == "x86_64" {
+        params.sampling_strategy = WhisperSamplingStrategy::Greedy { best_of: 1 };
+        info!("[Transcription] Whisper decode strategy=greedy target_arch=x86_64");
+    } else {
+        info!(
+            "[Transcription] Whisper decode strategy=beam_search target_arch={}",
+            crate::build_info::current_build_info().target_arch
+        );
+    }
 
     // Run transcription with the persistent engine
     // Use into_inner() to recover from poisoned mutex, but clear state to force fresh reload

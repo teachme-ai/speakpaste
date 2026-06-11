@@ -82,6 +82,9 @@ security-framework = "2"
 tauri-plugin-global-shortcut = "2"
 tauri-plugin-single-instance = "2"
 
+[patch.crates-io]
+transcribe-rs = { path = "vendor/transcribe-rs" }
+
 [profile.dev]
 incremental = true # Compile your binary in smaller steps.
 
