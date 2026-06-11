@@ -102,12 +102,13 @@ use native_shortcuts::{
 pub async fn run() {
     let build_info = current_build_info();
     info!(
-        "[Build] version={} bundle={} commit={} dirty={} signature={}",
+        "[Build] version={} bundle={} commit={} dirty={} signature={} target_arch={}",
         build_info.marketing_version,
         build_info.bundle_version,
         build_info.git_commit,
         build_info.git_dirty,
-        build_info.build_signature
+        build_info.build_signature,
+        build_info.target_arch
     );
 
     // Set up panic hook to capture crash information before the app exits.
@@ -219,12 +220,13 @@ pub async fn run() {
                 .map(|path| path.to_string_lossy().to_string())
                 .unwrap_or_else(|error| format!("unavailable: {}", error));
             info!(
-                "[App] setup_started version={} bundle={} commit={} dirty={} signature={} identifier={} exe={} app_data_dir={}",
+                "[App] setup_started version={} bundle={} commit={} dirty={} signature={} target_arch={} identifier={} exe={} app_data_dir={}",
                 build_info.marketing_version,
                 build_info.bundle_version,
                 build_info.git_commit,
                 build_info.git_dirty,
                 build_info.build_signature,
+                build_info.target_arch,
                 app.config().identifier,
                 exe_path,
                 app_data_dir,
@@ -550,25 +552,32 @@ async fn open_mac_privacy_pane(pane: String) -> Result<bool, String> {
             }
         }
 
-        match std::process::Command::new("open")
-            .args(["-b", "com.apple.SystemSettings"])
-            .status()
-        {
-            Ok(status) if status.success() => {
-                info!("[Permissions] Opened System Settings by bundle id successfully");
-                opened = true;
-            }
-            Ok(status) => {
-                warn!(
-                    "[Permissions] Failed to open System Settings by bundle id: status {:?}",
-                    status.code()
-                );
-            }
-            Err(error) => {
-                warn!(
-                    "[Permissions] Failed to open System Settings by bundle id: {}",
-                    error
-                );
+        for bundle_id in ["com.apple.systempreferences", "com.apple.SystemSettings"] {
+            match std::process::Command::new("open")
+                .args(["-b", bundle_id])
+                .status()
+            {
+                Ok(status) if status.success() => {
+                    info!(
+                        "[Permissions] Opened System Settings by bundle id {} successfully",
+                        bundle_id
+                    );
+                    opened = true;
+                    break;
+                }
+                Ok(status) => {
+                    warn!(
+                        "[Permissions] Failed to open System Settings by bundle id {}: status {:?}",
+                        bundle_id,
+                        status.code()
+                    );
+                }
+                Err(error) => {
+                    warn!(
+                        "[Permissions] Failed to open System Settings by bundle id {}: {}",
+                        bundle_id, error
+                    );
+                }
             }
         }
 
