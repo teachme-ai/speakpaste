@@ -43,7 +43,7 @@ function main() {
 
 	// 2. Define DMG artifacts
 	const architectures = ['aarch64', 'x86_64'];
-	const types = ['Trial', 'Lifetime'];
+	const types = ['Trial'];
 	const artifacts = [];
 
 	for (const arch of architectures) {
