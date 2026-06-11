@@ -60,6 +60,7 @@ function generateBuildMeta(marketingVersion) {
 	const bundleVersion = gitCommitCount;
 	const buildSignature = `${marketingVersion}+r${gitCommitCount}.${gitCommit}${gitDirty ? '.dirty' : ''}`;
 	const isTrialMode = process.env.MYNAH_TRIAL_MODE === 'true';
+	const targetArch = normalizeTargetArch(process.env.MYNAH_BUILD_TARGET_ARCH) ?? getHostArch();
 
 	return {
 		marketingVersion,
@@ -70,6 +71,7 @@ function generateBuildMeta(marketingVersion) {
 		gitDirty,
 		buildSignature,
 		isTrialMode,
+		targetArch,
 	};
 }
 
@@ -82,6 +84,7 @@ function readBuildMetaFromEnv() {
 		MYNAH_BUILD_GIT_COMMIT,
 		MYNAH_BUILD_GIT_DIRTY,
 		MYNAH_BUILD_SIGNATURE,
+		MYNAH_BUILD_TARGET_ARCH,
 	} = process.env;
 
 	if (
@@ -104,5 +107,17 @@ function readBuildMetaFromEnv() {
 		gitDirty: MYNAH_BUILD_GIT_DIRTY === 'true',
 		buildSignature: MYNAH_BUILD_SIGNATURE,
 		isTrialMode: process.env.MYNAH_TRIAL_MODE === 'true',
+		targetArch: normalizeTargetArch(MYNAH_BUILD_TARGET_ARCH) ?? getHostArch(),
 	};
+}
+
+function normalizeTargetArch(value) {
+	if (value === 'x86_64' || value === 'aarch64') return value;
+	if (value === 'x64') return 'x86_64';
+	if (value === 'arm64') return 'aarch64';
+	return null;
+}
+
+function getHostArch() {
+	return normalizeTargetArch(process.arch) ?? 'aarch64';
 }

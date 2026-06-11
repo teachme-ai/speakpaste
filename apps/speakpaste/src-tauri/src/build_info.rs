@@ -10,6 +10,7 @@ pub struct BuildInfo {
     pub git_dirty: bool,
     pub built_at_iso: String,
     pub build_signature: String,
+    pub target_arch: String,
 }
 
 pub fn current_build_info() -> BuildInfo {
@@ -23,6 +24,7 @@ pub fn current_build_info() -> BuildInfo {
         git_dirty: env!("MYNAH_BUILD_GIT_DIRTY") == "true",
         built_at_iso: env!("MYNAH_BUILD_AT_ISO").to_string(),
         build_signature: env!("MYNAH_BUILD_SIGNATURE").to_string(),
+        target_arch: env!("MYNAH_BUILD_TARGET_ARCH").to_string(),
     }
 }
 

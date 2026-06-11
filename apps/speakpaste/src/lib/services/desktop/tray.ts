@@ -72,6 +72,42 @@ let currentShortcut = 'Fn key';
 let currentModel = 'tiny.en';
 let autoPasteEnabled = true;
 
+function showMainWindow() {
+	void getCurrentWindow().show();
+	void getCurrentWindow().setFocus();
+}
+
+async function attachTrayClickHandler(tray: unknown, source: 'config' | 'js') {
+	const trayWithOptionalAction = tray as {
+		setAction?: (handler: (event: {
+			type?: string;
+			button?: string;
+			buttonState?: string;
+		}) => void) => void | Promise<void>;
+	};
+
+	if (typeof trayWithOptionalAction.setAction !== 'function') {
+		logDiagnostic('tray', 'click_action_unavailable', {
+			source,
+			fallback: 'left_click_opens_menu',
+		});
+		return false;
+	}
+
+	await trayWithOptionalAction.setAction((e) => {
+		if (
+			e.type === 'Click' &&
+			e.button === 'Left' &&
+			e.buttonState === 'Down'
+		) {
+			showMainWindow();
+		}
+	});
+
+	logDiagnostic('tray', 'click_action_attached', { source });
+	return true;
+}
+
 export const TrayIconServiceLive = {
 	/**
 	 * Update tray icon and menu status line to reflect new app state.
@@ -190,8 +226,7 @@ async function buildMenu() {
 				id: 'open',
 				text: 'Open Mynah',
 				action: () => {
-					void getCurrentWindow().show();
-					void getCurrentWindow().setFocus();
+					showMainWindow();
 				},
 			}),
 
@@ -201,8 +236,7 @@ async function buildMenu() {
 				text: 'Start Dictation',
 				action: () => {
 					void invoke('toggle_native_dictation').catch(() => {
-						void getCurrentWindow().show();
-						void getCurrentWindow().setFocus();
+						showMainWindow();
 						if (typeof window !== 'undefined' && (window as any).commands) {
 							(window as any).commands.toggleManualRecording();
 						}
@@ -240,26 +274,18 @@ async function initTray() {
 		// Attach menu and click handler to the config-declared tray
 		const trayMenu = await buildMenu();
 		await existingTray.setMenu(trayMenu);
-		await existingTray.setMenuOnLeftClick(false);
 
 		// Set the proper bird icon (the config uses icons/32x32.png, but we want the 22px version)
 		const iconPath = await resolveResource(ICON_PATHS['IDLE']);
 		await existingTray.setIcon(iconPath);
 
-		existingTray.setAction((e) => {
-			if (
-				e.type === 'Click' &&
-				e.button === 'Left' &&
-				e.buttonState === 'Down'
-			) {
-				void getCurrentWindow().show();
-				void getCurrentWindow().setFocus();
-			}
-		});
+		const attachedClickHandler = await attachTrayClickHandler(existingTray, 'config');
+		await existingTray.setMenuOnLeftClick(!attachedClickHandler);
 
 		logDiagnostic('tray', 'init_completed_from_config', {
 			trayId: TRAY_ID,
 			iconPath,
+			attachedClickHandler,
 		});
 		return existingTray;
 	}
@@ -287,11 +313,12 @@ async function initTray() {
 				e.button === 'Left' &&
 				e.buttonState === 'Down'
 			) {
-				void getCurrentWindow().show();
-				void getCurrentWindow().setFocus();
+				showMainWindow();
 			}
 		},
 	});
+
+	await attachTrayClickHandler(tray, 'js');
 
 	logDiagnostic('tray', 'init_completed', {
 		trayId: TRAY_ID,

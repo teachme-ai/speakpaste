@@ -12,6 +12,7 @@
 	import { goto } from '$app/navigation';
 	import LocalModelDownloadCard from '$lib/components/settings/LocalModelDownloadCard.svelte';
 	import { logDiagnostic } from '$lib/diagnostics/runtime-diagnostics';
+	import { BUILD_INFO } from '$lib/generated/build-info';
 	import { WHISPER_MODELS } from '$lib/services/transcription/local/whispercpp';
 	import { isModelFileSizeValid } from '$lib/services/transcription/local/types';
 	import { desktopServices } from '$lib/services/desktop';
@@ -50,6 +51,7 @@
 	let preflightMessage = $state('');
 	let lastModelDiagnosticKey = '';
 	let pollTimer: number | undefined;
+	const isIntelBuild = BUILD_INFO.targetArch === 'x86_64';
 
 	const modelPath = $derived(deviceConfig.get('transcription.whispercpp.modelPath'));
 	const activeModel = $derived(
@@ -546,7 +548,8 @@
 						<div>
 							<p class="font-semibold">Local Whisper model</p>
 							<p class="mt-1 text-sm leading-6 text-muted-foreground">
-								Choose one model before first use. Balanced is recommended for most Macs.
+								Choose one model before first use.
+								{isIntelBuild ? 'Fast is recommended for Intel Macs.' : 'Balanced is recommended for Apple Silicon Macs.'}
 							</p>
 						</div>
 					</div>
@@ -564,7 +567,11 @@
 				<div class="mac-settings-section-header">
 					<h2 class="text-xl font-semibold tracking-tight">Choose your first model</h2>
 					<p class="mt-1 text-sm text-muted-foreground">
-						Download one local model. You can change it later in Settings > Models.
+						{#if isIntelBuild}
+							Download one local model. Pick Fast on Intel Macs for the smoothest first run; you can change it later in Settings > Models.
+						{:else}
+							Download one local model. Balanced is the recommended Apple Silicon starting point; you can change it later in Settings > Models.
+						{/if}
 					</p>
 				</div>
 				<div class="space-y-3 p-4">

@@ -78,6 +78,14 @@ fn main() {
             .map(|value| if value { "true" } else { "false" })
             .unwrap_or("false"),
     );
+    set_rustc_env(
+        "MYNAH_BUILD_TARGET_ARCH",
+        build_meta
+            .as_ref()
+            .and_then(|meta| meta.get("targetArch"))
+            .and_then(|value| value.as_str())
+            .unwrap_or(std::env::consts::ARCH),
+    );
 
     tauri_build::build()
 }

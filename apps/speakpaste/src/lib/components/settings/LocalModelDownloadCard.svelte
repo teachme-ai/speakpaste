@@ -20,6 +20,7 @@
 	import { extractErrorMessage } from 'wellcrafted/error';
 	import { Ok, tryAsync } from 'wellcrafted/result';
 	import { PATHS } from '$lib/constants/paths';
+	import { BUILD_INFO } from '$lib/generated/build-info';
 	import {
 		isModelFileSizeValid,
 		type LocalModelConfig,
@@ -39,6 +40,16 @@
 		| { type: 'active' };
 
 	let modelState = $state<ModelState>({ type: 'not-downloaded' });
+	const isIntelBuild = BUILD_INFO.targetArch === 'x86_64';
+	const isRecommendedForThisBuild = $derived(
+		(isIntelBuild && model.id === 'tiny.en') ||
+			(!isIntelBuild && model.id === 'base.en'),
+	);
+	const performanceNote = $derived(
+		isIntelBuild && model.id !== 'tiny.en'
+			? 'May feel slow on Intel Macs'
+			: null,
+	);
 
 	/**
 	 * Calculates the destination path where this model will be downloaded and stored,
@@ -318,6 +329,11 @@
 	<div class="flex-1">
 		<div class="flex items-center gap-2">
 			<span class="font-medium">{model.name}</span>
+			{#if isRecommendedForThisBuild}
+				<Badge variant="secondary" class="text-xs">
+					{isIntelBuild ? 'Recommended for Intel' : 'Recommended'}
+				</Badge>
+			{/if}
 			{#if modelState.type === 'active'}
 				<Badge variant="default" class="text-xs">Active</Badge>
 			{:else if modelState.type === 'ready'}
@@ -325,6 +341,9 @@
 			{/if}
 		</div>
 		<div class="text-sm text-muted-foreground">{model.description}</div>
+		{#if performanceNote}
+			<div class="text-xs font-medium text-amber-700 mt-1">{performanceNote}</div>
+		{/if}
 		<div class="text-xs text-muted-foreground mt-1">{model.size}</div>
 	</div>
 

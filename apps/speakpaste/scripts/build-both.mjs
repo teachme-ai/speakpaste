@@ -4,6 +4,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import readline from 'node:readline';
 import { Writable } from 'node:stream';
+import crypto from 'node:crypto';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -12,9 +13,6 @@ const appRoot = path.resolve(__dirname, '..');
 const packageJson = JSON.parse(readFileSync(path.join(appRoot, 'package.json'), 'utf8'));
 const version = packageJson.version; // e.g. "1.0.0"
 
-import crypto from 'node:crypto';
-
-const outputDir = path.join(appRoot, 'src-tauri', 'target', 'release', 'bundle', 'dmg');
 const finalOutputDir = path.join(appRoot, 'dist');
 
 // Apple Notarization credentials
@@ -86,7 +84,10 @@ function runCommand(command, envOverrides = {}) {
 function buildAndRename(isTrial, bundleVersion, targetArch) {
 	const modeLabel = isTrial ? 'TRIAL' : 'LIFETIME';
 	const rustTarget = targetArch === 'x86_64' ? 'x86_64-apple-darwin' : 'aarch64-apple-darwin';
-	const defaultDmgName = `Mynah_${version}_${targetArch}.dmg`;
+	
+	// Dynamically resolve target-specific directory in release bundle outputs
+	const outputDir = path.join(appRoot, 'src-tauri', 'target', rustTarget, 'release', 'bundle', 'dmg');
+	const defaultDmgName = `Mynah_${version}_${targetArch === 'x86_64' ? 'x64' : 'aarch64'}.dmg`;
 	const defaultDmgPath = path.join(outputDir, defaultDmgName);
 	
 	const targetDmgName = `Mynah_${isTrial ? 'Trial' : 'Lifetime'}_${version}_b${bundleVersion}_macos_${targetArch}.dmg`;
@@ -96,8 +97,12 @@ function buildAndRename(isTrial, bundleVersion, targetArch) {
 	console.log(`[build-both] Building ${modeLabel} version (${targetArch} / Build ${bundleVersion})...`);
 	console.log(`==================================================`);
 
+	// Run tauri build to compile/package the DMG.
+	// NOTE: We deliberately do not pass APPLE_PASSWORD here to let tauri skip internal notarization
+	// (which is prone to failure) and successfully generate the DMG, which we notarize manually.
 	runCommand(`bun run tauri build --target ${rustTarget}`, {
 		MYNAH_TRIAL_MODE: String(isTrial),
+		MYNAH_BUILD_TARGET_ARCH: targetArch,
 		CI: 'true', // Suppress automatic opening of DMG folder in Finder
 	});
 
@@ -120,17 +125,35 @@ function notarizeAndStaple(dmgPath, appSpecificPassword) {
 	console.log(`[build-both] Notarizing ${path.basename(dmgPath)}...`);
 	console.log(`==================================================`);
 
+	// Pass password via env variable for shell safety and process isolation
 	const notarizeCmd = `xcrun notarytool submit "${dmgPath}" ` +
 		`--apple-id "${APPLE_ID}" ` +
 		`--team-id "${APPLE_TEAM_ID}" ` +
-		`--password "${appSpecificPassword}" ` +
+		`--password "$APPLE_PASSWORD" ` +
 		`--wait`;
 	
-	execSync(notarizeCmd, { stdio: 'inherit' });
+	try {
+		execSync(notarizeCmd, { 
+			stdio: 'inherit',
+			env: {
+				...process.env,
+				APPLE_PASSWORD: appSpecificPassword
+			}
+		});
+	} catch (err) {
+		console.error(`\n[build-both] Notarization failed for ${path.basename(dmgPath)}:`, err.message);
+		throw err;
+	}
 
 	console.log(`\n[build-both] Stapling ticket to ${path.basename(dmgPath)}...`);
 	const stapleCmd = `xcrun stapler staple "${dmgPath}"`;
-	execSync(stapleCmd, { stdio: 'inherit' });
+	
+	try {
+		execSync(stapleCmd, { stdio: 'inherit' });
+	} catch (err) {
+		console.error(`\n[build-both] Stapling failed for ${path.basename(dmgPath)}:`, err.message);
+		throw err;
+	}
 
 	console.log(`[build-both] Notarization and stapling complete for ${path.basename(dmgPath)}`);
 }
@@ -225,7 +248,7 @@ async function main() {
 		}
 		console.log('==================================================\n');
 	} catch (error) {
-		console.error('[build-both] Build/Notarization pipeline failed:', error);
+		console.error('[build-both] Build/Notarization pipeline failed:', error.message || error);
 		process.exit(1);
 	}
 }
