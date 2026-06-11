@@ -69,7 +69,9 @@
 	"scripts": {
 		"dev": "cd apps/speakpaste && bun run dev",
 		"build": "cd apps/speakpaste && bun run build",
-		"typecheck": "cd apps/speakpaste && bun run typecheck"
+		"typecheck": "cd apps/speakpaste && bun run typecheck",
+		"build:all": "cd apps/speakpaste && bun run build:all",
+		"publish:website": "cd apps/speakpaste && bun run publish:website"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "catalog:"
