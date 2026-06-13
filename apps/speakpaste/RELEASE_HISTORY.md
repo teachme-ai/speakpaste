@@ -86,3 +86,17 @@ This file tracks all successfully completed production DMG builds, including the
 
 ---
 
+## Build 177 (1.0.0) — 2026-06-13
+- **Release Version**: `1.0.0`
+- **Build Number**: `177`
+- **Git Commit**: `36fe3367d528` (dirty)
+- **Timestamp**: `2026-06-13T06:30:58.923Z`
+- **Description**: double paste fix build177
+- **Artifacts**:
+  - `Mynah_Trial_1.0.0_b177_macos_aarch64.dmg` (SHA-256: `5ae2f2059e945e331d1f77495fa64a055ab9baa5f1c6a22203ff531cb2bd234c`)
+  - `Mynah_Lifetime_1.0.0_b177_macos_aarch64.dmg` (SHA-256: `7e7ba1e7ae0b4b00fce5b343136ec2d2b78aea629671cfcee43578c6aaf937b0`)
+  - `Mynah_Trial_1.0.0_b177_macos_x86_64.dmg` (SHA-256: `390d7e0ad7d1a5427b702af029b6421a4df566e493ecc7af8d3ee10ea2d9e821`)
+  - `Mynah_Lifetime_1.0.0_b177_macos_x86_64.dmg` (SHA-256: `ba408109a3d1f7f60961f90d91bfe8ad16272b3170fb5b4b8be2a19326e8ba16`)
+
+---
+
