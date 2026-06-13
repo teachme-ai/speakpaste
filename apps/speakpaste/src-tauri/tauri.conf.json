@@ -19,7 +19,7 @@
 			"icons/icon.icns",
 			"icons/icon.ico"
 		],
-		"longDescription": "Local-only speech-to-text and writing modes for your Mac. Uses on-device engines and Apple frameworks when available. No cloud transcription, no remote rewrite, and no remote analytics.",
+		"longDescription": "Local-first speech-to-text for your Mac. Uses local transcription engines, local diagnostics, and explicit user-started model downloads. No cloud transcription, no cloud rewrite, and no remote analytics.",
 		"shortDescription": "Press shortcut \u2192 speak \u2192 get text. Local-only.",
 		"createUpdaterArtifacts": false,
 		"macOS": {
@@ -54,14 +54,6 @@
 	"productName": "Mynah",
 	"version": "1.0.0",
 	"identifier": "com.mynah.app",
-	"plugins": {
-		"updater": {
-			"pubkey": "dW51c2VkX3BsYWNlaG9sZGVyX2tleV9mb3JfZGV2ZWxvcG1lbnRfcHVycG9zZXMK",
-			"endpoints": [
-				"https://mynah.site/update.json"
-			]
-		}
-	},
 	"app": {
 		"macOSPrivateApi": true,
 		"trayIcon": {

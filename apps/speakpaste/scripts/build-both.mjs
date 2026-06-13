@@ -1,5 +1,6 @@
 import { execSync } from 'node:child_process';
-import { readFileSync, renameSync, existsSync, mkdirSync, appendFileSync } from 'node:fs';
+import { readFileSync, renameSync, existsSync, mkdirSync, appendFileSync, mkdtempSync, rmSync } from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import readline from 'node:readline';
@@ -18,6 +19,11 @@ const finalOutputDir = path.join(appRoot, 'dist');
 // Apple Notarization credentials
 const APPLE_ID = "irfan1476@gmail.com";
 const APPLE_TEAM_ID = "99YAK7YU3M";
+const SIGNING_IDENTITY = "Developer ID Application: Khalid Irfan (99YAK7YU3M)";
+
+function shellQuote(value) {
+	return `'${String(value).replaceAll("'", "'\\''")}'`;
+}
 
 function getSha256(filePath) {
 	const fileBuffer = readFileSync(filePath);
@@ -81,12 +87,58 @@ function runCommand(command, envOverrides = {}) {
 	});
 }
 
+function assertSigningIdentityAvailable() {
+	const output = execSync('security find-identity -v -p codesigning', {
+		cwd: appRoot,
+		encoding: 'utf8',
+	});
+	if (!output.includes(SIGNING_IDENTITY)) {
+		throw new Error(
+			`Required signing identity not available: ${SIGNING_IDENTITY}\n${output}`,
+		);
+	}
+	console.log(`[build-both] Signing identity available: ${SIGNING_IDENTITY}`);
+}
+
+function verifySignedAppBundle(appPath) {
+	if (!existsSync(appPath)) {
+		throw new Error(`Expected app bundle not found at: ${appPath}`);
+	}
+
+	runCommand(`codesign --verify --deep --strict --verbose=4 ${shellQuote(appPath)}`);
+	runCommand(`codesign --display --verbose=4 ${shellQuote(appPath)}`);
+}
+
+function assessAppBundle(appPath) {
+	verifySignedAppBundle(appPath);
+	runCommand(`spctl -a -vv -t exec ${shellQuote(appPath)}`);
+}
+
+function verifyDmgAndMountedApp(dmgPath) {
+	runCommand(`hdiutil verify ${shellQuote(dmgPath)}`);
+	runCommand(`xcrun stapler validate ${shellQuote(dmgPath)}`);
+	runCommand(`spctl --assess --type open --context context:primary-signature --verbose ${shellQuote(dmgPath)}`);
+
+	const mountDir = mkdtempSync(path.join(os.tmpdir(), 'mynah-dmg-'));
+	try {
+		runCommand(`hdiutil attach -nobrowse -readonly -mountpoint ${shellQuote(mountDir)} ${shellQuote(dmgPath)}`);
+		assessAppBundle(path.join(mountDir, 'Mynah.app'));
+	} finally {
+		try {
+			runCommand(`hdiutil detach ${shellQuote(mountDir)}`);
+		} finally {
+			rmSync(mountDir, { recursive: true, force: true });
+		}
+	}
+}
+
 function buildAndRename(isTrial, bundleVersion, targetArch) {
 	const modeLabel = isTrial ? 'TRIAL' : 'LIFETIME';
 	const rustTarget = targetArch === 'x86_64' ? 'x86_64-apple-darwin' : 'aarch64-apple-darwin';
 	
 	// Dynamically resolve target-specific directory in release bundle outputs
 	const outputDir = path.join(appRoot, 'src-tauri', 'target', rustTarget, 'release', 'bundle', 'dmg');
+	const appPath = path.join(appRoot, 'src-tauri', 'target', rustTarget, 'release', 'bundle', 'macos', 'Mynah.app');
 	const defaultDmgName = `Mynah_${version}_${targetArch === 'x86_64' ? 'x64' : 'aarch64'}.dmg`;
 	const defaultDmgPath = path.join(outputDir, defaultDmgName);
 	
@@ -105,6 +157,9 @@ function buildAndRename(isTrial, bundleVersion, targetArch) {
 		MYNAH_BUILD_TARGET_ARCH: targetArch,
 		CI: 'true', // Suppress automatic opening of DMG folder in Finder
 	});
+
+	console.log(`[build-both] Verifying signed app bundle before DMG notarization: ${appPath}`);
+	verifySignedAppBundle(appPath);
 
 	if (!existsSync(defaultDmgPath)) {
 		throw new Error(`Expected DMG artifact not found at: ${defaultDmgPath}`);
@@ -156,6 +211,8 @@ function notarizeAndStaple(dmgPath, appSpecificPassword) {
 	}
 
 	console.log(`[build-both] Notarization and stapling complete for ${path.basename(dmgPath)}`);
+	console.log(`[build-both] Verifying stapled DMG and mounted app: ${path.basename(dmgPath)}`);
+	verifyDmgAndMountedApp(dmgPath);
 }
 
 function logToReleaseHistory(buildMeta, changeDescription, generatedFiles) {
@@ -200,6 +257,8 @@ async function main() {
 	const changeDescription = await askQuestion("Enter a description of changes/fixes for this build: ");
 
 	try {
+		assertSigningIdentityAvailable();
+
 		// Ensure both Apple Silicon and Intel build targets are installed in Rust
 		console.log("\n[build-both] Preparing Rust compiler targets...");
 		runCommand('rustup target add aarch64-apple-darwin x86_64-apple-darwin');

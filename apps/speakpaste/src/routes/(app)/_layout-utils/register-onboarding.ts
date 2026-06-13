@@ -1,3 +1,4 @@
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { goto } from '$app/navigation';
 import { logDiagnostic } from '$lib/diagnostics/runtime-diagnostics';
 import { rpc } from '$lib/query';
@@ -13,7 +14,8 @@ import {
 export function registerOnboarding() {
 	const selectedService = getSelectedTranscriptionService();
 	const pathname = window.location.pathname;
-	const canShowSetupAssistant = window.__TAURI_INTERNALS__ && pathname === '/';
+	const isMainWindow = window.__TAURI_INTERNALS__ && getCurrentWindow().label === 'main';
+	const canShowSetupAssistant = isMainWindow && pathname === '/';
 	const alreadyInSetup = pathname === '/setup';
 	const selectedServiceId = selectedService?.id ?? null;
 

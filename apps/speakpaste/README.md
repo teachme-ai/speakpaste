@@ -1,5 +1,5 @@
 # Mynah
 
-Local voice typing for macOS. Hotkey → speak → whisper.cpp → paste.
+Local-first voice typing for macOS. Hold Fn, speak, release, and paste at your cursor.
 
 See the [root README](../../README.md) for setup and build instructions.

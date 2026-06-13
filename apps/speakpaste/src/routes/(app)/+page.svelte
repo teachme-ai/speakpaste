@@ -76,6 +76,16 @@
 					);
 				}
 			});
+
+			import('@tauri-apps/api/event').then(({ listen }) => {
+				listen('dictation-pasted', () => {
+					if (isOverlay) {
+						justPasted = true;
+						clearTimeout(pastedTimer);
+						pastedTimer = setTimeout(() => { justPasted = false; }, PASTED_INDICATOR_MS);
+					}
+				});
+			});
 		}
 	});
 
@@ -128,6 +138,11 @@
 				justPasted = true;
 				clearTimeout(pastedTimer);
 				pastedTimer = setTimeout(() => { justPasted = false; }, PASTED_INDICATOR_MS);
+				if (window.__TAURI_INTERNALS__ && !isOverlay) {
+					import('@tauri-apps/api/event').then(({ emit }) => {
+						emit('dictation-pasted');
+					});
+				}
 			});
 		}
 	});

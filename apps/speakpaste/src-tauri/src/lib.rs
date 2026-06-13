@@ -110,6 +110,7 @@ pub async fn run() {
         build_info.build_signature,
         build_info.target_arch
     );
+    let _ = *accessibility_repair::PROCESS_STARTED_AT_MS;
 
     // Set up panic hook to capture crash information before the app exits.
     // The previous hook is preserved so default panic reporting still occurs.

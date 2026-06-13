@@ -28,6 +28,7 @@
 		didReset: boolean;
 		installChanged: boolean;
 		needsUserApproval: boolean;
+		relaunchRequired: boolean;
 		recoveryState: string;
 		bundlePath: string | null;
 		buildSignature: string;
@@ -46,12 +47,14 @@
 	let microphoneStatus = $state<SetupStatus>('checking');
 	let isOpeningAccessibilitySettings = $state(false);
 	let accessibilitySettingsMessage = $state('');
+	let accessibilityRelaunchRequired = $state(false);
 	let isRequestingMicrophone = $state(false);
+	let isRelaunching = $state(false);
 	let isRunningPreflight = $state(false);
 	let preflightMessage = $state('');
 	let lastModelDiagnosticKey = '';
 	let pollTimer: number | undefined;
-	const isIntelBuild = BUILD_INFO.targetArch === 'x86_64';
+	const isIntelBuild = String(BUILD_INFO.targetArch) === 'x86_64';
 
 	const modelPath = $derived(deviceConfig.get('transcription.whispercpp.modelPath'));
 	const activeModel = $derived(
@@ -59,7 +62,10 @@
 	);
 	const modelReady = $derived(Boolean(activeModel));
 	const allReady = $derived(
-		accessibilityStatus === 'ready' && microphoneStatus === 'ready' && modelReady,
+		accessibilityStatus === 'ready' &&
+			!accessibilityRelaunchRequired &&
+			microphoneStatus === 'ready' &&
+			modelReady,
 	);
 
 	function errorMessage(error: unknown) {
@@ -95,6 +101,17 @@
 		logDiagnostic('permissions', 'open_privacy_pane_completed', { pane, source: 'setup' });
 	}
 
+	async function restartMynah() {
+		isRelaunching = true;
+		logDiagnostic('permissions', 'setup_accessibility_relaunch_requested');
+		try {
+			const { relaunch } = await import('@tauri-apps/plugin-process');
+			await relaunch();
+		} finally {
+			isRelaunching = false;
+		}
+	}
+
 	async function prepareAccessibilityForSetup(prompt = false) {
 		if (!window.__TAURI_INTERNALS__) return;
 
@@ -119,6 +136,7 @@
 			repairResult,
 		});
 		if (repairResult.trusted) {
+			accessibilityRelaunchRequired = false;
 			updateAccessibilityStatus('ready', {
 				source: 'repair',
 				prompt,
@@ -128,6 +146,21 @@
 			return;
 		}
 
+		if (repairResult.relaunchRequired) {
+			accessibilityRelaunchRequired = true;
+			updateAccessibilityStatus('needed', {
+				source: 'repair',
+				prompt,
+				recoveryState: repairResult.recoveryState,
+				didReset: repairResult.didReset,
+				relaunchRequired: repairResult.relaunchRequired,
+			});
+			accessibilitySettingsMessage =
+				'Mynah was updated or reinstalled while it was running. macOS ties Accessibility permission to the exact app on disk, so restart Mynah before enabling the Fn key.';
+			return;
+		}
+
+		accessibilityRelaunchRequired = false;
 		updateAccessibilityStatus('needed', {
 			source: 'repair',
 			prompt,
@@ -141,6 +174,11 @@
 	}
 
 	async function checkAccessibility() {
+		if (accessibilityRelaunchRequired) {
+			updateAccessibilityStatus('needed', { source: 'relaunch-required' });
+			return;
+		}
+
 		if (!window.__TAURI_INTERNALS__) {
 			updateAccessibilityStatus('ready', { source: 'web-fallback' });
 			return;
@@ -218,6 +256,7 @@
 		logDiagnostic('permissions', 'setup_accessibility_open_settings_started');
 		try {
 			await prepareAccessibilityForSetup(true);
+			if (accessibilityRelaunchRequired) return;
 			await openMacPrivacyPane('Privacy_Accessibility');
 			accessibilitySettingsMessage =
 				'In System Settings, open Privacy & Security > Accessibility and enable Mynah.';
@@ -496,12 +535,21 @@
 						</div>
 					</div>
 					<div class="flex justify-end">
-						{#if accessibilityStatus === 'ready'}
-							{@render StatusReady('Ready')}
-						{:else if accessibilityStatus === 'checking'}
-							{@render StatusPending('Checking')}
-						{:else}
-							<Button
+							{#if accessibilityStatus === 'ready'}
+								{@render StatusReady('Ready')}
+							{:else if accessibilityStatus === 'checking'}
+								{@render StatusPending('Checking')}
+							{:else if accessibilityRelaunchRequired}
+								<Button
+									variant="outline"
+									size="sm"
+									onclick={restartMynah}
+									disabled={isRelaunching}
+								>
+									{isRelaunching ? 'Restarting...' : 'Restart Mynah'}
+								</Button>
+							{:else}
+								<Button
 								variant="outline"
 								size="sm"
 								onclick={openAccessibilitySettings}

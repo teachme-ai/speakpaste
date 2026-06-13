@@ -12,7 +12,7 @@
 	import { asShellCommand } from '$lib/services/desktop/command';
 	import type { PageData } from './$types';
 
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, untrack } from 'svelte';
 	import { invoke } from '@tauri-apps/api/core';
 
 	type AccessibilityRepairResult = {
@@ -21,6 +21,7 @@
 		didReset: boolean;
 		installChanged: boolean;
 		needsUserApproval: boolean;
+		relaunchRequired: boolean;
 		recoveryState: string;
 		bundlePath: string | null;
 		buildSignature: string;
@@ -36,7 +37,9 @@
 	};
 
 	let { data } = $props();
-	let isAccessibilityGranted = $state($state.snapshot(data).isAccessibilityGranted);
+	let isAccessibilityGranted = $state(untrack(() => data.isAccessibilityGranted));
+	let relaunchRequired = $state(false);
+	let isRelaunching = $state(false);
 	let checkInterval: any;
 	const quarantineCommand =
 		'xattr -dr com.apple.quarantine /Applications/Mynah.app';
@@ -99,7 +102,26 @@
 			});
 		}
 
+		if (repairResult?.relaunchRequired) {
+			relaunchRequired = true;
+			toast.warning('Restart needed to finish enabling', {
+				description:
+					'Mynah was updated or reinstalled while it was running. Restart Mynah before re-approving Accessibility.',
+			});
+			return;
+		}
+
 		await openSystemSettings();
+	}
+
+	async function restartMynah() {
+		isRelaunching = true;
+		try {
+			const { relaunch } = await import('@tauri-apps/plugin-process');
+			await relaunch();
+		} finally {
+			isRelaunching = false;
+		}
 	}
 
 	async function checkFnKeyReadiness() {
@@ -181,6 +203,7 @@
 				Mynah requires fresh Microphone and Accessibility permissions.
 				Old SpeakPaste permission entries may remain in System Settings and should be removed.
 				Ensure you run Mynah from <code class="text-xs bg-muted px-1.5 py-0.5 rounded">/Applications/Mynah.app</code> and do not reuse the old <code class="text-xs bg-muted px-1.5 py-0.5 rounded">SpeakPaste.app</code>.
+				If Mynah was replaced while it was running, restart it before re-approving Accessibility.
 			</Card.Description>
 		</Card.Header>
 		<Card.Content>
@@ -192,6 +215,12 @@
 						Mynah may automatically refresh a stale entry in the
 						background. If you still do not see a working Fn trigger, continue
 						with the manual re-approval steps below.
+					</li>
+
+					<li>
+						If Mynah shows as enabled but Fn still does not start dictation
+						after an update or reinstall, restart Mynah once. macOS ties
+						Accessibility approval to the exact app on disk.
 					</li>
 
 					<li>
@@ -262,13 +291,23 @@
 						<ArrowLeft class="size-4" />
 						Back to Home
 					</Button>
-					<Button
-						onclick={() => requestPermissionOrShowGuidance()}
-						class="flex-1 text-sm"
-					>
-						<SettingsIcon class="size-4" />
-						Request Permission
-					</Button>
+					{#if relaunchRequired}
+						<Button
+							onclick={() => restartMynah()}
+							class="flex-1 text-sm"
+							disabled={isRelaunching}
+						>
+							{isRelaunching ? 'Restarting...' : 'Restart Mynah'}
+						</Button>
+					{:else}
+						<Button
+							onclick={() => requestPermissionOrShowGuidance()}
+							class="flex-1 text-sm"
+						>
+							<SettingsIcon class="size-4" />
+							Request Permission
+						</Button>
+					{/if}
 				</div>
 			{:else}
 				<div class="flex flex-col gap-3 w-full">

@@ -1,6 +1,6 @@
 /**
  * Supported languages for transcription
- * Pulled from OpenAI Website: https://platform.openai.com/docs/guides/speech-to-text/supported-languages
+ * Based on the language code set supported by Whisper-style transcription models.
  */
 
 export const SUPPORTED_LANGUAGES = [

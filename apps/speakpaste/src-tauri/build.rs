@@ -5,6 +5,8 @@ use std::path::PathBuf;
 fn main() {
     println!("cargo:rerun-if-changed=build-meta.json");
     println!("cargo:rerun-if-changed=../package.json");
+    println!("cargo:rerun-if-env-changed=MYNAH_TRIAL_MODE");
+    println!("cargo:rerun-if-env-changed=MYNAH_TRIAL_HMAC_KEY");
 
     let manifest_dir =
         PathBuf::from(env::var("CARGO_MANIFEST_DIR").expect("missing CARGO_MANIFEST_DIR"));
@@ -86,10 +88,44 @@ fn main() {
             .and_then(|value| value.as_str())
             .unwrap_or(std::env::consts::ARCH),
     );
+    set_rustc_env(
+        "MYNAH_TRIAL_HMAC_KEY_RESOLVED",
+        resolve_trial_hmac_key().as_str(),
+    );
 
     tauri_build::build()
 }
 
 fn set_rustc_env(key: &str, value: &str) {
     println!("cargo:rustc-env={}={}", key, value.replace('\n', ""));
+}
+
+fn resolve_trial_hmac_key() -> String {
+    const DEV_FALLBACK_KEY: &str = "mynah-dev-only-trial-hmac-key-do-not-ship";
+
+    let trial_mode = env::var("MYNAH_TRIAL_MODE").unwrap_or_default();
+    let is_trial_build = trial_mode == "true";
+    let is_release_build = env::var("PROFILE")
+        .map(|profile| profile == "release")
+        .unwrap_or(false);
+    let provided_key = env::var("MYNAH_TRIAL_HMAC_KEY")
+        .ok()
+        .map(|key| key.trim().to_string())
+        .filter(|key| !key.is_empty());
+
+    if let Some(key) = provided_key {
+        return key;
+    }
+
+    if is_trial_build && is_release_build {
+        panic!("MYNAH_TRIAL_HMAC_KEY is required for Trial release builds");
+    }
+
+    if !is_release_build {
+        println!(
+            "cargo:warning=Using development-only Mynah trial HMAC key; set MYNAH_TRIAL_HMAC_KEY for release Trial builds"
+        );
+    }
+
+    DEV_FALLBACK_KEY.to_string()
 }

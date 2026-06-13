@@ -105,7 +105,7 @@
 						<Link href="https://github.com/ggerganov/whisper.cpp" target="_blank" class="text-xs">GitHub ↗</Link>
 					</div>
 					<p class="text-xs text-muted-foreground leading-relaxed">
-						High-performance, pure C/C++ port of OpenAI's Whisper speech-to-text models by Georgi Gerganov. Enables lightning-fast, offline local audio processing.
+						High-performance, pure C/C++ implementation for Whisper speech-to-text model files by Georgi Gerganov. Enables fast, offline local audio processing.
 					</p>
 				</div>
 
@@ -156,7 +156,7 @@
 				Mynah is adapted from the open-source **Whispering** project, which is part of the **Epicenter** application monorepo created and maintained by **Braden Wong** and contributors.
 			</p>
 			<p class="text-xs text-muted-foreground leading-relaxed">
-				In complete compliance with the **MIT** and **AGPL-3.0** licensing agreements of the upstream source, all original copyrights, framework abstractions, and shared library structures remain owned by their respective authors. We sincerely thank Braden and the Epicenter community for providing the architectural layout that made this utility possible.
+				Mynah is proprietary software built on open-source components. Open-source licenses and acknowledgments are included in the app and documentation, and upstream copyrights remain owned by their respective authors.
 			</p>
 			<div class="flex gap-4 text-xs font-medium mt-1">
 				<Link href="https://mynah.site" target="_blank">Mynah Website ↗</Link>

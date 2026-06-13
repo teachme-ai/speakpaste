@@ -58,3 +58,31 @@ This file tracks all successfully completed production DMG builds, including the
 
 ---
 
+## Build 177 (1.0.0) — 2026-06-13
+- **Release Version**: `1.0.0`
+- **Build Number**: `177`
+- **Git Commit**: `36fe3367d528` (dirty)
+- **Timestamp**: `2026-06-13T04:57:37.977Z`
+- **Description**: Fix for build 177 authorization for DMG
+- **Artifacts**:
+  - `Mynah_Trial_1.0.0_b177_macos_aarch64.dmg` (SHA-256: `97b30dd9747e66b55af0f5b5aaee60895de764513253d7bd7b218580403fa36f`)
+  - `Mynah_Lifetime_1.0.0_b177_macos_aarch64.dmg` (SHA-256: `816cdc75719030e16549e54b1ea5e0084e0e6dea092a32ae85797ff45e4e4145`)
+  - `Mynah_Trial_1.0.0_b177_macos_x86_64.dmg` (SHA-256: `795fa5fdc3488bc86c4a58231f5599139cf0952ea3fd6ee77463b7cab05690be`)
+  - `Mynah_Lifetime_1.0.0_b177_macos_x86_64.dmg` (SHA-256: `dc5b604c05102a08f68d90bef1223be4382096eac365e7321f6f2aa358837be3`)
+
+---
+
+## Build 177 (1.0.0) — 2026-06-13
+- **Release Version**: `1.0.0`
+- **Build Number**: `177`
+- **Git Commit**: `36fe3367d528` (dirty)
+- **Timestamp**: `2026-06-13T05:30:54.892Z`
+- **Description**: Build 177 ACL and setup assistant fix
+- **Artifacts**:
+  - `Mynah_Trial_1.0.0_b177_macos_aarch64.dmg` (SHA-256: `a768e1780aa49f963c89a672087e013ef661dd5ee499ecbc293da9c30aa427c7`)
+  - `Mynah_Lifetime_1.0.0_b177_macos_aarch64.dmg` (SHA-256: `a3eac1449e427c1df518a242095d60b51d142f71db6b1b7b9670603779270abd`)
+  - `Mynah_Trial_1.0.0_b177_macos_x86_64.dmg` (SHA-256: `08dfe0e16e568da857fa173653a8025b34a605ceba0ad2ab86226e3d18616d35`)
+  - `Mynah_Lifetime_1.0.0_b177_macos_x86_64.dmg` (SHA-256: `b73b0556bac5eb4eb32c6b98de99faaf3309f79d91e5c4f84fae6ab2f7dfbeec`)
+
+---
+

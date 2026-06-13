@@ -7,10 +7,13 @@ use macos_accessibility_client::accessibility::{
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::LazyLock;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::{AppHandle, Manager};
 
 const ACCESSIBILITY_RECOVERY_FILE: &str = "accessibility-recovery.json";
+
+pub static PROCESS_STARTED_AT_MS: LazyLock<u128> = LazyLock::new(now_ms);
 
 #[derive(Clone, Debug, Deserialize, Serialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -19,6 +22,8 @@ struct AccessibilityRecoveryState {
     has_seen_accessibility_trusted: bool,
     last_tcc_reset_build_signature: Option<String>,
     last_install_fingerprint: Option<InstallFingerprint>,
+    #[serde(default)]
+    pending_post_relaunch_prompt: bool,
     updated_at_ms: u128,
 }
 
@@ -44,6 +49,7 @@ pub struct AccessibilityRepairResult {
     pub did_reset: bool,
     pub install_changed: bool,
     pub needs_user_approval: bool,
+    pub relaunch_required: bool,
     pub recovery_state: String,
     pub bundle_path: Option<String>,
     pub build_signature: String,
@@ -64,6 +70,7 @@ pub async fn repair_accessibility_permissions_if_needed(
             did_reset: false,
             install_changed: false,
             needs_user_approval: false,
+            relaunch_required: false,
             recovery_state: "not_applicable".to_string(),
             bundle_path: None,
             build_signature: build_info.build_signature,
@@ -83,12 +90,13 @@ pub async fn repair_accessibility_permissions_if_needed(
 
         if trusted_before {
             state.has_seen_accessibility_trusted = true;
+            state.pending_post_relaunch_prompt = false;
             state.last_install_fingerprint = Some(current.clone());
             state.updated_at_ms = now_ms();
             write_recovery_state(&app, &state)?;
 
             info!(
-                "[Permissions] accessibility_repair_result trusted=true prompted=false did_reset=false install_changed={} needs_user_approval=false recovery_state=trusted bundle_path={} build_signature={}",
+                "[Permissions] accessibility_repair_result trusted=true prompted=false did_reset=false install_changed={} needs_user_approval=false relaunch_required=false recovery_state=trusted bundle_path={} build_signature={}",
                 install_changed,
                 current.bundle_path,
                 current.build_signature
@@ -99,6 +107,7 @@ pub async fn repair_accessibility_permissions_if_needed(
                 did_reset: false,
                 install_changed,
                 needs_user_approval: false,
+                relaunch_required: false,
                 recovery_state: "trusted".to_string(),
                 bundle_path: Some(current.bundle_path.clone()),
                 build_signature: current.build_signature.clone(),
@@ -119,6 +128,33 @@ pub async fn repair_accessibility_permissions_if_needed(
             false
         };
 
+        if running_process_is_stale(&current) {
+            state.pending_post_relaunch_prompt = true;
+            state.last_install_fingerprint = Some(current.clone());
+            state.updated_at_ms = now_ms();
+            write_recovery_state(&app, &state)?;
+
+            info!(
+                "[Permissions] accessibility_repair_result trusted=false prompted=false did_reset={} install_changed={} needs_user_approval=true relaunch_required=true recovery_state=relaunch_required bundle_path={} build_signature={}",
+                did_reset,
+                install_changed,
+                current.bundle_path,
+                current.build_signature
+            );
+
+            return Ok(AccessibilityRepairResult {
+                trusted: false,
+                prompted: false,
+                did_reset,
+                install_changed,
+                needs_user_approval: true,
+                relaunch_required: true,
+                recovery_state: "relaunch_required".to_string(),
+                bundle_path: Some(current.bundle_path),
+                build_signature: current.build_signature,
+            });
+        }
+
         let prompted = prompt.unwrap_or(true) && !application_is_trusted();
         if prompted {
             let _ = application_is_trusted_with_prompt();
@@ -129,12 +165,13 @@ pub async fn repair_accessibility_permissions_if_needed(
         state.updated_at_ms = now_ms();
         if trusted_after {
             state.has_seen_accessibility_trusted = true;
+            state.pending_post_relaunch_prompt = false;
         }
         write_recovery_state(&app, &state)?;
 
         let recovery_state = repair_state_label(trusted_after, did_reset, install_changed);
         info!(
-            "[Permissions] accessibility_repair_result trusted={} prompted={} did_reset={} install_changed={} needs_user_approval={} recovery_state={} bundle_path={} build_signature={}",
+            "[Permissions] accessibility_repair_result trusted={} prompted={} did_reset={} install_changed={} needs_user_approval={} relaunch_required=false recovery_state={} bundle_path={} build_signature={}",
             trusted_after,
             prompted,
             did_reset,
@@ -151,6 +188,7 @@ pub async fn repair_accessibility_permissions_if_needed(
             did_reset,
             install_changed,
             needs_user_approval: !trusted_after,
+            relaunch_required: false,
             recovery_state,
             bundle_path: Some(current.bundle_path),
             build_signature: current.build_signature,
@@ -229,6 +267,19 @@ fn should_reset_stale_accessibility(
         .unwrap_or(false);
 
     reset_not_attempted_for_build && (state.has_seen_accessibility_trusted || install_changed)
+}
+
+#[cfg(target_os = "macos")]
+fn running_process_is_stale(current: &InstallFingerprint) -> bool {
+    let exe_modified_ms = modified_at_ms(Path::new(&current.executable_path));
+    is_stale(exe_modified_ms, *PROCESS_STARTED_AT_MS)
+}
+
+fn is_stale(exe_modified_ms: Option<u128>, process_started_at_ms: u128) -> bool {
+    match exe_modified_ms {
+        None => true,
+        Some(modified_at_ms) => modified_at_ms > process_started_at_ms,
+    }
 }
 
 #[cfg(target_os = "macos")]
@@ -321,7 +372,7 @@ fn now_ms() -> u128 {
 #[cfg(test)]
 mod tests {
     use super::{
-        fingerprint_changed, repair_state_label, should_reset_stale_accessibility,
+        fingerprint_changed, is_stale, repair_state_label, should_reset_stale_accessibility,
         AccessibilityRecoveryState, InstallFingerprint,
     };
 
@@ -353,6 +404,7 @@ mod tests {
             has_seen_accessibility_trusted: true,
             last_tcc_reset_build_signature: None,
             last_install_fingerprint: None,
+            pending_post_relaunch_prompt: false,
             updated_at_ms: 0,
         };
         let current = sample_fingerprint("0.1.1+20260603.220000.def456");
@@ -379,5 +431,36 @@ mod tests {
             repair_state_label(true, false, false),
             "trusted".to_string()
         );
+    }
+
+    #[test]
+    fn detects_stale_process_when_exe_modified_after_process_start() {
+        assert!(is_stale(Some(200), 100));
+    }
+
+    #[test]
+    fn does_not_mark_process_stale_when_exe_is_older() {
+        assert!(!is_stale(Some(100), 200));
+    }
+
+    #[test]
+    fn treats_missing_exe_mtime_as_stale() {
+        assert!(is_stale(None, 200));
+    }
+
+    #[test]
+    fn old_recovery_json_defaults_pending_post_relaunch_prompt() {
+        let state: AccessibilityRecoveryState = serde_json::from_str(
+            r#"{
+                "version": 1,
+                "hasSeenAccessibilityTrusted": true,
+                "lastTccResetBuildSignature": null,
+                "lastInstallFingerprint": null,
+                "updatedAtMs": 0
+            }"#,
+        )
+        .expect("old recovery JSON should deserialize");
+
+        assert!(!state.pending_post_relaunch_prompt);
     }
 }

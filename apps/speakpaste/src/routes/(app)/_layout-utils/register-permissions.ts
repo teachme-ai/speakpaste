@@ -20,6 +20,7 @@ type AccessibilityRepairResult = {
 	didReset: boolean;
 	installChanged: boolean;
 	needsUserApproval: boolean;
+	relaunchRequired: boolean;
 	recoveryState: string;
 	bundlePath: string | null;
 	buildSignature: string;
@@ -89,11 +90,23 @@ export function registerAccessibilityPermission() {
 	if (!isMacDesktop()) return;
 
 	const accessibilityToastId = nanoid();
-	let pollTimer: ReturnType<typeof window.setInterval> | undefined;
+	const restartToastId = `${accessibilityToastId}-restart`;
+	const pollEscalationToastId = `${accessibilityToastId}-poll-escalation`;
+	let pollTimer: number | undefined;
+	let pollStartedAt = 0;
+	let pollEscalationShown = false;
 
 	const dismissSetupToasts = () => {
 		toast.dismiss(accessibilityToastId);
 		toast.dismiss(`${accessibilityToastId}-reset`);
+		toast.dismiss(restartToastId);
+		toast.dismiss(pollEscalationToastId);
+	};
+
+	const relaunchMynah = async () => {
+		logDiagnostic('permissions', 'accessibility_relaunch_requested');
+		const { relaunch } = await import('@tauri-apps/plugin-process');
+		await relaunch();
 	};
 
 	const showRecoveryToast = (
@@ -127,20 +140,66 @@ export function registerAccessibilityPermission() {
 		});
 	};
 
+	const showRestartToast = () => {
+		if (isSetupAssistantActive()) {
+			logDiagnostic('permissions', 'accessibility_restart_toast_suppressed_for_setup');
+			dismissSetupToasts();
+			return;
+		}
+
+		logDiagnostic('permissions', 'accessibility_restart_toast_shown');
+		toast.warning('Restart needed to finish enabling', {
+			id: restartToastId,
+			description:
+				'Mynah was updated or reinstalled while it was running. macOS ties Accessibility permission to the exact app on disk, so a quick restart is needed before the Fn key can work.',
+			duration: Number.POSITIVE_INFINITY,
+			action: {
+				label: 'Restart Mynah',
+				onClick: () => {
+					void relaunchMynah();
+				},
+			},
+		});
+	};
+
+	const showPollEscalationToast = () => {
+		if (pollEscalationShown || isSetupAssistantActive()) return;
+		pollEscalationShown = true;
+
+		logDiagnostic('permissions', 'accessibility_poll_escalation_toast_shown');
+		toast.info('Already enabled in System Settings?', {
+			id: pollEscalationToastId,
+			description:
+				'If Mynah shows as enabled under Privacy & Security -> Accessibility but dictation is not starting, restarting Mynah completes the activation.',
+			duration: Number.POSITIVE_INFINITY,
+			action: {
+				label: 'Restart Mynah',
+				onClick: () => {
+					void relaunchMynah();
+				},
+			},
+		});
+	};
+
 	const startPermissionPoll = () => {
 		if (pollTimer) return;
+		pollStartedAt = Date.now();
+		pollEscalationShown = false;
 		pollTimer = window.setInterval(async () => {
 			const initialized = await initializeFnKeyListener();
 			if (initialized) {
 				window.clearInterval(pollTimer);
 				pollTimer = undefined;
-				toast.dismiss(accessibilityToastId);
+				dismissSetupToasts();
 				if (!isSetupAssistantActive()) {
 					toast.success('Accessibility permission granted', {
 						description: 'Mynah is ready to listen for the Fn key again.',
 					});
 				}
 				return;
+			}
+			if (Date.now() - pollStartedAt >= 20_000) {
+				showPollEscalationToast();
 			}
 		}, 1000);
 	};
@@ -192,6 +251,14 @@ export function registerAccessibilityPermission() {
 			if (await initializeFnKeyListener()) return;
 		}
 
+		if (repairResult?.relaunchRequired) {
+			logDiagnostic('permissions', 'accessibility_relaunch_required', {
+				repairResult,
+			});
+			showRestartToast();
+			return;
+		}
+
 		if (repairResult?.didReset) {
 			if (isSetupAssistantActive()) {
 				dismissSetupToasts();
@@ -226,7 +293,7 @@ export function registerAccessibilityPermission() {
 			window.clearInterval(pollTimer);
 			pollTimer = undefined;
 		}
-		toast.dismiss(accessibilityToastId);
+		dismissSetupToasts();
 	};
 }
 
