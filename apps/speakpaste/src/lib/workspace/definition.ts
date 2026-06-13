@@ -283,6 +283,18 @@ const transformation = {
 	'transformation.selectedId': defineKv(type('string | null'), null),
 } as const;
 
+/**
+ * Local intent router and writing modes.
+ */
+const intent = {
+	'intent.mode': defineKv(
+		type.enumerated('dictate', 'clean_ramble', 'list', 'prompt'),
+		'dictate',
+	),
+	'intent.voiceOverrideEnabled': defineKv(type('boolean'), false),
+} as const;
+
+
 /** Device-local diagnostics preference. No off-device analytics are sent. */
 const analytics = {
 	'analytics.enabled': defineKv(type('boolean'), false),
@@ -335,6 +347,7 @@ export const whisperingKv = {
 	...recording,
 	...transcription,
 	...transformation,
+	...intent,
 	...analytics,
 	...shortcuts,
 	...appState,

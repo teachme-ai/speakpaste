@@ -19,6 +19,7 @@ import {
 import { sound } from './sound';
 import { transcribeBlob } from './transcription';
 import { transformer } from './transformer';
+import { routeAndFormat } from './intent-router';
 
 export type PipelineSource = 'manual' | 'native' | 'vad' | 'upload';
 
@@ -466,10 +467,17 @@ export async function processRecordingPipeline({
 		return;
 	}
 
+	const activeMode = settings.get('intent.mode');
+	const voiceOverrideEnabled = settings.get('intent.voiceOverrideEnabled');
+	console.info(
+		`[Diagnostics] Pipeline settings check: intent.mode=${activeMode} intent.voiceOverrideEnabled=${voiceOverrideEnabled} rawText="${transcribedText}"`,
+	);
+	const shapedResult = routeAndFormat(transcribedText, activeMode, voiceOverrideEnabled);
+
 	await deliverTranscriptStage({
 		recordingId: recording.id,
 		source,
-		transcribedText,
+		transcribedText: shapedResult.text,
 		transcribeToastId,
 		pipelineStart,
 	});
@@ -478,7 +486,7 @@ export async function processRecordingPipeline({
 		recordingId: recording.id,
 		source,
 		pipelineStart,
-		chars: transcribedText.length,
+		chars: shapedResult.text.length,
 	});
 
 	await finalizeRecordingSuccess({
@@ -486,7 +494,7 @@ export async function processRecordingPipeline({
 		saveAudioPromise,
 		source,
 		toastId,
-		transcribedText,
+		transcribedText, // Raw text is persisted in IndexedDB/Yjs
 	});
 
 	await runSelectedTransformationStage({ recordingId: recording.id, source });

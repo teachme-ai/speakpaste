@@ -37,6 +37,56 @@
 	const selectedThemeLabel = $derived(
 		THEME_OPTIONS.find((t) => t.value === settings.get('ui.theme'))?.label ?? 'Light',
 	);
+
+	const INTENT_MODE_OPTIONS = [
+		{ value: 'dictate', label: 'Dictate', description: 'Verbatim text without styling.' },
+		{ value: 'clean_ramble', label: 'Clean Ramble', description: 'Cleans stutters, repetitions, and clause fillers.' },
+		{ value: 'prompt', label: 'Prompt', description: 'Auto-formats into developer task/context templates.' },
+	] as const;
+
+	const selectedIntentModeLabel = $derived(
+		INTENT_MODE_OPTIONS.find((t) => t.value === settings.get('intent.mode'))?.label ?? 'Dictate',
+	);
+
+	const config = {
+		get mode() {
+			return settings.get('intent.mode');
+		},
+		set mode(v) {
+			settings.set('intent.mode', v);
+		},
+		get voiceOverrideEnabled() {
+			return settings.get('intent.voiceOverrideEnabled');
+		},
+		set voiceOverrideEnabled(v) {
+			settings.set('intent.voiceOverrideEnabled', v);
+		},
+		get clipboardBehavior() {
+			return settings.get('output.transcription.clipboardBehavior');
+		},
+		set clipboardBehavior(v) {
+			settings.set('output.transcription.clipboardBehavior', v);
+			settings.set('output.transcription.clipboard', v !== 'preserve');
+		},
+		get cursor() {
+			return settings.get('output.transcription.cursor');
+		},
+		set cursor(v) {
+			settings.set('output.transcription.cursor', v);
+		},
+		get enter() {
+			return settings.get('output.transcription.enter');
+		},
+		set enter(v) {
+			settings.set('output.transcription.enter', v);
+		},
+		get theme() {
+			return settings.get('ui.theme');
+		},
+		set theme(v) {
+			settings.set('ui.theme', v);
+		}
+	};
 </script>
 
 <svelte:head> <title>Settings - Mynah</title> </svelte:head>
@@ -106,8 +156,7 @@
 			</div>
 			<Switch
 				id="transcription.writeToCursorOnSuccess"
-				bind:checked={() => settings.get('output.transcription.cursor'),
-					(v) => settings.set('output.transcription.cursor', v)}
+				bind:checked={config.cursor}
 			/>
 		</div>
 
@@ -122,18 +171,7 @@
 			</div>
 			<Select.Root
 				type="single"
-				bind:value={() => settings.get('output.transcription.clipboardBehavior'),
-					(selected) => {
-						const behavior = TRANSCRIPTION_CLIPBOARD_BEHAVIOR_OPTIONS.find(
-							(option) => option.value === selected,
-						);
-						if (!behavior) return;
-						settings.set('output.transcription.clipboardBehavior', behavior.value);
-						settings.set(
-							'output.transcription.clipboard',
-							behavior.value !== 'preserve',
-						);
-					}}
+				bind:value={config.clipboardBehavior}
 			>
 				<Select.Trigger id="transcription-clipboard-behavior" class="w-52 justify-between">
 					{selectedClipboardBehavior?.label ?? 'Select behavior'}
@@ -165,11 +203,61 @@
 				</div>
 				<Switch
 					id="transcription.simulateEnterAfterOutput"
-					bind:checked={() => settings.get('output.transcription.enter'),
-						(v) => settings.set('output.transcription.enter', v)}
+					bind:checked={config.enter}
 				/>
 			</div>
 		{/if}
+	</section>
+
+	<section class="mac-settings-section">
+		<div class="mac-settings-section-header">
+			<h2 class="text-lg font-semibold tracking-tight">Smart Dictation</h2>
+			<p class="mt-1 text-sm text-muted-foreground">
+				Format and shape your spoken text automatically as you dictate.
+			</p>
+		</div>
+
+		<div class="mac-settings-row">
+			<div>
+				<label class="font-medium" for="intent-mode">Default mode</label>
+				<p class="mt-1 text-sm text-muted-foreground">
+					The writing style applied to your dictation by default.
+				</p>
+			</div>
+			<Select.Root
+				type="single"
+				bind:value={config.mode}
+			>
+				<Select.Trigger id="intent-mode" class="w-52 justify-between">
+					{selectedIntentModeLabel}
+				</Select.Trigger>
+				<Select.Content>
+					{#each INTENT_MODE_OPTIONS as item}
+						<Select.Item value={item.value} label={item.label}>
+							<div class="flex flex-col gap-0.5">
+								<span class="font-medium">{item.label}</span>
+								<span class="text-xs text-muted-foreground">
+									{item.description}
+								</span>
+							</div>
+						</Select.Item>
+					{/each}
+				</Select.Content>
+			</Select.Root>
+		</div>
+
+		<div class="mac-settings-row">
+			<div>
+				<label class="font-medium" for="intent.voiceOverrideEnabled">Voice command overrides</label>
+				<p class="mt-1 text-sm text-muted-foreground">
+					Temporarily switch modes by speaking commands (e.g. "as a list").
+				</p>
+			</div>
+			<Switch
+				id="intent.voiceOverrideEnabled"
+				bind:checked={config.voiceOverrideEnabled}
+			/>
+		</div>
 	</section>
 
 	{#if window.__TAURI_INTERNALS__}
@@ -217,8 +305,7 @@
 				</div>
 				<Select.Root
 					type="single"
-					bind:value={() => settings.get('ui.theme'),
-						(v) => settings.set('ui.theme', v)}
+					bind:value={config.theme}
 				>
 					<Select.Trigger id="ui-theme" class="w-52 justify-between">
 						{selectedThemeLabel}
