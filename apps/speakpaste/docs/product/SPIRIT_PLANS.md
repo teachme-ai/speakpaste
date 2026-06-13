@@ -23,13 +23,13 @@ This is a planning document only. It does not represent completed implementation
 | Area | Decision | Status |
 | --- | --- | --- |
 | Local-only promise | Strict local-only. No cloud transcription, no cloud rewrite, no remote telemetry, no hidden network fallback. | Decided |
-| Trial network call | Remove `worldtimeapi.org` from trial status. Use local-only time strategy. | Build 178 |
-| Trial clock strategy | Use local system time plus HMAC-signed high-water mark. Trial bypasses are acceptable because trial is honest-user friction. Known accepted bypass: deleting the keychain item can reset first launch. | Build 178 |
-| Trial key | Move trial HMAC key out of source into build-time env. | Build 178 |
+| Trial network call | Remove `worldtimeapi.org` from trial status. Use local-only time strategy. | Done (Build 177/178) |
+| Trial clock strategy | Use local system time plus HMAC-signed high-water mark. | Done (Build 177/178) |
+| Trial key | Move trial HMAC key out of source into build-time env. | Done (Build 177/178) |
 | Old trial signatures after key rotation | Treat as expired. Paid/Lifetime build must run normally. | Decided |
 | Lifetime build behavior | Lifetime build must not read trial state and must work after an expired trial install. | Decided |
-| Accessibility RB-001 | Add stale running process detection and explicit Restart Mynah flow. | Build 178 |
-| Updater | Remove or quarantine inert updater config until updater is intentionally shipped. | Build 178 |
+| Accessibility RB-001 | Add stale running process detection and explicit Restart Mynah flow. | Done (Build 177/178) |
+| Updater | Remove or quarantine inert updater config until updater is intentionally shipped. | Done (Build 177/178) |
 | Website hero | Before Build 178: "Built to keep your words on your Mac." After Build 178 validation: "Nothing leaves your Mac." | Decided |
 | Writing modes | Next major release modes: Dictate, Clean Ramble, List, Prompt. | Next major |
 | Apple Foundation Models | Allowed only when proven on-device. Never Private Cloud Compute. Deterministic fallback everywhere. | Next major |
@@ -45,19 +45,15 @@ Recommended branches:
 
 | Branch | Purpose | Merge timing |
 | --- | --- | --- |
-| `main` | Current stable working line. Keep clean. | Always stable |
-| `release/1.0.0-b177` | Preserve current launchable build and DMG state. Tag as `v1.0.0-b177`. | Create before risky changes |
-| `build-178-hardening` | Small trust/stability fixes: trial local-only, HMAC env key, RB-001, updater quarantine, README/site claim cleanup. | Merge before public local-only launch |
-| `license-cleanup-remove-agpl-sync` | Longer dependency/license refactor to remove AGPL-linked workspace/sync path from shipped app. | Merge only after proof |
-| `next-major-intent-router` | Writing modes, deterministic router, Apple FM capability gate. | After Build 178 |
+| `main` | Current stable working line. Contains Build 178 hardening and hotfixes. | Always stable |
+| `license-cleanup-remove-agpl-sync` | Longer dependency/license refactor to remove AGPL-linked workspace/sync path from shipped app. | Underway |
+| `next-major-smart-dictation` | Incremental streaming ASR, Intent Router, Writing Modes, and MCP Server. | Next phase |
 
 Recommended order:
 
-1. Create/tag stable current build.
-2. Implement and validate `build-178-hardening`.
-3. Launch using Build 178 if possible.
-4. Continue `license-cleanup-remove-agpl-sync` separately.
-5. Start `next-major-intent-router` after trust fixes are done.
+1. Ship Build 177/178 hardening baseline (Done - pushed to `main` and website).
+2. Complete `license-cleanup-remove-agpl-sync` separately.
+3. Build `next-major-smart-dictation` features (Streaming dictation, Intent Router, and local MCP Server).
 
 ## Build 178 Scope
 
@@ -632,42 +628,43 @@ Mynah's privacy is architectural. Audio, transcription, history, diagnostics, an
 
 If website copy names model hosts for advanced-user reassurance, it must say model downloads may come from Hugging Face or GitHub Releases. Current sources are Hugging Face for Whisper/Moonshine and GitHub Releases for Parakeet. Do not claim Hugging Face is the only model host.
 
-## Next Major Release: Local Writing Modes
+## Next Major Release: Smart Dictation & Developer Integration
 
-This is not part of Build 178.
+This contains the three primary post-178 roadmap items:
 
-Modes:
+### 1. Instantaneous Pasting (Streaming ASR & KV Caching)
+- Feed live microphone buffers to `transcribe-rs` streaming engine incrementally during speech (while key is held).
+- Utilize Moonshine's KV-caching to update ASR state without re-transcribing the full buffer.
+- Paste completed text instantly on key release (pasting latency < 100ms).
+- Emit real-time partial transcripts to Svelte `overlay` for live word previews.
 
-- Dictate
-- Clean Ramble
-- List
-- Prompt
+### 2. Local Intent Router & Writing Modes
+- **Modes:** Dictate (passthrough), Clean Ramble (stutter/repetition removal), List (markdown bullet list formatting), Prompt (structured developer templates).
+- **Triggering:** Local classification (regex/prefix commands like *"make a list of..."*, *"summarize this..."*) maps transcripts to the correct formatting modes.
+- **Formatters:** Fallback to local regex/template formatters; use Apple Natural Language or local Apple Intelligence Foundation Models only when available on-device.
+- **Engine Parity:** Provide unified post-processing formatting for Parakeet and Moonshine (which lack native model-level prompts) to ensure identical behavior to Whisper C++.
 
-Rules:
+### 3. Model Context Protocol (MCP) Server
+- Run a localhost JSON-RPC server (over port/axum) inside Mynah's background runtime.
+- Expose tools to let AI coding tools (Claude Desktop, Cursor) query voice notes:
+  - `get_latest_transcripts(limit)`
+  - `search_transcripts(query)`
+- Secure connection using tokens stored in the macOS Keychain.
 
-- Dictate is byte-identical passthrough.
-- Clean Ramble tidies obvious filler/repeated words without changing meaning.
-- List turns explicit or carefully inferred spoken lists into bullets/numbered steps.
-- Prompt organizes rough thoughts into `Task`, `Context`, `Constraints`, and `Output Format`.
-- Raw transcript remains the saved record.
-- Shaped output is pasted and may be shown transiently only.
-- Apple FM can enhance only if on-device status is proven.
-- Intel/unsupported Macs use deterministic fallback.
+*Note: Diarization / Multi-speaker meeting recording is explicitly out of scope.*
 
 Implementation branch:
 
 ```text
-next-major-intent-router
+next-major-smart-dictation
 ```
 
 Minimum PR sequence:
 
-1. Pure TS `intent/` service and tests.
-2. Rust active-app snapshot if needed.
-3. Settings KV and UI picker.
-4. Pipeline wiring.
-5. Apple FM capability gate dark.
-6. FM benchmark and owner sign-off.
+1. Implement audio streaming/channel buffering in `recorder.rs` and wire to Moonshine streaming engine in Rust.
+2. Add Svelte overlay support for live partial transcript previews.
+3. Build the local Intent Router and deterministic mode formatters (Dictate, Clean, List, Prompt).
+4. Implement the local MCP server inside Mynah's background runtime.
 
 ## Stable Launch Recommendation
 
@@ -776,10 +773,6 @@ Later decision:
 
 ## Final Priority Order
 
-1. Preserve current stable state with branch/tag.
-2. Build 178 hardening branch.
-3. Validate Build 178.
-4. Update website/README claim language.
-5. Launch stronger local-only version.
-6. Continue AGPL cleanup branch.
-7. Build next-major Intent Router branch.
+1. Validate the live Build 177/178 website deployment (Done).
+2. Complete the AGPL license/workspace cleanup branch (`license-cleanup-remove-agpl-sync`).
+3. Build the smart dictation, streaming, and local MCP server branch (`next-major-smart-dictation`).

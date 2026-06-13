@@ -14,6 +14,8 @@
 	import { logDiagnostic } from '$lib/diagnostics/runtime-diagnostics';
 	import { BUILD_INFO } from '$lib/generated/build-info';
 	import { WHISPER_MODELS } from '$lib/services/transcription/local/whispercpp';
+	import { PARAKEET_MODELS } from '$lib/services/transcription/local/parakeet';
+	import { MOONSHINE_MODELS } from '$lib/services/transcription/local/moonshine';
 	import { isModelFileSizeValid } from '$lib/services/transcription/local/types';
 	import { desktopServices } from '$lib/services/desktop';
 	import { deviceConfig } from '$lib/state/device-config.svelte';
@@ -56,9 +58,23 @@
 	let pollTimer: number | undefined;
 	const isIntelBuild = String(BUILD_INFO.targetArch) === 'x86_64';
 
-	const modelPath = $derived(deviceConfig.get('transcription.whispercpp.modelPath'));
+	const selectedEngine = $derived(settings.get('transcription.service'));
+	const modelPath = $derived(
+		selectedEngine === 'whispercpp'
+			? deviceConfig.get('transcription.whispercpp.modelPath')
+			: selectedEngine === 'parakeet'
+				? deviceConfig.get('transcription.parakeet.modelPath')
+				: deviceConfig.get('transcription.moonshine.modelPath')
+	);
+	const ALL_MODELS = [...WHISPER_MODELS, ...PARAKEET_MODELS, ...MOONSHINE_MODELS];
 	const activeModel = $derived(
-		WHISPER_MODELS.find((model) => modelPath.endsWith(model.file.filename)) ?? null,
+		ALL_MODELS.find((model) => {
+			if (model.engine === 'whispercpp') {
+				return modelPath.endsWith(model.file.filename);
+			} else {
+				return modelPath.endsWith(model.directoryName);
+			}
+		}) ?? null,
 	);
 	const modelReady = $derived(Boolean(activeModel));
 	const allReady = $derived(
@@ -276,11 +292,11 @@
 		}
 	}
 
-	async function validateWhisperModel() {
+	async function validateSelectedModel() {
 		if (!modelReady || !activeModel) {
 			return {
 				ok: false,
-				reason: 'No Whisper model is selected.',
+				reason: 'No local model is selected.',
 			};
 		}
 
@@ -291,18 +307,47 @@
 		if (!(await exists(modelPath))) {
 			return {
 				ok: false,
-				reason: 'The selected Whisper model file does not exist.',
+				reason: 'The selected model path does not exist.',
 			};
 		}
 
 		const modelStats = await stat(modelPath);
-		if (!isModelFileSizeValid(modelStats.size, activeModel.sizeBytes)) {
-			return {
-				ok: false,
-				reason: 'The selected Whisper model file looks incomplete.',
-				size: modelStats.size,
-				expectedSize: activeModel.sizeBytes,
-			};
+
+		if (activeModel.engine === 'whispercpp') {
+			if (!isModelFileSizeValid(modelStats.size, activeModel.sizeBytes)) {
+				return {
+					ok: false,
+					reason: 'The selected Whisper model file looks incomplete.',
+					size: modelStats.size,
+					expectedSize: activeModel.sizeBytes,
+				};
+			}
+		} else {
+			if (!modelStats.isDirectory) {
+				return {
+					ok: false,
+					reason: 'Expected a directory for this model but found a file.',
+				};
+			}
+			const { join } = await import('@tauri-apps/api/path');
+			for (const file of activeModel.files) {
+				const filePath = await join(modelPath, file.filename);
+				if (!(await exists(filePath))) {
+					return {
+						ok: false,
+						reason: `Missing model file: ${file.filename}`,
+					};
+				}
+				const fileStats = await stat(filePath);
+				if (!isModelFileSizeValid(fileStats.size, file.sizeBytes)) {
+					return {
+						ok: false,
+						reason: `Incomplete model file: ${file.filename}`,
+						size: fileStats.size,
+						expectedSize: file.sizeBytes,
+					};
+				}
+			}
 		}
 
 		return {
@@ -343,7 +388,7 @@
 		try {
 			await refreshPermissions();
 			const [modelValidation, fnReadiness] = await Promise.all([
-				validateWhisperModel(),
+				validateSelectedModel(),
 				getFnKeyReadiness(),
 			]);
 			const passed =
@@ -424,10 +469,12 @@
 	onMount(() => {
 		logDiagnostic('setup', 'setup_page_mounted', {
 			initialService: settings.get('transcription.service'),
-			initialModelPath: deviceConfig.get('transcription.whispercpp.modelPath'),
+			initialModelPath: modelPath,
 			setupCompletedAt: localStorage.getItem('mynah.setup.completedAt'),
 		});
-		settings.set('transcription.service', 'whispercpp');
+		if (!settings.get('transcription.service')) {
+			settings.set('transcription.service', 'whispercpp');
+		}
 
 		if (window.__TAURI_INTERNALS__) {
 			import('@tauri-apps/api/window').then(async ({ getCurrentWindow, LogicalSize }) => {
@@ -494,7 +541,7 @@
 					</h1>
 					<p class="mt-2 text-[17px] leading-7 text-muted-foreground">
 						Before your first Fn dictation, {@render AppIcon()} needs three things: Accessibility,
-						Microphone, and one local Whisper model. Your voice stays on this Mac.
+						Microphone, and one local speech model. Your voice stays on this Mac.
 					</p>
 				</div>
 			</div>
@@ -594,10 +641,9 @@
 							<SparklesIcon class="size-5" />
 						</div>
 						<div>
-							<p class="font-semibold">Local Whisper model</p>
+							<p class="font-semibold">Local speech model</p>
 							<p class="mt-1 text-sm leading-6 text-muted-foreground">
-								Choose one model before first use.
-								{isIntelBuild ? 'Fast is recommended for Intel Macs.' : 'Balanced is recommended for Apple Silicon Macs.'}
+								Choose one local dictation model before first use.
 							</p>
 						</div>
 					</div>
@@ -612,20 +658,48 @@
 			</section>
 
 			<section class="mac-settings-section">
-				<div class="mac-settings-section-header">
+				<div class="mac-settings-section-header border-b pb-3">
 					<h2 class="text-xl font-semibold tracking-tight">Choose your first model</h2>
 					<p class="mt-1 text-sm text-muted-foreground">
-						{#if isIntelBuild}
-							Download one local model. Pick Fast on Intel Macs for the smoothest first run; you can change it later in Settings > Models.
-						{:else}
-							Download one local model. Balanced is the recommended Apple Silicon starting point; you can change it later in Settings > Models.
-						{/if}
+						Download one local speech model. Balanced (Whisper) is the recommended starting point; you can change it later in Settings > Models.
 					</p>
 				</div>
-				<div class="space-y-3 p-4">
-					{#each WHISPER_MODELS as model}
-						<LocalModelDownloadCard {model} />
-					{/each}
+				<div class="space-y-6 p-4">
+					<!-- Whisper C++ Models -->
+					<div>
+						<h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 px-1">
+							Whisper C++ Models (Multi-lingual, High Accuracy)
+						</h3>
+						<div class="space-y-3">
+							{#each WHISPER_MODELS as model}
+								<LocalModelDownloadCard {model} />
+							{/each}
+						</div>
+					</div>
+
+					<!-- Moonshine Models -->
+					<div>
+						<h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 px-1">
+							Moonshine Models (English-only, Ultra-fast)
+						</h3>
+						<div class="space-y-3">
+							{#each MOONSHINE_MODELS as model}
+								<LocalModelDownloadCard {model} />
+							{/each}
+						</div>
+					</div>
+
+					<!-- Parakeet Models -->
+					<div>
+						<h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 px-1">
+							Parakeet Models (NVIDIA NeMo, Optimized)
+						</h3>
+						<div class="space-y-3">
+							{#each PARAKEET_MODELS as model}
+								<LocalModelDownloadCard {model} />
+							{/each}
+						</div>
+					</div>
 				</div>
 			</section>
 

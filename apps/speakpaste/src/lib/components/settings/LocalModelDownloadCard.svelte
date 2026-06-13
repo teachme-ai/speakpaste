@@ -26,6 +26,7 @@
 		type LocalModelConfig,
 	} from '$lib/services/transcription/local/types';
 	import { deviceConfig } from '$lib/state/device-config.svelte';
+	import { settings } from '$lib/state/settings.svelte';
 
 	let {
 		model,
@@ -40,7 +41,7 @@
 		| { type: 'active' };
 
 	let modelState = $state<ModelState>({ type: 'not-downloaded' });
-	const isIntelBuild = BUILD_INFO.targetArch === 'x86_64';
+	const isIntelBuild = String(BUILD_INFO.targetArch) === 'x86_64';
 	const isRecommendedForThisBuild = $derived(
 		(isIntelBuild && model.id === 'tiny.en') ||
 			(!isIntelBuild && model.id === 'base.en'),
@@ -146,10 +147,11 @@
 
 	// Check model status on mount and when settings change
 	$effect(() => {
-		// React to settings changes for this engine
+		// React to settings changes for this engine and active service selection
 		const settingsKey = `transcription.${model.engine}.modelPath` as const;
 		const currentPath = deviceConfig.get(settingsKey);
-		// Trigger refresh when settings change (currentPath is a dependency)
+		const currentService = settings.get('transcription.service');
+		// Trigger refresh when settings change
 		refreshStatus();
 	});
 
@@ -164,10 +166,10 @@
 					return;
 				}
 
-				// Check if this model is active in settings
+				// Check if this model is active in settings and matches the selected service
 				const settingsKey = `transcription.${model.engine}.modelPath` as const;
 				const currentPath = deviceConfig.get(settingsKey);
-				const isActive = currentPath === path;
+				const isActive = currentPath === path && settings.get('transcription.service') === model.engine;
 
 				modelState = isActive ? { type: 'active' } : { type: 'ready' };
 			},
@@ -286,6 +288,7 @@
 		const settingsKey = `transcription.${model.engine}.modelPath` as const;
 
 		deviceConfig.set(settingsKey, path);
+		settings.set('transcription.service', model.engine);
 		// The settings watcher will update modelState to 'active'
 		toast.success('Model activated');
 	}

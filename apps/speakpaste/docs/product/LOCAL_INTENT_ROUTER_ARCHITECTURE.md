@@ -147,6 +147,21 @@ Good first enhanced actions:
 
 Avoid making Foundation Models required for basic dictation.
 
+## Model-Specific Integration Strategy (Whisper vs. Parakeet & Moonshine)
+
+To achieve feature parity across all supported local engines, the Local Intent Router handles architectural differences between models:
+
+### 1. ASR Prompting Capabilities vs. Post-Processing
+*   **Whisper C++:** Supports native ASR prompting (injecting a prompt prefix directly into the model at inference time to guide formatting or tone).
+*   **Parakeet & Moonshine:** Do not support model-level prompting.
+*   **Router Solution:** The Local Intent Router acts as a unified post-processing formatting layer. When the active model is Parakeet or Moonshine, the router executes deterministic regex formatters, templates, or local NLP (Apple Natural Language/Foundation Models) on the raw transcribed text. This ensures modes like "Prompt" or "List" work identically across all models.
+
+### 2. Streaming ASR & KV Caching (Moonshine Integration)
+*   **Streaming Input:** Moonshine processes variable-length inputs and supports internal state (KV) caching.
+*   **Live Preview Pipeline:** During active dictation (while the shortcut/Fn key is held), the audio recorder streams chunked audio buffers to `transcribe-rs`. 
+*   **Caching Optimization:** The Intent Router feeds these live buffers into Moonshine's streaming engine, updating ASR states incrementally using cached KV states to avoid re-transcribing the entire history.
+*   **Instant Paste:** Reduces key-release-to-paste latency to `<100ms` and broadcasts partial transcripts to the Svelte `overlay` window for real-time word previews.
+
 ## Runtime Capability Object
 
 Expose a single capability contract to the UI:
