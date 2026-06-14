@@ -393,9 +393,9 @@ export async function invokeActionForRpc<T = unknown>(
 /**
  * Transport-layer error for actions invoked over RPC.
  *
- * Sourced from `@epicenter/sync`'s `RpcError` so the wire and the remote-action
- * type surface share a single nominal `ActionFailed`. There is one `name`
- * discriminant to match on.
+ * Vendored locally (originally sourced from `@epicenter/sync`'s `RpcError`) so the
+ * wire and the remote-action type surface share a single nominal `ActionFailed`.
+ * There is one `name` discriminant to match on.
  */
 export type ActionFailed = Extract<RpcError, { name: 'ActionFailed' }>;
 
