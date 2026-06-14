@@ -10,12 +10,6 @@
  * loader produces these from `epicenter.config.ts` exports.
  */
 
-import type {
-	SyncAttachment,
-	SyncRpcAttachment,
-} from '../document/attach-sync.js';
-import type { PeerPresenceAttachment } from '../document/peer-presence.js';
-
 /**
  * Fields the daemon looks at on each workspace export. `[Symbol.dispose]` and
  * `actions` are required. Other fields are read when present. Extra fields are
@@ -37,13 +31,6 @@ export type LoadedWorkspace = {
 	/** Awaited before any action invocation, if present. */
 	readonly whenReady?: Promise<unknown>;
 
-	/**
-	 * Underlying sync transport. Presence and RPC are attached separately so
-	 * callers choose which peer surfaces they expose.
-	 */
-	readonly sync?: SyncAttachment;
-	readonly presence?: PeerPresenceAttachment;
-	readonly rpc?: SyncRpcAttachment;
 	readonly [key: string]: unknown;
 };
 

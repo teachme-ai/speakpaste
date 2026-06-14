@@ -11,8 +11,7 @@
 			"packages/ui",
 			"packages/workspace",
 			"packages/constants",
-			"packages/svelte-utils",
-			"packages/sync"
+			"packages/svelte-utils"
 		],
 		"catalog": {
 			"@types/node": "^24.0.0",

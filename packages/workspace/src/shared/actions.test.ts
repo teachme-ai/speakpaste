@@ -8,7 +8,7 @@
  */
 
 import { describe, expect, test } from 'bun:test';
-import { isRpcError, RpcError } from '@epicenter/sync';
+import { isRpcError, RpcError } from './rpc-errors.js';
 import Type from 'typebox';
 import { Err, Ok } from 'wellcrafted/result';
 import {

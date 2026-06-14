@@ -1,4 +1,4 @@
-import type { BaseRow, Table } from '@epicenter/workspace';
+import type { BaseRow, Table } from '@epicenter/workspace/local';
 import { SvelteMap } from 'svelte/reactivity';
 
 /**

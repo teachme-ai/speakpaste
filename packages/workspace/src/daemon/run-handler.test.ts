@@ -7,9 +7,44 @@
 
 import { describe, expect, test } from 'bun:test';
 
-import { PeerMiss, type SyncRpcAttachment } from '../document/attach-sync.js';
-import type { PeerPresenceAttachment } from '../document/peer-presence.js';
+import { defineErrors, type InferErrors } from 'wellcrafted/error';
 import { defineMutation, defineQuery } from '../shared/actions.js';
+
+const PeerMiss = defineErrors({
+	PeerMiss: ({
+		peerTarget,
+		sawPeers,
+		waitMs,
+		emptyReason,
+	}: {
+		peerTarget: string;
+		sawPeers: boolean;
+		waitMs: number;
+		emptyReason: string | null;
+	}) => ({
+		message: `no peer matches peer id "${peerTarget}"`,
+		peerTarget,
+		sawPeers,
+		waitMs,
+		emptyReason,
+	}),
+});
+
+type SyncRpcAttachment = {
+	rpc(
+		targetClientId: number,
+		actionPath: string,
+		actionInput: unknown,
+		options?: { timeout?: number }
+	): Promise<any>;
+};
+
+type PeerPresenceAttachment = {
+	waitForPeer(
+		peerId: string,
+		options: { timeoutMs: number }
+	): Promise<any>;
+};
 import { executeRun } from './run-handler.js';
 import type { WorkspaceEntry } from './types.js';
 

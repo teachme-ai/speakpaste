@@ -32,7 +32,7 @@
  * @module
  */
 
-import { isRpcError, RpcError } from '@epicenter/sync';
+import { isRpcError, RpcError } from './rpc-errors.js';
 import type { Static, TSchema } from 'typebox';
 import type { Result } from 'wellcrafted/result';
 import { isResult, Ok } from 'wellcrafted/result';

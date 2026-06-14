@@ -1,4 +1,4 @@
-import type { DateTimeString } from '@epicenter/workspace';
+import type { DateTimeString } from '@epicenter/workspace/local';
 import * as chrono from 'chrono-node/en';
 
 export type DateComponents = {

@@ -1,0 +1,12 @@
+export { defineKv } from './document/define-kv';
+export { defineTable } from './document/define-table';
+export { attachKv } from './document/attach-kv';
+export type { InferKvValue, Kv, KvDefinitions } from './document/attach-kv';
+export { attachTable, attachTables } from './document/attach-table';
+export type { InferTableRow, Table, BaseRow, TableDefinitions, Tables } from './document/attach-table';
+export { attachEncryption } from './document/attach-encryption';
+export { attachIndexedDb } from './document/attach-indexed-db';
+export type { MaybePromise } from './shared/types';
+export { DateTimeString } from './shared/datetime-string';
+export { createDisposableCache } from './cache/disposable-cache';
+export { attachTimeline } from './document/attach-timeline/index';

@@ -1,4 +1,4 @@
-import { attachEncryption } from '@epicenter/workspace';
+import { attachEncryption } from '@epicenter/workspace/local';
 import * as Y from 'yjs';
 import { whisperingKv, whisperingTables } from '$lib/workspace';
 

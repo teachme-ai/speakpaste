@@ -1,4 +1,4 @@
-import type { DisposableCache } from '@epicenter/workspace';
+import type { DisposableCache } from '@epicenter/workspace/local';
 
 /**
  * Reactive binding to a `DisposableCache`. Opens a handle for the current id

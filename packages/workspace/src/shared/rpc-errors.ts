@@ -5,30 +5,7 @@ import {
 } from 'wellcrafted/error';
 
 /**
- * RPC error variants for remote action invocation over the sync protocol.
- *
- * These errors cover all failure modes in the RPC flow:
- * - Infrastructure errors (PeerOffline, Timeout) from the transport layer
- * - Application errors (ActionNotFound, ActionFailed) from the target peer
- *
- * Defined in `@epicenter/sync` because they describe wire-protocol failure
- * modes—both the server (Durable Object) and client construct these errors
- * at the sync boundary.
- *
- * All errors include a `name` discriminant for switch-based handling:
- *
- * @example
- * ```typescript
- * const { data, error } = await workspace.extensions.sync.rpc(clientId, 'tabs.close', { tabIds: [1] });
- * if (error) {
- *   switch (error.name) {
- *     case 'PeerOffline': // target not connected
- *     case 'Timeout':     // no response in time
- *     case 'ActionNotFound': // bad action path
- *     case 'ActionFailed':   // handler error
- *   }
- * }
- * ```
+ * RPC error variants for remote action invocation.
  */
 export const RpcError = defineErrors({
 	PeerOffline: () => ({
@@ -73,20 +50,6 @@ const RPC_ERROR_NAMES = new Set<string>([
 
 /**
  * Type guard that narrows an unknown wire value to a known {@link RpcError} variant.
- *
- * Use this at the deserialization boundary instead of `as RpcError` casts.
- * Validates that the value is an object with a `name` field matching one of
- * the known RPC error variant names.
- *
- * @example
- * ```typescript
- * if (isRpcError(result.error)) {
- *   switch (result.error.name) {
- *     case 'PeerOffline': // TypeScript knows the full shape
- *     case 'Timeout':     // No cast needed
- *   }
- * }
- * ```
  */
 export function isRpcError(value: unknown): value is RpcError {
 	return (

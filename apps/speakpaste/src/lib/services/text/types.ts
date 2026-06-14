@@ -4,7 +4,7 @@ import {
 	type InferErrors,
 } from 'wellcrafted/error';
 import type { Result } from 'wellcrafted/result';
-import type { MaybePromise } from '@epicenter/workspace';
+import type { MaybePromise } from '@epicenter/workspace/local';
 import type { WhisperingError } from '$lib/result';
 
 export const TextError = defineErrors({

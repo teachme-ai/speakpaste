@@ -1,4 +1,4 @@
-import { defineKv, defineTable, type InferTableRow } from '@epicenter/workspace';
+import { defineKv, defineTable, type InferTableRow } from '@epicenter/workspace/local';
 import { type } from 'arktype';
 
 // ── Constant imports ─────────────────────────────────────────────────────────

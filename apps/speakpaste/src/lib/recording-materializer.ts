@@ -7,7 +7,7 @@
  * changes never produce overlapping writes.
  */
 
-import type { MaybePromise, Table } from '@epicenter/workspace';
+import type { MaybePromise, Table } from '@epicenter/workspace/local';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import yaml from 'js-yaml';
 import type * as Y from 'yjs';

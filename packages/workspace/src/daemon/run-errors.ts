@@ -10,7 +10,7 @@
  * daemon route owns every run-specific failure the CLI renders.
  */
 
-import type { RpcError } from '@epicenter/sync';
+import type { RpcError } from '../shared/rpc-errors.js';
 import {
 	defineErrors,
 	extractErrorMessage,

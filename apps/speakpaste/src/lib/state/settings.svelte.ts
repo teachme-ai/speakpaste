@@ -1,4 +1,4 @@
-import type { InferKvValue } from '@epicenter/workspace';
+import type { InferKvValue } from '@epicenter/workspace/local';
 import { SvelteMap } from 'svelte/reactivity';
 import { whispering } from '$lib/whispering/client';
 import { whisperingKv } from '$lib/workspace';

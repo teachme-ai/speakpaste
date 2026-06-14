@@ -1,4 +1,4 @@
-import type { DateTimeString } from '@epicenter/workspace';
+import type { DateTimeString } from '@epicenter/workspace/local';
 
 /**
  * Convert a UTC `Date` and IANA timezone into Epicenter's `DateTimeString`
