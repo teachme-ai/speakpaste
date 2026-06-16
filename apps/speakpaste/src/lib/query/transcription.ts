@@ -190,16 +190,6 @@ export async function transcribeBlob(
 						},
 					);
 				}
-				case 'moonshine': {
-					// Moonshine uses ONNX Runtime with encoder-decoder architecture
-					// Variant is extracted from modelPath (for example, "moonshine-tiny-en" means "tiny").
-					return await services.transcriptions.moonshine.transcribe(
-						audioToTranscribe,
-						{
-							modelPath: deviceConfig.get('transcription.moonshine.modelPath'),
-						},
-					);
-				}
 				default:
 					return WhisperingErr({
 						title: '⚠️ No transcription service selected',

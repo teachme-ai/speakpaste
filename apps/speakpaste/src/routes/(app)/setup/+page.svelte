@@ -15,7 +15,6 @@
 	import { BUILD_INFO } from '$lib/generated/build-info';
 	import { WHISPER_MODELS } from '$lib/services/transcription/local/whispercpp';
 	import { PARAKEET_MODELS } from '$lib/services/transcription/local/parakeet';
-	import { MOONSHINE_MODELS } from '$lib/services/transcription/local/moonshine';
 	import { isModelFileSizeValid } from '$lib/services/transcription/local/types';
 	import { desktopServices } from '$lib/services/desktop';
 	import { deviceConfig } from '$lib/state/device-config.svelte';
@@ -62,11 +61,9 @@
 	const modelPath = $derived(
 		selectedEngine === 'whispercpp'
 			? deviceConfig.get('transcription.whispercpp.modelPath')
-			: selectedEngine === 'parakeet'
-				? deviceConfig.get('transcription.parakeet.modelPath')
-				: deviceConfig.get('transcription.moonshine.modelPath')
+			: deviceConfig.get('transcription.parakeet.modelPath')
 	);
-	const ALL_MODELS = [...WHISPER_MODELS, ...PARAKEET_MODELS, ...MOONSHINE_MODELS];
+	const ALL_MODELS = [...WHISPER_MODELS, ...PARAKEET_MODELS];
 	const activeModel = $derived(
 		ALL_MODELS.find((model) => {
 			if (model.engine === 'whispercpp') {
@@ -677,17 +674,6 @@
 						</div>
 					</div>
 
-					<!-- Moonshine Models -->
-					<div>
-						<h3 class="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 px-1">
-							Moonshine Models (English-only, Ultra-fast)
-						</h3>
-						<div class="space-y-3">
-							{#each MOONSHINE_MODELS as model}
-								<LocalModelDownloadCard {model} />
-							{/each}
-						</div>
-					</div>
 
 					<!-- Parakeet Models -->
 					<div>

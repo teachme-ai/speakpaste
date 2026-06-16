@@ -80,15 +80,6 @@
 				}
 				return await join(parakeetModelsDir, model.directoryName);
 			}
-			case 'moonshine': {
-				// Moonshine models are stored in a directory
-				const moonshineModelsDir = await PATHS.MODELS.MOONSHINE();
-				// Ensure directory exists
-				if (!(await exists(moonshineModelsDir))) {
-					await mkdir(moonshineModelsDir, { recursive: true });
-				}
-				return await join(moonshineModelsDir, model.directoryName);
-			}
 		}
 	}
 
@@ -113,8 +104,7 @@
 				}
 				return true;
 			}
-			case 'parakeet':
-			case 'moonshine': {
+			case 'parakeet': {
 				if (!(await exists(path))) return false;
 				// For multi-file models, path must be a directory containing all files
 				const { data: dirStats } = await tryAsync({
@@ -234,8 +224,7 @@
 						);
 						break;
 					}
-					case 'parakeet':
-					case 'moonshine': {
+					case 'parakeet': {
 						// Multiple file downloads for multi-file models
 						const totalBytes = model.sizeBytes;
 						let downloadedBytes = 0;
@@ -299,7 +288,7 @@
 				const path = await ensureModelDestinationPath();
 				if (await exists(path)) {
 					const isDirectory =
-						model.engine === 'parakeet' || model.engine === 'moonshine';
+						model.engine === 'parakeet';
 					await remove(path, { recursive: isDirectory });
 				}
 

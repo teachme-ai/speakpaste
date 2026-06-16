@@ -42,7 +42,7 @@ use recorder::commands::{
 
 pub mod transcription;
 use transcription::{
-    transcribe_audio_moonshine, transcribe_audio_parakeet, transcribe_audio_whisper, ModelManager,
+    transcribe_audio_parakeet, transcribe_audio_whisper, ModelManager,
 };
 
 pub mod windows_path;
@@ -301,7 +301,6 @@ pub async fn run() {
         cancel_recording,
         transcribe_audio_whisper,
         transcribe_audio_parakeet,
-        transcribe_audio_moonshine,
         send_sigint,
         // Command execution (prevents console window flash on Windows)
         execute_command,

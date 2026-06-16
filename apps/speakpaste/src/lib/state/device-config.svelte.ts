@@ -61,7 +61,6 @@ const DEVICE_DEFINITIONS = {
 	// ── Local model paths ─────────────────────────────────────────────
 	'transcription.whispercpp.modelPath': defineEntry(type('string'), ''),
 	'transcription.parakeet.modelPath': defineEntry(type('string'), ''),
-	'transcription.moonshine.modelPath': defineEntry(type('string'), ''),
 
 	// ── Global OS shortcuts (device-specific, never synced) ───────────
 	'shortcuts.global.toggleManualRecording': defineEntry(

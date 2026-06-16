@@ -2,8 +2,6 @@ use log::error;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, SystemTime};
-#[cfg(not(target_os = "windows"))]
-use transcribe_rs::engines::moonshine::{MoonshineEngine, MoonshineModelParams};
 use transcribe_rs::engines::parakeet::{ParakeetEngine, ParakeetModelParams};
 #[cfg(not(target_os = "windows"))]
 use transcribe_rs::engines::whisper::WhisperEngine;
@@ -14,8 +12,6 @@ pub enum Engine {
     #[cfg(not(target_os = "windows"))]
     Whisper(WhisperEngine),
     Parakeet(ParakeetEngine),
-    #[cfg(not(target_os = "windows"))]
-    Moonshine(MoonshineEngine),
 }
 
 impl Engine {
@@ -24,8 +20,6 @@ impl Engine {
             Engine::Parakeet(e) => e.unload_model(),
             #[cfg(not(target_os = "windows"))]
             Engine::Whisper(e) => e.unload_model(),
-            #[cfg(not(target_os = "windows"))]
-            Engine::Moonshine(e) => e.unload_model(),
         }
     }
 }
@@ -171,80 +165,6 @@ impl ModelManager {
         Err("Whisper C++ is not available on Windows due to build compatibility issues. Please use Parakeet for local transcription.".to_string())
     }
 
-    #[cfg(not(target_os = "windows"))]
-    pub fn get_or_load_moonshine(
-        &self,
-        model_path: PathBuf,
-        variant: MoonshineModelParams,
-    ) -> Result<Arc<Mutex<Option<Engine>>>, String> {
-        let mut engine_guard = self.engine.lock().map_err(|e| {
-            format!(
-                "Engine mutex poisoned (likely due to previous panic): {}",
-                e
-            )
-        })?;
-        let mut current_path_guard = self.current_model_path.lock().map_err(|e| {
-            format!(
-                "Model path mutex poisoned (likely due to previous panic): {}",
-                e
-            )
-        })?;
-
-        // Check if we need to load a new model
-        let needs_load = match (&*engine_guard, &*current_path_guard) {
-            (None, _) => true,
-            (Some(_), Some(path)) if path != &model_path => {
-                // Different model requested, unload current one
-                if let Some(mut engine) = engine_guard.take() {
-                    engine.unload();
-                }
-                true
-            }
-            (Some(Engine::Whisper(_)), _) => {
-                // Wrong engine type, unload and reload
-                if let Some(mut engine) = engine_guard.take() {
-                    engine.unload();
-                }
-                true
-            }
-            (Some(Engine::Parakeet(_)), _) => {
-                // Wrong engine type, unload and reload
-                if let Some(mut engine) = engine_guard.take() {
-                    engine.unload();
-                }
-                true
-            }
-            _ => false,
-        };
-
-        if needs_load {
-            let mut engine = MoonshineEngine::new();
-            engine
-                .load_model_with_params(&model_path, variant)
-                .map_err(|e| format!("Failed to load Moonshine model: {}", e))?;
-
-            *engine_guard = Some(Engine::Moonshine(engine));
-            *current_path_guard = Some(model_path);
-        }
-
-        // Update last activity
-        let mut last_activity_guard = self
-            .last_activity
-            .lock()
-            .map_err(|e| format!("Last activity mutex poisoned: {}", e))?;
-        *last_activity_guard = SystemTime::now();
-
-        Ok(self.engine.clone())
-    }
-
-    #[cfg(target_os = "windows")]
-    pub fn get_or_load_moonshine(
-        &self,
-        _model_path: PathBuf,
-        _variant: &str,
-    ) -> Result<Arc<Mutex<Option<Engine>>>, String> {
-        Err("Moonshine is not available on Windows due to build compatibility issues. Please use Parakeet for local transcription.".to_string())
-    }
 
     pub fn unload_if_idle(&self) {
         let last_activity = match self.last_activity.lock() {

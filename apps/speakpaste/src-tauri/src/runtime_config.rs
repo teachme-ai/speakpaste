@@ -35,7 +35,6 @@ pub struct RuntimeConfig {
     pub transcription_engine: String,
     pub whisper_model_path: Option<String>,
     pub parakeet_model_path: Option<String>,
-    pub moonshine_model_path: Option<String>,
     pub auto_paste_enabled: bool,
     pub selected_text_rule_id: Option<String>,
     pub text_rules: Vec<RuntimeTextRule>,

@@ -19,7 +19,6 @@ type RuntimeConfig = {
 	transcriptionEngine: string;
 	whisperModelPath: string | null;
 	parakeetModelPath: string | null;
-	moonshineModelPath: string | null;
 	autoPasteEnabled: boolean;
 	selectedTextRuleId: string | null;
 	textRules: RuntimeTextRule[];
@@ -119,9 +118,6 @@ function buildRuntimeConfig(): RuntimeConfig {
 		),
 		parakeetModelPath: emptyToNull(
 			deviceConfig.get('transcription.parakeet.modelPath'),
-		),
-		moonshineModelPath: emptyToNull(
-			deviceConfig.get('transcription.moonshine.modelPath'),
 		),
 		autoPasteEnabled: settings.get('output.transcription.cursor'),
 		selectedTextRuleId,

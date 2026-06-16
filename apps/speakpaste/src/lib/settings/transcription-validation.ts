@@ -31,8 +31,7 @@ export function isTranscriptionServiceConfigured(
 	const modelPathByService = {
 		whispercpp: 'transcription.whispercpp.modelPath',
 		parakeet: 'transcription.parakeet.modelPath',
-		moonshine: 'transcription.moonshine.modelPath',
 	} as const;
 
-	return deviceConfig.get(modelPathByService[service.id]) !== '';
+	return deviceConfig.get(modelPathByService[service.id as 'whispercpp' | 'parakeet']) !== '';
 }

@@ -8,7 +8,6 @@
 	import { SUPPORTED_LANGUAGES_OPTIONS } from '$lib/constants/languages';
 	import { TRANSCRIPTION } from '$lib/constants/transcription';
 	import { TRANSCRIPTION_SERVICES } from '$lib/services/transcription/registry';
-	import { MOONSHINE_MODELS } from '$lib/services/transcription/local/moonshine';
 	import { PARAKEET_MODELS } from '$lib/services/transcription/local/parakeet';
 	import { WHISPER_MODELS } from '$lib/services/transcription/local/whispercpp';
 	import { deviceConfig } from '$lib/state/device-config.svelte';
@@ -192,104 +191,6 @@
 
 				{/if}
 			</div>
-		{:else if settings.get('transcription.service') === 'moonshine'}
-			<div class="space-y-4">
-				<!-- Moonshine Model Selector Component -->
-				{#if window.__TAURI_INTERNALS__}
-					<LocalModelSelector
-						models={MOONSHINE_MODELS}
-						title="Moonshine Model"
-						description="Moonshine is an efficient ONNX model by UsefulSensors. English-only with fast inference and small model sizes (~30 MB)."
-						fileSelectionMode="directory"
-						bind:value={() => deviceConfig.get('transcription.moonshine.modelPath'),
-						(v) => deviceConfig.set('transcription.moonshine.modelPath', v)}
-					>
-						{#snippet prebuiltFooter()}
-							<Field.Description>
-								Models are downloaded from{' '}
-								<Link
-									href="https://huggingface.co/UsefulSensors/moonshine"
-									target="_blank"
-									rel="noopener noreferrer"
-								>
-									Hugging Face
-								</Link>
-								{' '}and stored in your app data directory. Moonshine uses
-								quantized ONNX models for efficient local inference.
-							</Field.Description>
-						{/snippet}
-
-						{#snippet manualInstructions()}
-							<Card.Root class="bg-muted/50">
-								<Card.Content class="p-4">
-									<Field.Legend variant="label">
-										Getting Moonshine Models
-									</Field.Legend>
-									<ul class="space-y-2 text-sm text-muted-foreground">
-										<li class="flex items-start gap-2">
-											<span
-												class="mt-0.5 block size-1.5 rounded-full bg-muted-foreground/50"
-											></span>
-											<span>
-												Download pre-built models from the "Pre-built Models"
-												tab
-											</span>
-										</li>
-										<li class="flex items-start gap-2">
-											<span
-												class="mt-0.5 block size-1.5 rounded-full bg-muted-foreground/50"
-											></span>
-											<span>
-												Or download from{' '}
-												<Link
-													href="https://huggingface.co/UsefulSensors/moonshine"
-													target="_blank"
-													rel="noopener noreferrer"
-												>
-													UsefulSensors on Hugging Face
-												</Link>
-											</span>
-										</li>
-										<li class="flex items-start gap-2">
-											<span
-												class="mt-0.5 block size-1.5 rounded-full bg-muted-foreground/50"
-											></span>
-											<span>
-												Moonshine models are directories containing ONNX files
-												and tokenizer
-											</span>
-										</li>
-									</ul>
-									<div
-										class="mt-3 rounded border border-amber-500/20 bg-amber-500/5 p-3"
-									>
-										<p
-											class="text-xs font-medium text-amber-600 dark:text-amber-400"
-										>
-											Directory Naming Requirement
-										</p>
-										<p class="mt-1 text-xs text-muted-foreground">
-											The model directory must be named{' '}
-											<code class="rounded bg-muted px-1 py-0.5 font-mono"
-												>moonshine-&#123;variant&#125;-&#123;lang&#125;</code
-											>
-											{' '}(e.g.,
-											<code class="rounded bg-muted px-1 py-0.5 font-mono"
-												>moonshine-tiny-en</code
-											>,
-											{' '}
-											<code class="rounded bg-muted px-1 py-0.5 font-mono"
-												>moonshine-base-en</code
-											>). The variant (tiny/base) determines model architecture.
-										</p>
-									</div>
-								</Card.Content>
-							</Card.Root>
-						{/snippet}
-					</LocalModelSelector>
-
-				{/if}
-			</div>
 		{/if}
 
 		<Field.Field>
@@ -311,10 +212,7 @@
 			</Select.Root>
 			{#if !currentServiceCapabilities.supportsLanguage}
 				<Field.Description>
-					{settings.get('transcription.service') ===
-					'moonshine'
-						? 'Moonshine is English-only'
-						: 'Parakeet automatically detects the language'}
+					Parakeet automatically detects the language
 				</Field.Description>
 			{:else}
 				<Field.Description>

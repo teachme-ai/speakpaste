@@ -27,8 +27,7 @@ export function hasNavigatorLocalTranscriptionIssue({
 	const isUsingNavigator = deviceConfig.get('recording.method') === 'navigator';
 	const isUsingLocalTranscription =
 		settings.get('transcription.service') === 'whispercpp' ||
-		settings.get('transcription.service') === 'parakeet' ||
-		settings.get('transcription.service') === 'moonshine';
+		settings.get('transcription.service') === 'parakeet';
 
 	return isUsingNavigator && isUsingLocalTranscription && !isFFmpegInstalled;
 }

@@ -25,16 +25,6 @@ export const TRANSCRIPTION = {
 			supportsLanguage: false,
 		},
 	},
-	moonshine: {
-		label: 'Moonshine',
-		location: 'local',
-		models: null,
-		capabilities: {
-			supportsPrompt: false,
-			supportsTemperature: false,
-			supportsLanguage: false,
-		},
-	},
 } as const;
 
 export type TranscriptionServiceId = keyof typeof TRANSCRIPTION;

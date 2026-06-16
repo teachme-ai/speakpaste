@@ -182,7 +182,7 @@ function toInteger(raw: unknown): number | undefined {
 }
 
 function toLocalTranscriptionService(raw: unknown): string {
-	return raw === 'parakeet' || raw === 'moonshine' ? raw : 'whispercpp';
+	return raw === 'parakeet' ? raw : 'whispercpp';
 }
 
 // ── Key mappings ─────────────────────────────────────────────────────────────
@@ -374,10 +374,7 @@ const DEVICE_KEY_MAP: readonly { oldKey: string; newKey: string }[] = [
 		oldKey: 'transcription.parakeet.modelPath',
 		newKey: 'transcription.parakeet.modelPath',
 	},
-	{
-		oldKey: 'transcription.moonshine.modelPath',
-		newKey: 'transcription.moonshine.modelPath',
-	},
+
 
 	// Global shortcuts (same key names in old and new)
 	{

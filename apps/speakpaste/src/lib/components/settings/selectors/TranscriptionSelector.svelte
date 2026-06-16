@@ -32,8 +32,6 @@
 				return deviceConfig.get('transcription.whispercpp.modelPath');
 			case 'parakeet':
 				return deviceConfig.get('transcription.parakeet.modelPath');
-			case 'moonshine':
-				return deviceConfig.get('transcription.moonshine.modelPath');
 		}
 
 		return '';
