@@ -100,7 +100,7 @@ describe("🎙️ Mynah LocalStorage Settings 100% Full-Coverage Suite", () => {
 		const promptKey = "mynah.settings.transcription.prompt";
 
 		// switches between local transcription services
-		const allowedServices = ["whispercpp", "parakeet", "moonshine"];
+		const allowedServices = ["whispercpp", "parakeet"];
 		localStorageMock.setItem(serviceKey, "whispercpp");
 		expect(allowedServices).toContain(localStorageMock.getItem(serviceKey) || "");
 

@@ -182,7 +182,10 @@ function toInteger(raw: unknown): number | undefined {
 }
 
 function toLocalTranscriptionService(raw: unknown): string {
-	return raw === 'parakeet' ? raw : 'whispercpp';
+	if (raw === 'parakeet' || raw === 'moonshine') {
+		return 'parakeet';
+	}
+	return 'whispercpp';
 }
 
 // ── Key mappings ─────────────────────────────────────────────────────────────

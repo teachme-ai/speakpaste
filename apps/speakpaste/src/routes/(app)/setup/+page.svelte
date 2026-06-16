@@ -470,7 +470,7 @@
 			setupCompletedAt: localStorage.getItem('mynah.setup.completedAt'),
 		});
 		if (!settings.get('transcription.service')) {
-			settings.set('transcription.service', 'whispercpp');
+			settings.set('transcription.service', 'parakeet');
 		}
 
 		if (window.__TAURI_INTERNALS__) {

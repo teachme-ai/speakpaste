@@ -6,7 +6,6 @@ The active engines are:
 
 - `whispercpp` for the default local speech-to-text path.
 - `parakeet` for local NVIDIA/NeMo-family experiments when available.
-- `moonshine` for lightweight local model experiments when available.
 
 Do not add providers that send audio to external services from this layer. The product baseline is sovereign voice typing: audio, transcripts, settings, and usage intelligence stay on the user's Mac.
 

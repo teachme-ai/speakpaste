@@ -19,7 +19,7 @@ constants/
 
 ## Local-Only Baseline
 
-Transcription constants should describe on-device engines and model options only. The current product surface supports `whispercpp`, `parakeet`, and `moonshine`; removed provider constants should not be reintroduced unless the product baseline changes.
+Transcription constants should describe on-device engines and model options only. The current product surface supports `whispercpp` and `parakeet`; removed provider constants should not be reintroduced unless the product baseline changes.
 
 ## Import Pattern
 

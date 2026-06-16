@@ -217,7 +217,7 @@
 			<div class="space-y-3 rounded-lg border bg-muted/20 p-4">
 				<h3 class="text-sm font-semibold tracking-tight">In the app today</h3>
 				<ul class="space-y-2 text-sm text-muted-foreground leading-relaxed">
-					<li>Local speech engines including whisper.cpp, Parakeet, and Moonshine.</li>
+					<li>Local speech engines including whisper.cpp and Parakeet.</li>
 					<li>Tauri, Svelte, Rust, CPAL, and Enigo for the Mac app and system integration.</li>
 					<li>Local model files and runtime configuration stored on this Mac.</li>
 				</ul>

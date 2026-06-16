@@ -59,7 +59,6 @@
 	 * @returns The full path where the model should be stored:
 	 * - For Whisper models: `{appDataDir}/models/whisper/{filename}` (a single file)
 	 * - For Parakeet models: `{appDataDir}/models/parakeet/{directoryName}/` (a directory containing multiple files)
-	 * - For Moonshine models: `{appDataDir}/models/moonshine/{directoryName}/` (a directory containing multiple files)
 	 */
 	async function ensureModelDestinationPath(): Promise<string> {
 		switch (model.engine) {

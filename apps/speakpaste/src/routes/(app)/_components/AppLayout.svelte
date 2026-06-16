@@ -273,7 +273,6 @@
 		deviceConfig.get('recording.cpal.outputFolder');
 		deviceConfig.get('transcription.whispercpp.modelPath');
 		deviceConfig.get('transcription.parakeet.modelPath');
-		deviceConfig.get('transcription.moonshine.modelPath');
 		deviceConfig.get('shortcuts.global.toggleManualRecording');
 		deviceConfig.get('shortcuts.global.startManualRecording');
 		deviceConfig.get('shortcuts.global.stopManualRecording');

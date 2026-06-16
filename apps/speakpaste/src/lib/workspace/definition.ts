@@ -262,7 +262,7 @@ const recording = {
 const transcription = {
 	'transcription.service': defineKv(
 		type.enumerated(...TRANSCRIPTION_SERVICE_IDS),
-		'whispercpp',
+		'parakeet',
 	),
 	'transcription.language': defineKv(type('string'), 'auto'),
 	'transcription.prompt': defineKv(type('string'), ''),
