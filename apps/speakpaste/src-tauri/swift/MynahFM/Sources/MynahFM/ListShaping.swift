@@ -3,13 +3,10 @@ import Darwin
 
 #if canImport(FoundationModels)
 import FoundationModels
+#endif
 
-@Generable
 public struct ListSpec: Codable {
-    @Guide(description: "The introduction stem or lead-in text of the list, e.g. 'grocery list:' or 'I need to do:'")
     public let introduction: String
-    
-    @Guide(description: "The individual bullet points or items of the list")
     public let items: [String]
     
     public init(introduction: String, items: [String]) {
@@ -17,12 +14,47 @@ public struct ListSpec: Codable {
         self.items = items
     }
 }
-#else
-public struct ListSpec: Codable {
-    public let introduction: String
-    public let items: [String]
+
+func parseListFallback(input: String, modelResponse: String) -> ListSpec {
+    let textToParse = modelResponse.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? input : modelResponse
+    let lines = textToParse.components(separatedBy: .newlines)
+        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        .filter { !$0.isEmpty }
+    
+    var intro = ""
+    var items: [String] = []
+    
+    for line in lines {
+        let isBullet = line.hasPrefix("-") || line.hasPrefix("*") || line.hasPrefix("•") || 
+                       (line.first?.isNumber == true && line.contains("."))
+        
+        if isBullet {
+            var cleanedItem = line
+            if line.hasPrefix("-") || line.hasPrefix("*") || line.hasPrefix("•") {
+                cleanedItem = String(line.dropFirst()).trimmingCharacters(in: .whitespacesAndNewlines)
+            } else {
+                if let dotIndex = line.firstIndex(of: ".") {
+                    let afterDot = line.suffix(from: line.index(after: dotIndex))
+                    cleanedItem = afterDot.trimmingCharacters(in: .whitespacesAndNewlines)
+                }
+            }
+            items.append(cleanedItem)
+        } else {
+            if intro.isEmpty {
+                intro = line
+            } else if items.isEmpty {
+                intro += " " + line
+            } else {
+                items.append(line)
+            }
+        }
+    }
+    
+    if intro.isEmpty {
+        intro = "List:"
+    }
+    return ListSpec(introduction: intro, items: items)
 }
-#endif
 
 @_cdecl("mynah_fm_list")
 public func mynah_fm_list(_ inputPtr: UnsafePointer<CChar>?) -> UnsafeMutablePointer<CChar>? {
@@ -40,14 +72,35 @@ public func mynah_fm_list(_ inputPtr: UnsafePointer<CChar>?) -> UnsafeMutablePoi
                 let session = try LanguageModelSession(
                     model: SystemLanguageModel.default,
                     instructions: {
-                        "You are a helpful assistant. Parse the input speech transcript and structure it into a list, identifying the introduction statement and the list items."
+                        """
+                        You are a helpful assistant. Parse the input speech transcript and structure it into a JSON object matching this schema:
+                        {
+                          "introduction": "The introduction stem or lead-in text of the list, e.g. 'grocery list:' or 'I need to do:'",
+                          "items": ["item 1", "item 2"]
+                        }
+                        Return ONLY the raw JSON object. Do not include any conversational text, explanations, or markdown formatting outside of the JSON.
+                        """
                     }
                 )
-                let response = try await session.respond(to: inputString, generating: ListSpec.self)
-                let encoder = JSONEncoder()
-                let data = try encoder.encode(response.content)
-                if let jsonStr = String(data: data, encoding: .utf8) {
-                    jsonResult = jsonStr
+                let response = try await session.respond(to: inputString)
+                let textResponse = response.content
+                
+                let cleanedJSON = extractJSONString(from: textResponse)
+                if let data = cleanedJSON.data(using: .utf8) {
+                    let decoder = JSONDecoder()
+                    if let parsed = try? decoder.decode(ListSpec.self, from: data) {
+                        let encoder = JSONEncoder()
+                        let encodedData = try encoder.encode(parsed)
+                        jsonResult = String(data: encodedData, encoding: .utf8)
+                    }
+                }
+                
+                if jsonResult == nil {
+                    let fallback = parseListFallback(input: inputString, modelResponse: textResponse)
+                    let encoder = JSONEncoder()
+                    if let encodedData = try? encoder.encode(fallback) {
+                        jsonResult = String(data: encodedData, encoding: .utf8)
+                    }
                 }
             } catch {
                 print("Error during list shaping: \(error)")
@@ -61,6 +114,15 @@ public func mynah_fm_list(_ inputPtr: UnsafePointer<CChar>?) -> UnsafeMutablePoi
         }
     }
     #endif
+    
+    if jsonResult == nil {
+        // Local fallback (no on-device model support)
+        let fallback = parseListFallback(input: inputString, modelResponse: "")
+        let encoder = JSONEncoder()
+        if let encodedData = try? encoder.encode(fallback) {
+            jsonResult = String(data: encodedData, encoding: .utf8)
+        }
+    }
     
     if let result = jsonResult {
         return result.withCString { strdup($0) }

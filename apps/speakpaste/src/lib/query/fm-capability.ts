@@ -13,6 +13,9 @@ export type FmCapabilityStatus =
  * Returns the capability status.
  */
 export async function getFmCapability(): Promise<FmCapabilityStatus> {
+	if (typeof window === 'undefined' || !(window as any).__TAURI_INTERNALS__) {
+		return 'unsupported';
+	}
 	return invoke<FmCapabilityStatus>('get_fm_capability').catch((error) => {
 		console.error('Failed to get FM capability:', error);
 		return 'unknown' as FmCapabilityStatus;

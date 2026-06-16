@@ -3,19 +3,12 @@ import Darwin
 
 #if canImport(FoundationModels)
 import FoundationModels
+#endif
 
-@Generable
 public struct PromptSpec: Codable {
-    @Guide(description: "The main task or instruction the prompt should execute")
     public let task: String
-    
-    @Guide(description: "The context or background information for the task")
     public let context: String
-    
-    @Guide(description: "Specific constraints or rules the output must follow")
     public let constraints: [String]
-    
-    @Guide(description: "The expected output format of the response")
     public let outputFormat: String
     
     public init(task: String, context: String, constraints: [String], outputFormat: String) {
@@ -25,14 +18,16 @@ public struct PromptSpec: Codable {
         self.outputFormat = outputFormat
     }
 }
-#else
-public struct PromptSpec: Codable {
-    public let task: String
-    public let context: String
-    public let constraints: [String]
-    public let outputFormat: String
+
+func parsePromptFallback(input: String, modelResponse: String) -> PromptSpec {
+    // If JSON parsing fails, we treat the entire input as the task, and others as empty.
+    return PromptSpec(
+        task: input,
+        context: "",
+        constraints: [],
+        outputFormat: ""
+    )
 }
-#endif
 
 @_cdecl("mynah_fm_prompt")
 public func mynah_fm_prompt(_ inputPtr: UnsafePointer<CChar>?) -> UnsafeMutablePointer<CChar>? {
@@ -50,14 +45,37 @@ public func mynah_fm_prompt(_ inputPtr: UnsafePointer<CChar>?) -> UnsafeMutableP
                 let session = try LanguageModelSession(
                     model: SystemLanguageModel.default,
                     instructions: {
-                        "You are a helpful assistant. Parse the input speech transcript and structure it into a prompt specification, identifying the task, context, constraints, and output format."
+                        """
+                        You are a helpful assistant. Parse the input speech transcript and structure it into a prompt specification JSON object matching this schema:
+                        {
+                          "task": "The main task or instruction the prompt should execute",
+                          "context": "The context or background information for the task",
+                          "constraints": ["Specific constraint 1", "Specific constraint 2"],
+                          "outputFormat": "The expected output format of the response"
+                        }
+                        Return ONLY the raw JSON object. Do not include any conversational text, explanations, or markdown formatting outside of the JSON.
+                        """
                     }
                 )
-                let response = try await session.respond(to: inputString, generating: PromptSpec.self)
-                let encoder = JSONEncoder()
-                let data = try encoder.encode(response.content)
-                if let jsonStr = String(data: data, encoding: .utf8) {
-                    jsonResult = jsonStr
+                let response = try await session.respond(to: inputString)
+                let textResponse = response.content
+                
+                let cleanedJSON = extractJSONString(from: textResponse)
+                if let data = cleanedJSON.data(using: .utf8) {
+                    let decoder = JSONDecoder()
+                    if let parsed = try? decoder.decode(PromptSpec.self, from: data) {
+                        let encoder = JSONEncoder()
+                        let encodedData = try encoder.encode(parsed)
+                        jsonResult = String(data: encodedData, encoding: .utf8)
+                    }
+                }
+                
+                if jsonResult == nil {
+                    let fallback = parsePromptFallback(input: inputString, modelResponse: textResponse)
+                    let encoder = JSONEncoder()
+                    if let encodedData = try? encoder.encode(fallback) {
+                        jsonResult = String(data: encodedData, encoding: .utf8)
+                    }
                 }
             } catch {
                 print("Error during prompt generation: \(error)")
@@ -71,6 +89,15 @@ public func mynah_fm_prompt(_ inputPtr: UnsafePointer<CChar>?) -> UnsafeMutableP
         }
     }
     #endif
+    
+    if jsonResult == nil {
+        // Local fallback (no on-device model support)
+        let fallback = parsePromptFallback(input: inputString, modelResponse: "")
+        let encoder = JSONEncoder()
+        if let encodedData = try? encoder.encode(fallback) {
+            jsonResult = String(data: encodedData, encoding: .utf8)
+        }
+    }
     
     if let result = jsonResult {
         return result.withCString { strdup($0) }

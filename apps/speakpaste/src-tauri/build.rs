@@ -160,6 +160,10 @@ fn main() {
         // Weak-link FoundationModels framework so the app doesn't crash on macOS < 26.0
         println!("cargo:rustc-link-arg=-weak_framework");
         println!("cargo:rustc-link-arg=FoundationModels");
+
+        // Add rpath for Swift runtime libraries to prevent dyld loading crashes
+        println!("cargo:rustc-link-arg=-Wl,-rpath,/usr/lib/swift");
+        println!("cargo:rustc-link-arg=-Wl,-rpath,/Library/Developer/CommandLineTools/usr/lib/swift/macosx");
     }
 
     tauri_build::build()
