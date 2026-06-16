@@ -215,7 +215,7 @@ describe('🎙️ Recording Pipeline End-to-End Persistence Split Test', () => {
 
 		// 3. Assertions
 		// Delivery got the clean, formatted residual:
-		expect(deliveredText).toBe('so i went to the store');
+		expect(deliveredText).toBe('So i went to the store');
 		
 		// The recording record in recordings got the verbatim raw transcript:
 		const savedRecording = mockRecordingsStore.get(recordingId);

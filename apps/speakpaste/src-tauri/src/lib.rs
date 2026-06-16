@@ -97,6 +97,9 @@ use native_shortcuts::{
     reload_native_global_shortcuts, unregister_native_global_shortcuts, NativeShortcutManager,
 };
 
+pub mod fm_bridge;
+use fm_bridge::get_fm_capability;
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 #[tokio::main]
 pub async fn run() {
@@ -334,6 +337,7 @@ pub async fn run() {
         reset_tcc_permissions,
         open_mac_privacy_pane,
         get_trial_status,
+        get_fm_capability,
     ]);
 
     let app = builder

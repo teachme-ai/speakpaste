@@ -12,19 +12,22 @@ import {
 
 const cleanRambleFixtures = [
 	// Standard stutter/filler removals
-	{ input: 'i went to the store um and bought some apples', expected: 'i went to the store and bought some apples' },
-	{ input: 'uh what was i saying err yes the report is done', expected: 'what was i saying yes the report is done' },
-	{ input: 'i went to the store the store and bought bought some apples', expected: 'i went to the store and bought some apples' },
+	{ input: 'i went to the store um and bought some apples', expected: 'I went to the store and bought some apples' },
+	{ input: 'uh what was i saying err yes the report is done', expected: 'What was i saying yes the report is done' },
+	{ input: 'i went to the store the store and bought bought some apples', expected: 'I went to the store and bought some apples' },
 	// Cross-punctuation duplicate test (must not collapse)
 	{ input: 'Yes. Yes. I will do it.', expected: 'Yes. Yes. I will do it.' },
 	{ input: 'No, no, no.', expected: 'No, no, no.' },
 	// Guarded filler deletion (like, actually)
 	{ input: 'I like pizza.', expected: 'I like pizza.' }, // mid-clause, must stay
-	{ input: 'Actually, he went to the office.', expected: 'he went to the office.' }, // clause-initial
+	{ input: 'Actually, he went to the office.', expected: 'He went to the office.' }, // clause-initial
 	{ input: 'He, like, decided to wait.', expected: 'He, like, decided to wait.' }, // mid-clause
 	{ input: 'It was, actually, a very nice day.', expected: 'It was, a very nice day.' }, // comma-sandwiched
 	{ input: 'She went to the park, actually.', expected: 'She went to the park.' }, // trailing clause boundary
-	{ input: 'Like, you know, it was fine.', expected: 'you know, it was fine.' }, // clause-initial
+	{ input: 'Like, you know, it was fine.', expected: 'You know, it was fine.' }, // clause-initial
+	// Spoken punctuation conversions
+	{ input: 'hello period this is a test comma and then some more', expected: 'Hello. This is a test, and then some more' },
+	{ input: 'this is a sentence period', expected: 'This is a sentence.' },
 ];
 
 const listFixtures = [
@@ -38,7 +41,7 @@ const listFixtures = [
 	{ input: 'grocery list: apples, bananas, and oranges', expected: 'grocery list:\n- Apples\n- Bananas\n- And oranges' },
 	{ input: 'I need to do: wash the car, buy groceries, pay the bills', expected: 'I need to do:\n- Wash the car\n- Buy groceries\n- Pay the bills' },
 	// Gated failure fallbacks (no intro stem or too long or too few items)
-	{ input: 'auth and retention and billing', expected: 'auth and retention and billing' }, // LS-06: no intro stem -> fallback
+	{ input: 'auth and retention and billing', expected: 'Auth and retention and billing' }, // LS-06: no intro stem -> fallback
 	{ input: 'Johnson and Johnson and Pfizer', expected: 'Johnson and Johnson and Pfizer' }, // LS-11: no intro stem -> fallback
 	{ input: 'I need to: this is a very long item that exceeds the maximum word count constraint because it goes on and on and on, second item, third item', expected: 'I need to: this is a very long item that exceeds the maximum word count constraint because it goes on and on and on, second item, third item' }, // item > 12 words -> fallback
 ];
@@ -59,6 +62,13 @@ const promptFixtures = [
 	{
 		input: 'task: implement sorting algorithm context: array of integers',
 		expected: '### Task\nimplement sorting algorithm\n\n### Context\narray of integers',
+	},
+	// Meta-framing stripping
+	{ input: 'write a prompt to explain transformers simply', expected: 'explain transformers simply' },
+	{ input: 'please create a prompt that explains quantum computing', expected: 'explains quantum computing' },
+	{
+		input: 'write a prompt: task: explain quantum physics context: for a 5 year old',
+		expected: '### Task\nexplain quantum physics\n\n### Context\nfor a 5 year old',
 	},
 ];
 
@@ -164,7 +174,7 @@ describe('🎙️ Intent Router Strategy & Formatters', () => {
 		test('Dictate Mode allows voice overrides when voiceOverrideEnabled is true', () => {
 			const rawText = 'please clean this up: so i went to the the store um';
 			const res = routeAndFormat(rawText, 'dictate', true);
-			expect(res.text).toBe('so i went to the store');
+			expect(res.text).toBe('So i went to the store');
 			expect(res.modeApplied).toBe('clean_ramble');
 			expect(res.passthrough).toBe(false);
 		});
@@ -180,7 +190,7 @@ describe('🎙️ Intent Router Strategy & Formatters', () => {
 			const rawText = 'list: apples, bananas, oranges';
 			const res = routeAndFormat(rawText, 'clean_ramble', false);
 			// Under clean_ramble, list: prefix matches cleanRamble but isn't stripped as a command
-			expect(res.text).toBe('list: apples, bananas, oranges');
+			expect(res.text).toBe('List: apples, bananas, oranges');
 			expect(res.modeApplied).toBe('clean_ramble');
 			expect(res.passthrough).toBe(false);
 		});
@@ -257,7 +267,7 @@ describe('🎙️ Intent Router Strategy & Formatters', () => {
 			const persistenceInput = rawText;
 
 			// Verify divergence
-			expect(deliveryInput).toBe('so i went to the store');
+			expect(deliveryInput).toBe('So i went to the store');
 			expect(persistenceInput).toBe('please clean this up: so i went to the the store um');
 			expect(deliveryInput).not.toBe(persistenceInput);
 		});

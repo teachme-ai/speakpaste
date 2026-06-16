@@ -93,6 +93,75 @@ fn main() {
         resolve_trial_hmac_key().as_str(),
     );
 
+    // Compile Swift package and link it on macOS
+    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
+    if target_os == "macos" {
+        println!("cargo:rerun-if-changed=swift/MynahFM/Sources/MynahFM/Availability.swift");
+        println!("cargo:rerun-if-changed=swift/MynahFM/Package.swift");
+
+        let swift_dir = manifest_dir.join("swift/MynahFM");
+        let target = env::var("TARGET").unwrap_or_default();
+        let profile = env::var("PROFILE").unwrap_or_default();
+        let configuration = if profile == "release" { "release" } else { "debug" };
+        let arch = if target.starts_with("aarch64") {
+            "arm64"
+        } else {
+            "x86_64"
+        };
+        let triple = format!("{}-apple-macosx", arch);
+
+        let status = std::process::Command::new("swift")
+            .args(&[
+                "build",
+                "-c",
+                configuration,
+                "--triple",
+                &triple,
+            ])
+            .current_dir(&swift_dir)
+            .status()
+            .expect("Failed to run swift build");
+
+        if !status.success() {
+            panic!("Swift build failed");
+        }
+
+        let build_dir = swift_dir
+            .join(".build")
+            .join(&triple)
+            .join(configuration);
+
+        println!("cargo:rustc-link-search=native={}", build_dir.display());
+        println!("cargo:rustc-link-lib=static=MynahFM");
+
+        // Link Swift runtime libraries dynamically
+        let mut runtime_linked = false;
+        if let Ok(output) = std::process::Command::new("swift")
+            .arg("-print-target-info")
+            .output()
+        {
+            if let Ok(info) = serde_json::from_slice::<serde_json::Value>(&output.stdout) {
+                if let Some(paths) = info["paths"]["runtimeLibraryPaths"].as_array() {
+                    for path in paths {
+                        if let Some(path_str) = path.as_str() {
+                            println!("cargo:rustc-link-search=native={}", path_str);
+                            runtime_linked = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        if !runtime_linked {
+            println!("cargo:rustc-link-search=native=/usr/lib/swift");
+            println!("cargo:rustc-link-search=native=/Library/Developer/CommandLineTools/usr/lib/swift/macosx");
+        }
+
+        // Weak-link FoundationModels framework so the app doesn't crash on macOS < 26.0
+        println!("cargo:rustc-link-arg=-weak_framework");
+        println!("cargo:rustc-link-arg=FoundationModels");
+    }
+
     tauri_build::build()
 }
 

@@ -123,13 +123,6 @@ function capitalize(s: string): string {
 	return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-const REPEATABLE_WORDS = new Set([
-	'the', 'a', 'an', 'to', 'in', 'on', 'at', 'it', 'that', 'this', 'there', 'here',
-	'i', 'you', 'he', 'she', 'we', 'they', 'go', 'went', 'want', 'think', 'know',
-	'say', 'store', 'house', 'car', 'do', 'have', 'get', 'make', 'would', 'will',
-	'can', 'clean', 'up', 'ramble', 'and', 'but', 'or', 'about'
-]);
-
 /**
  * Clean Ramble Mode: Cleans stutters, filler words, and consecutive duplicates.
  */
@@ -137,10 +130,14 @@ export function cleanRamble(text: string): string {
 	const trimmed = text.trim();
 	if (!trimmed) return '';
 
-	// 1. Remove stutters/fillers: uh, um, ah, err
-	let cleaned = trimmed.replace(/\b(uh|um|ah|err)\b,?\s*/gi, '');
+	// 1. Convert spoken punctuation (e.g. "period" to ".", "comma" to ",")
+	let cleaned = trimmed.replace(/\s*\bperiod\b(?:[.,!?]|\s)*/gi, '. ');
+	cleaned = cleaned.replace(/\s*\bcomma\b(?:[.,!?]|\s)*/gi, ', ');
 
-	// 2. Guarded fillers: like, actually
+	// 2. Remove stutters/fillers: uh, um, ah, err
+	cleaned = cleaned.replace(/\b(uh|um|ah|err)\b,?\s*/gi, '');
+
+	// 3. Guarded fillers: like, actually
 	// Clause-initial (start of string or after sentence punctuation)
 	cleaned = cleaned.replace(/(^|[\.\?!;:\-—]\s+)(like|actually)\b,?\s*/gi, '$1');
 	// Comma-sandwiched (e.g. ", actually,")
@@ -148,18 +145,15 @@ export function cleanRamble(text: string): string {
 	// Trailing clause boundary
 	cleaned = cleaned.replace(/,\s*actually\b/gi, '');
 
-	// 3. Collapse consecutive duplicate words/phrases (excluding across punctuation)
+	// 4. Collapse consecutive duplicate words/phrases (excluding across punctuation)
 	let prev;
 	do {
 		prev = cleaned;
 		// Collapse two-word phrase duplicates: "the store the store" -> "the store"
 		// Guard against A and A / A or A idioms (e.g. "on and on", "Johnson and Johnson")
 		cleaned = cleaned.replace(/\b([a-z]+)\s+([a-z]+)\s+\1\s+\2\b/gi, (match, w1, w2) => {
-			const lw1 = w1.toLowerCase();
 			const lw2 = w2.toLowerCase();
 			if (
-				REPEATABLE_WORDS.has(lw1) &&
-				REPEATABLE_WORDS.has(lw2) &&
 				lw2 !== 'and' &&
 				lw2 !== 'or' &&
 				lw2 !== 'by'
@@ -172,8 +166,16 @@ export function cleanRamble(text: string): string {
 		cleaned = cleaned.replace(/\b([a-z]+)\s+\1\b/gi, '$1');
 	} while (cleaned !== prev);
 
-	return cleaned.trim();
+	// 5. Capitalise sentence-initial Latin script
+	cleaned = cleaned.replace(/(^|[.!?]\s+)([^a-zA-Z]*)([a-z])/g, (match, prefix, nonLetters, char) => {
+		return prefix + nonLetters + char.toUpperCase();
+	});
+
+	// Remove space before punctuation and collapse multiple spaces (preserving newlines)
+	cleaned = cleaned.replace(/\s+([.,!?])/g, '$1');
+	return cleaned.replace(/[ \t]+/g, ' ').trim();
 }
+
 
 /**
  * List Mode: Formats items into bulleted lists using a three-tier rule.
@@ -247,7 +249,7 @@ export function formatList(text: string, forceList = false): string {
  * Prompt Mode: Wraps text into a developer prompt template.
  */
 export function formatPrompt(text: string): string {
-	const trimmed = text.trim();
+	let trimmed = text.trim();
 	if (!trimmed) return '';
 
 	// Idempotency check: if already formatted as a prompt, return verbatim
@@ -255,12 +257,22 @@ export function formatPrompt(text: string): string {
 		return trimmed;
 	}
 
-	const words = trimmed.split(/\s+/);
-	const hasCues = /task:|context:|constraint|format:/i.test(trimmed);
+	// Strip meta-framing prefix
+	const metaFraming = new RegExp(
+		`^${POLITE}(?:write|create|make|give\\s+me|just|set)?\\s*(?:a\\s+)?prompt\\s*(?:mode)?\\s*(?:to|that|for|about|:|is)?\\s*`,
+		'i',
+	);
+	let cleanedText = trimmed.replace(metaFraming, '').trim();
+	if (!cleanedText) {
+		cleanedText = trimmed;
+	}
+
+	const words = cleanedText.split(/\s+/);
+	const hasCues = /task:|context:|constraint|format:/i.test(cleanedText);
 
 	// Thin input rule: bypass template for short inputs with no cue phrases
 	if (words.length < 15 && !hasCues) {
-		return trimmed;
+		return cleanedText;
 	}
 
 	let task = '';
@@ -269,7 +281,7 @@ export function formatPrompt(text: string): string {
 	let format = '';
 
 	const sectionRegex = /(task:|context:|constraints:|format:)/i;
-	const parts = trimmed.split(sectionRegex);
+	const parts = cleanedText.split(sectionRegex);
 
 	if (parts.length > 1) {
 		const p0 = parts[0];
@@ -292,7 +304,7 @@ export function formatPrompt(text: string): string {
 			}
 		}
 	} else {
-		task = trimmed;
+		task = cleanedText;
 	}
 
 	let result = '';
@@ -374,7 +386,7 @@ export function routeAndFormat(
 			formatted = cleanRamble(trimmed);
 			break;
 		case 'list':
-			formatted = formatList(trimmed, true);
+			formatted = formatList(trimmed, false);
 			break;
 		case 'prompt':
 			formatted = formatPrompt(trimmed);

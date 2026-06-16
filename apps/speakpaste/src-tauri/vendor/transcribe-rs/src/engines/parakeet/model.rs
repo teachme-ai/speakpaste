@@ -1,6 +1,6 @@
 use ndarray::{Array, Array1, Array2, Array3, ArrayD, ArrayViewD, IxDyn};
 use once_cell::sync::Lazy;
-use ort::execution_providers::CPUExecutionProvider;
+use ort::execution_providers::{CoreMLExecutionProvider, CPUExecutionProvider};
 use ort::inputs;
 use ort::session::builder::GraphOptimizationLevel;
 use ort::session::Session;
@@ -91,7 +91,10 @@ impl ParakeetModel {
         intra_threads: Option<usize>,
         try_quantized: bool,
     ) -> Result<Session, ParakeetError> {
-        let providers = vec![CPUExecutionProvider::default().build()];
+        let providers = vec![
+            CoreMLExecutionProvider::default().build(),
+            CPUExecutionProvider::default().build(),
+        ];
 
         // Try quantized version first if requested, fallback to regular version
         let model_filename = if try_quantized {
