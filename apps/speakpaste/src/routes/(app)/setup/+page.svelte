@@ -518,6 +518,15 @@
 			activeModelName: activeModel?.name ?? null,
 		});
 	});
+
+	$effect(() => {
+		// Clear stale preflight error messages when model selection, path, or permission statuses change
+		accessibilityStatus;
+		microphoneStatus;
+		modelReady;
+		modelPath;
+		preflightMessage = '';
+	});
 </script>
 
 <svelte:head><title>Set Up</title></svelte:head>
