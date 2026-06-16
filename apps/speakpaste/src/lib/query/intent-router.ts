@@ -1,4 +1,6 @@
 import { invoke } from '@tauri-apps/api/core';
+import { getFmCapability } from './fm-capability';
+import { renderPrompt } from './prompt-renderer';
 
 export type WritingMode = 'dictate' | 'clean_ramble' | 'list' | 'prompt';
 
@@ -329,11 +331,11 @@ export function formatPrompt(text: string): string {
 /**
  * Formats a raw transcript based on the active mode and optional voice overrides.
  */
-export function routeAndFormat(
+export async function routeAndFormat(
 	rawText: string,
 	activeMode: WritingMode,
 	voiceOverrideEnabled: boolean,
-): RouteAndFormatResult {
+): Promise<RouteAndFormatResult> {
 	const trimmed = rawText.trim();
 	if (!trimmed) {
 		return { text: '', modeApplied: activeMode, passthrough: true };
@@ -351,18 +353,55 @@ export function routeAndFormat(
 				return { text: parsed.residual, modeApplied: 'dictate', passthrough: true };
 			}
 
-			// Apply requested formatting to residual (forcing List if explicit)
+			// Apply requested formatting to residual
 			let formattedResidual = '';
-			switch (parsed.mode) {
-				case 'clean_ramble':
-					formattedResidual = cleanRamble(parsed.residual);
-					break;
-				case 'list':
-					formattedResidual = formatList(parsed.residual, true);
-					break;
-				case 'prompt':
-					formattedResidual = formatPrompt(parsed.residual);
-					break;
+
+			// Idempotency check for prompt mode
+			if (parsed.mode === 'prompt' && (parsed.residual.startsWith('### Task') || parsed.residual.startsWith('### Context'))) {
+				formattedResidual = parsed.residual;
+			} else {
+				const status = await getFmCapability();
+				if (status === 'available') {
+					try {
+						switch (parsed.mode) {
+							case 'clean_ramble':
+								formattedResidual = await invoke<string>('fm_clean_ramble', { input: parsed.residual });
+								break;
+							case 'list':
+								const listJson = await invoke<string>('fm_list', { input: parsed.residual });
+								const parsedList = JSON.parse(listJson);
+								const intro = parsedList.introduction?.trim();
+								const items = parsedList.items || [];
+								if (items.length > 0) {
+									const listItems = items.map((item: string) => `- ${capitalize(item.trim())}`).join('\n');
+									formattedResidual = intro ? `${intro}\n${listItems}` : listItems;
+								}
+								break;
+							case 'prompt':
+								const promptJson = await invoke<string>('fm_prompt', { input: parsed.residual });
+								const parsedPrompt = JSON.parse(promptJson);
+								formattedResidual = renderPrompt(parsedPrompt);
+								break;
+						}
+					} catch (error) {
+						console.error('Apple Intelligence formatting failed for voice override, falling back:', error);
+					}
+				}
+			}
+
+			// Deterministic fallback if FM failed, timed out, or capability is unsupported
+			if (!formattedResidual || !formattedResidual.trim()) {
+				switch (parsed.mode) {
+					case 'clean_ramble':
+						formattedResidual = cleanRamble(parsed.residual);
+						break;
+					case 'list':
+						formattedResidual = formatList(parsed.residual, true);
+						break;
+					case 'prompt':
+						formattedResidual = formatPrompt(parsed.residual);
+						break;
+				}
 			}
 
 			// Fail-open guard: if formatting residual yields empty output, deliver original rawText
@@ -381,16 +420,53 @@ export function routeAndFormat(
 
 	// 3. Apply active mode formatting to the full text
 	let formatted = '';
-	switch (activeMode) {
-		case 'clean_ramble':
-			formatted = cleanRamble(trimmed);
-			break;
-		case 'list':
-			formatted = formatList(trimmed, false);
-			break;
-		case 'prompt':
-			formatted = formatPrompt(trimmed);
-			break;
+
+	// Idempotency check for prompt mode
+	if (activeMode === 'prompt' && (trimmed.startsWith('### Task') || trimmed.startsWith('### Context'))) {
+		formatted = trimmed;
+	} else {
+		const status = await getFmCapability();
+		if (status === 'available') {
+			try {
+				switch (activeMode) {
+					case 'clean_ramble':
+						formatted = await invoke<string>('fm_clean_ramble', { input: trimmed });
+						break;
+					case 'list':
+						const listJson = await invoke<string>('fm_list', { input: trimmed });
+						const parsedList = JSON.parse(listJson);
+						const intro = parsedList.introduction?.trim();
+						const items = parsedList.items || [];
+						if (items.length > 0) {
+							const listItems = items.map((item: string) => `- ${capitalize(item.trim())}`).join('\n');
+							formatted = intro ? `${intro}\n${listItems}` : listItems;
+						}
+						break;
+					case 'prompt':
+						const promptJson = await invoke<string>('fm_prompt', { input: trimmed });
+						const parsedPrompt = JSON.parse(promptJson);
+						formatted = renderPrompt(parsedPrompt);
+						break;
+				}
+			} catch (error) {
+				console.error('Apple Intelligence formatting failed, falling back:', error);
+			}
+		}
+	}
+
+	// Deterministic fallback if FM failed, timed out, or capability is unsupported
+	if (!formatted || !formatted.trim()) {
+		switch (activeMode) {
+			case 'clean_ramble':
+				formatted = cleanRamble(trimmed);
+				break;
+			case 'list':
+				formatted = formatList(trimmed, false);
+				break;
+			case 'prompt':
+				formatted = formatPrompt(trimmed);
+				break;
+		}
 	}
 
 	return { text: formatted, modeApplied: activeMode, passthrough: false };

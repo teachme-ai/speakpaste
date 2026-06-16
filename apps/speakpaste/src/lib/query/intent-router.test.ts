@@ -7,6 +7,7 @@ import {
 	formatPrompt,
 	type WritingMode,
 } from './intent-router';
+import { renderPrompt } from './prompt-renderer';
 
 // ── 50-Fixture Strategy Test Suite ───────────────────────────────────────────
 
@@ -163,48 +164,48 @@ describe('🎙️ Intent Router Strategy & Formatters', () => {
 
 	// ── Main routing and format logic tests ──
 	describe('routeAndFormat', () => {
-		test('Dictate Mode verbatim bypass when voiceOverrideEnabled is false', () => {
+		test('Dictate Mode verbatim bypass when voiceOverrideEnabled is false', async () => {
 			const rawText = 'please clean this up: apples, oranges as a list';
-			const res = routeAndFormat(rawText, 'dictate', false);
+			const res = await routeAndFormat(rawText, 'dictate', false);
 			expect(res.text).toBe(rawText);
 			expect(res.modeApplied).toBe('dictate');
 			expect(res.passthrough).toBe(true);
 		});
 
-		test('Dictate Mode allows voice overrides when voiceOverrideEnabled is true', () => {
+		test('Dictate Mode allows voice overrides when voiceOverrideEnabled is true', async () => {
 			const rawText = 'please clean this up: so i went to the the store um';
-			const res = routeAndFormat(rawText, 'dictate', true);
+			const res = await routeAndFormat(rawText, 'dictate', true);
 			expect(res.text).toBe('So i went to the store');
 			expect(res.modeApplied).toBe('clean_ramble');
 			expect(res.passthrough).toBe(false);
 		});
 
-		test('Voice overrides are parsed under non-dictate modes', () => {
-			const res = routeAndFormat('list: apples, bananas, oranges', 'clean_ramble', true);
+		test('Voice overrides are parsed under non-dictate modes', async () => {
+			const res = await routeAndFormat('list: apples, bananas, oranges', 'clean_ramble', true);
 			expect(res.text).toBe('- Apples\n- Bananas\n- Oranges');
 			expect(res.modeApplied).toBe('list');
 			expect(res.passthrough).toBe(false);
 		});
 
-		test('Bypasses voice override if voiceOverrideEnabled is false', () => {
+		test('Bypasses voice override if voiceOverrideEnabled is false', async () => {
 			const rawText = 'list: apples, bananas, oranges';
-			const res = routeAndFormat(rawText, 'clean_ramble', false);
+			const res = await routeAndFormat(rawText, 'clean_ramble', false);
 			// Under clean_ramble, list: prefix matches cleanRamble but isn't stripped as a command
 			expect(res.text).toBe('List: apples, bananas, oranges');
 			expect(res.modeApplied).toBe('clean_ramble');
 			expect(res.passthrough).toBe(false);
 		});
 
-		test('Empty-residual fallback fail-open to rawText', () => {
+		test('Empty-residual fallback fail-open to rawText', async () => {
 			// Case A: Formatted override residual yields empty output
 			const rawText1 = 'please clean this up um uh';
-			const res1 = routeAndFormat(rawText1, 'clean_ramble', true);
+			const res1 = await routeAndFormat(rawText1, 'clean_ramble', true);
 			expect(res1.text).toBe(rawText1);
 			expect(res1.passthrough).toBe(false);
 
 			// Case B: Dictate override residual is empty (bare command)
 			const rawText2 = 'just dictate mode:';
-			const res2 = routeAndFormat(rawText2, 'clean_ramble', true);
+			const res2 = await routeAndFormat(rawText2, 'clean_ramble', true);
 			expect(res2.text).toBe(rawText2);
 			expect(res2.modeApplied).toBe('dictate');
 			expect(res2.passthrough).toBe(true);
@@ -251,7 +252,7 @@ describe('🎙️ Intent Router Strategy & Formatters', () => {
 
 	// ── Persistence split assertion test ──
 	describe('Persistence Guard Split Wiring Contract', () => {
-		test('wiring contract: rawText vs shapedText divergence', () => {
+		test('wiring contract: rawText vs shapedText divergence', async () => {
 			const rawText = 'please clean this up: so i went to the the store um';
 			
 			// Mock settings values
@@ -259,7 +260,7 @@ describe('🎙️ Intent Router Strategy & Formatters', () => {
 			const voiceOverrideEnabled = true;
 
 			// Run routeAndFormat (pipeline's router stage)
-			const shapedResult = routeAndFormat(rawText, activeMode, voiceOverrideEnabled);
+			const shapedResult = await routeAndFormat(rawText, activeMode, voiceOverrideEnabled);
 
 			// Delivery gets shaped text:
 			const deliveryInput = shapedResult.text;
@@ -270,6 +271,29 @@ describe('🎙️ Intent Router Strategy & Formatters', () => {
 			expect(deliveryInput).toBe('So i went to the store');
 			expect(persistenceInput).toBe('please clean this up: so i went to the the store um');
 			expect(deliveryInput).not.toBe(persistenceInput);
+		});
+	});
+
+	// ── Prompt Renderer tests ──
+	describe('renderPrompt', () => {
+		test('formats complete prompt spec', () => {
+			const spec = {
+				task: 'write a function',
+				context: 'in Python',
+				constraints: ['use type hints', 'no external deps'],
+				outputFormat: 'markdown code block',
+			};
+			const expected = '### Task\nwrite a function\n\n### Context\nin Python\n\n### Constraints\n- use type hints\n- no external deps\n\n### Format\nmarkdown code block';
+			expect(renderPrompt(spec)).toBe(expected);
+		});
+
+		test('ignores empty or missing fields', () => {
+			const spec = {
+				task: 'clean the data',
+				constraints: [],
+			};
+			const expected = '### Task\nclean the data';
+			expect(renderPrompt(spec)).toBe(expected);
 		});
 	});
 });
