@@ -98,7 +98,7 @@ use native_shortcuts::{
 };
 
 pub mod fm_bridge;
-use fm_bridge::get_fm_capability;
+use fm_bridge::{get_fm_capability, fm_clean_ramble, fm_list, fm_prompt};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 #[tokio::main]
@@ -338,6 +338,9 @@ pub async fn run() {
         open_mac_privacy_pane,
         get_trial_status,
         get_fm_capability,
+        fm_clean_ramble,
+        fm_list,
+        fm_prompt,
     ]);
 
     let app = builder
