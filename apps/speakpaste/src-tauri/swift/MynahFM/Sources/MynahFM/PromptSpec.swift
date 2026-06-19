@@ -1,9 +1,12 @@
 import Foundation
 import Darwin
+import os
 
 #if canImport(FoundationModels)
 import FoundationModels
 #endif
+
+private let mynahLogger = Logger(subsystem: "com.mynah.app", category: "AppleFM")
 
 public struct PromptSpec: Codable {
     public let task: String
@@ -33,6 +36,8 @@ func parsePromptFallback(input: String, modelResponse: String) -> PromptSpec {
 public func mynah_fm_prompt(_ inputPtr: UnsafePointer<CChar>?) -> UnsafeMutablePointer<CChar>? {
     guard let inputPtr = inputPtr else { return nil }
     let inputString = String(cString: inputPtr)
+    let startTime = Date()
+    mynahLogger.info("[FM] prompt_generation started input_chars=\(inputString.count)")
     
     var jsonResult: String? = nil
     
@@ -78,6 +83,7 @@ public func mynah_fm_prompt(_ inputPtr: UnsafePointer<CChar>?) -> UnsafeMutableP
                     }
                 }
             } catch {
+                mynahLogger.error("[FM] prompt_generation failed error=\(error.localizedDescription)")
                 print("Error during prompt generation: \(error)")
             }
             semaphore.signal()
@@ -85,6 +91,7 @@ public func mynah_fm_prompt(_ inputPtr: UnsafePointer<CChar>?) -> UnsafeMutableP
         
         let timeout = DispatchTime.now() + 4.0
         if semaphore.wait(timeout: timeout) == .timedOut {
+            mynahLogger.error("[FM] prompt_generation timed_out after 4000ms")
             print("Prompt generation timed out after 4.0 seconds")
         }
     }
@@ -99,9 +106,12 @@ public func mynah_fm_prompt(_ inputPtr: UnsafePointer<CChar>?) -> UnsafeMutableP
         }
     }
     
+    let elapsedMs = Int(Date().timeIntervalSince(startTime) * 1000)
     if let result = jsonResult {
+        mynahLogger.info("[FM] prompt_generation completed input_chars=\(inputString.count) json_chars=\(result.count) elapsed_ms=\(elapsedMs)")
         return result.withCString { strdup($0) }
     } else {
+        mynahLogger.warning("[FM] prompt_generation produced no result elapsed_ms=\(elapsedMs)")
         return nil
     }
 }

@@ -7,6 +7,22 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const appRoot = path.resolve(__dirname, '..');
 
+// ── Instance isolation ─────────────────────────────────────────────────────
+// Both the production app and the dev build register a macOS CGEventTap for
+// the Fn key. Running them concurrently causes every dictation result to be
+// pasted twice (once per process). Kill any existing Mynah instances before
+// the dev server starts.
+if (process.platform === 'darwin') {
+	const kill = spawnSync('pkill', ['-x', 'mynah'], { stdio: 'inherit' });
+	// pkill exits 1 if no process matched — that is fine.
+	if (kill.status !== null && kill.status > 1) {
+		console.warn('[dev] pkill returned unexpected status', kill.status);
+	} else if (kill.status === 0) {
+		console.log('[dev] Terminated existing Mynah instance(s) to avoid double-paste conflicts.');
+	}
+}
+// ──────────────────────────────────────────────────────────────────────────
+
 const prepare = spawnSync('bun', ['./scripts/prepare-build-meta.mjs'], {
 	cwd: appRoot,
 	stdio: 'inherit',

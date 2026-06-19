@@ -1,7 +1,8 @@
 <script lang="ts">
 	import ShieldCheckIcon from '@lucide/svelte/icons/shield-check';
 
-	let { modelLabel, profileLabel } = $props<{
+	let { engineLabel, modelLabel, profileLabel } = $props<{
+		engineLabel: string;
 		modelLabel: string;
 		profileLabel: string;
 	}>();
@@ -12,7 +13,7 @@
 	<div class="flex flex-col leading-tight">
 		<span class="font-semibold">On-device signal</span>
 		<span class="text-xs text-muted-foreground">
-			whisper.cpp · {modelLabel} · {profileLabel}
+			{engineLabel} · {modelLabel} · {profileLabel}
 		</span>
 	</div>
 	<div class="inline-flex h-9 w-px bg-border" aria-hidden="true"></div>

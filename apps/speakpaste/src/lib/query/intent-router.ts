@@ -337,6 +337,7 @@ export async function routeAndFormat(
 	voiceOverrideEnabled: boolean,
 ): Promise<RouteAndFormatResult> {
 	const trimmed = rawText.trim();
+	console.info(`[Router] route_start mode=${activeMode} voiceOverride=${voiceOverrideEnabled} input_chars=${trimmed.length}`);
 	if (!trimmed) {
 		return { text: '', modeApplied: activeMode, passthrough: true };
 	}
@@ -361,30 +362,36 @@ export async function routeAndFormat(
 				formattedResidual = parsed.residual;
 			} else {
 				const status = await getFmCapability();
+				console.info(`[Router] fm_capability status=${status} mode=${activeMode}`);
 				if (status === 'available') {
 					try {
 						switch (parsed.mode) {
 							case 'clean_ramble':
 								formattedResidual = await invoke<string>('fm_clean_ramble', { input: parsed.residual });
+								console.info('[Router] fm_clean_ramble_success output_chars=' + formattedResidual.length);
 								break;
-							case 'list':
+							case 'list': {
 								const listJson = await invoke<string>('fm_list', { input: parsed.residual });
 								const parsedList = JSON.parse(listJson);
 								const intro = parsedList.introduction?.trim();
 								const items = parsedList.items || [];
+								console.info('[Router] fm_list_success items=' + items.length);
 								if (items.length > 0) {
 									const listItems = items.map((item: string) => `- ${capitalize(item.trim())}`).join('\n');
 									formattedResidual = intro ? `${intro}\n${listItems}` : listItems;
 								}
 								break;
-							case 'prompt':
+							}
+							case 'prompt': {
 								const promptJson = await invoke<string>('fm_prompt', { input: parsed.residual });
 								const parsedPrompt = JSON.parse(promptJson);
 								formattedResidual = renderPrompt(parsedPrompt);
+								console.info('[Router] fm_prompt_success output_chars=' + formattedResidual.length);
 								break;
+							}
 						}
 					} catch (error) {
-						console.error('Apple Intelligence formatting failed for voice override, falling back:', error);
+						console.error('[Router] fm_failed_fallback_to_deterministic mode=' + activeMode, error);
 					}
 				}
 			}
@@ -402,19 +409,24 @@ export async function routeAndFormat(
 						formattedResidual = formatPrompt(parsed.residual);
 						break;
 				}
+				console.info(`[Router] deterministic_fallback mode=${activeMode} output_chars=${formattedResidual.length}`);
 			}
 
 			// Fail-open guard: if formatting residual yields empty output, deliver original rawText
 			if (!formattedResidual.trim()) {
+				console.info(`[Router] route_complete mode_applied=${parsed.mode} passthrough=${false} output_chars=${rawText.length}`);
 				return { text: rawText, modeApplied: parsed.mode, passthrough: false };
 			}
 
+			console.info(`[Router] route_complete mode_applied=${parsed.mode} passthrough=${false} output_chars=${formattedResidual.length}`);
 			return { text: formattedResidual, modeApplied: parsed.mode, passthrough: false };
 		}
 	}
 
 	// 2. Dictate Mode: byte-identical passthrough, no voice override matched/processed
 	if (activeMode === 'dictate') {
+		console.info('[Router] dictate_passthrough — no formatting applied');
+		console.info(`[Router] route_complete mode_applied=${'dictate'} passthrough=${true} output_chars=${rawText.length}`);
 		return { text: rawText, modeApplied: 'dictate', passthrough: true };
 	}
 
@@ -426,30 +438,36 @@ export async function routeAndFormat(
 		formatted = trimmed;
 	} else {
 		const status = await getFmCapability();
+		console.info(`[Router] fm_capability status=${status} mode=${activeMode}`);
 		if (status === 'available') {
 			try {
 				switch (activeMode) {
 					case 'clean_ramble':
 						formatted = await invoke<string>('fm_clean_ramble', { input: trimmed });
+						console.info('[Router] fm_clean_ramble_success output_chars=' + formatted.length);
 						break;
-					case 'list':
+					case 'list': {
 						const listJson = await invoke<string>('fm_list', { input: trimmed });
 						const parsedList = JSON.parse(listJson);
 						const intro = parsedList.introduction?.trim();
 						const items = parsedList.items || [];
+						console.info('[Router] fm_list_success items=' + items.length);
 						if (items.length > 0) {
 							const listItems = items.map((item: string) => `- ${capitalize(item.trim())}`).join('\n');
 							formatted = intro ? `${intro}\n${listItems}` : listItems;
 						}
 						break;
-					case 'prompt':
+					}
+					case 'prompt': {
 						const promptJson = await invoke<string>('fm_prompt', { input: trimmed });
 						const parsedPrompt = JSON.parse(promptJson);
 						formatted = renderPrompt(parsedPrompt);
+						console.info('[Router] fm_prompt_success output_chars=' + formatted.length);
 						break;
+					}
 				}
 			} catch (error) {
-				console.error('Apple Intelligence formatting failed, falling back:', error);
+				console.error('[Router] fm_failed_fallback_to_deterministic mode=' + activeMode, error);
 			}
 		}
 	}
@@ -467,7 +485,9 @@ export async function routeAndFormat(
 				formatted = formatPrompt(trimmed);
 				break;
 		}
+		console.info(`[Router] deterministic_fallback mode=${activeMode} output_chars=${formatted.length}`);
 	}
 
+	console.info(`[Router] route_complete mode_applied=${activeMode} passthrough=${false} output_chars=${formatted.length}`);
 	return { text: formatted, modeApplied: activeMode, passthrough: false };
 }

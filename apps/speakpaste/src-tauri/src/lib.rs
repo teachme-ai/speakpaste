@@ -115,6 +115,45 @@ pub async fn run() {
     );
     let _ = *accessibility_repair::PROCESS_STARTED_AT_MS;
 
+    // ── Multi-instance guard (macOS only) ──────────────────────────────────
+    // Both the production app and a dev build register a CGEventTap for the
+    // Fn key.  Running them simultaneously causes dictation output to be pasted
+    // twice (once per process).  The dev runner script (`run-tauri-with-build-meta.mjs`)
+    // already kills stray processes via `pkill -x mynah` before every launch,
+    // but this runtime check acts as a belt-and-suspenders warning for edge
+    // cases (e.g. the production app was opened after the dev build started).
+    #[cfg(target_os = "macos")]
+    {
+        use std::process::Command;
+        match Command::new("pgrep").args(["-x", "mynah"]).output() {
+            Ok(output) => {
+                let matches: Vec<&str> = std::str::from_utf8(&output.stdout)
+                    .unwrap_or("")
+                    .lines()
+                    .collect();
+                // pgrep always includes the current process, so >1 match means
+                // a sibling is running.
+                if matches.len() > 1 {
+                    warn!(
+                        "[Instance] ⚠️  {} other Mynah process(es) detected (PIDs: {}).  \
+                         Double-paste is likely.  Quit all other Mynah instances.",
+                        matches.len() - 1,
+                        matches
+                            .iter()
+                            .filter(|&&pid| pid.trim() != std::process::id().to_string())
+                            .cloned()
+                            .collect::<Vec<_>>()
+                            .join(", ")
+                    );
+                }
+            }
+            Err(e) => {
+                warn!("[Instance] Could not run pgrep: {}", e);
+            }
+        }
+    }
+    // ──────────────────────────────────────────────────────────────────────
+
     // Set up panic hook to capture crash information before the app exits.
     // The previous hook is preserved so default panic reporting still occurs.
     let previous_hook = std::panic::take_hook();

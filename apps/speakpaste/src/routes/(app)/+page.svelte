@@ -25,6 +25,7 @@
 	import { dictationRuntime } from '$lib/state/dictation-runtime.svelte';
 	import { formatDistanceToNow } from 'date-fns';
 	import { WHISPER_MODELS } from '$lib/services/transcription/local/whispercpp';
+	import { PARAKEET_MODELS } from '$lib/services/transcription/local/parakeet';
 	import { toast } from '@epicenter/ui/sonner';
 	import { transformations } from '$lib/state/transformations.svelte';
 
@@ -252,10 +253,27 @@
 		};
 	});
 
-	const modelPath = $derived(deviceConfig.get('transcription.whispercpp.modelPath'));
-	const modelLabel = $derived(
-		WHISPER_MODELS.find((m) => modelPath.endsWith(m.file.filename))?.id ?? 'tiny.en'
+	const activeService = $derived(settings.get('transcription.service'));
+
+	// Whisper C++ derives label from the model filename
+	const whisperModelPath = $derived(deviceConfig.get('transcription.whispercpp.modelPath'));
+	// Parakeet derives label from the model directory name
+	const parakeetModelPath = $derived(deviceConfig.get('transcription.parakeet.modelPath'));
+
+	const engineLabel = $derived(
+		activeService === 'parakeet' ? 'Parakeet' : 'whisper.cpp'
 	);
+
+	const modelLabel = $derived(
+		activeService === 'parakeet'
+			? (PARAKEET_MODELS.find((m) =>
+					parakeetModelPath.endsWith(m.directoryName)
+			  )?.name ?? 'Parakeet TDT 0.6B v3 (INT8)')
+			: (WHISPER_MODELS.find((m) =>
+					whisperModelPath.endsWith(m.file.filename)
+			  )?.id ?? 'tiny.en')
+	);
+
 	const profileLabel = $derived(
 		LOCAL_PERFORMANCE_PROFILE_OPTIONS.find(
 			(profile) => profile.value === deviceConfig.get('local.performanceProfile'),
@@ -304,7 +322,7 @@
 						{currentStatus}
 					</p>
 				{/if}
-				<EngineBadge {modelLabel} {profileLabel} />
+				<EngineBadge {engineLabel} {modelLabel} {profileLabel} />
 			</div>
 			<PipelineControlDeck />
 		</div>

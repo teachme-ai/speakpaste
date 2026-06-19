@@ -473,6 +473,9 @@ export async function processRecordingPipeline({
 		`[Diagnostics] Pipeline settings check: intent.mode=${activeMode} intent.voiceOverrideEnabled=${voiceOverrideEnabled} rawText="${transcribedText}"`,
 	);
 	const shapedResult = await routeAndFormat(transcribedText, activeMode, voiceOverrideEnabled);
+	console.info(
+		`[Pipeline] route_complete mode_applied=${shapedResult.modeApplied} passthrough=${shapedResult.passthrough} raw_chars=${transcribedText.length} shaped_chars=${shapedResult.text.length}`
+	);
 
 	await deliverTranscriptStage({
 		recordingId: recording.id,

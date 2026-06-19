@@ -108,7 +108,9 @@ fn main() {
         } else {
             "x86_64"
         };
-        let triple = format!("{}-apple-macosx", arch);
+        let triple = format!("{}-apple-macosx26.0", arch);
+        // Swift's .build output directory uses the unversioned triple
+        let output_triple = format!("{}-apple-macosx", arch);
 
         let status = std::process::Command::new("swift")
             .args(&[
@@ -128,7 +130,7 @@ fn main() {
 
         let build_dir = swift_dir
             .join(".build")
-            .join(&triple)
+            .join(&output_triple)
             .join(configuration);
 
         println!("cargo:rustc-link-search=native={}", build_dir.display());

@@ -1,9 +1,12 @@
 import Foundation
 import Darwin
+import os
 
 #if canImport(FoundationModels)
 import FoundationModels
 #endif
+
+private let mynahLogger = Logger(subsystem: "com.mynah.app", category: "AppleFM")
 
 public struct ListSpec: Codable {
     public let introduction: String
@@ -60,6 +63,8 @@ func parseListFallback(input: String, modelResponse: String) -> ListSpec {
 public func mynah_fm_list(_ inputPtr: UnsafePointer<CChar>?) -> UnsafeMutablePointer<CChar>? {
     guard let inputPtr = inputPtr else { return nil }
     let inputString = String(cString: inputPtr)
+    let startTime = Date()
+    mynahLogger.info("[FM] list_shaping started input_chars=\(inputString.count)")
     
     var jsonResult: String? = nil
     
@@ -103,6 +108,7 @@ public func mynah_fm_list(_ inputPtr: UnsafePointer<CChar>?) -> UnsafeMutablePoi
                     }
                 }
             } catch {
+                mynahLogger.error("[FM] list_shaping failed error=\(error.localizedDescription)")
                 print("Error during list shaping: \(error)")
             }
             semaphore.signal()
@@ -110,6 +116,7 @@ public func mynah_fm_list(_ inputPtr: UnsafePointer<CChar>?) -> UnsafeMutablePoi
         
         let timeout = DispatchTime.now() + 4.0
         if semaphore.wait(timeout: timeout) == .timedOut {
+            mynahLogger.error("[FM] list_shaping timed_out after 4000ms")
             print("List shaping timed out after 4.0 seconds")
         }
     }
@@ -124,9 +131,12 @@ public func mynah_fm_list(_ inputPtr: UnsafePointer<CChar>?) -> UnsafeMutablePoi
         }
     }
     
+    let elapsedMs = Int(Date().timeIntervalSince(startTime) * 1000)
     if let result = jsonResult {
+        mynahLogger.info("[FM] list_shaping completed input_chars=\(inputString.count) json_chars=\(result.count) elapsed_ms=\(elapsedMs)")
         return result.withCString { strdup($0) }
     } else {
+        mynahLogger.warning("[FM] list_shaping produced no result elapsed_ms=\(elapsedMs)")
         return nil
     }
 }

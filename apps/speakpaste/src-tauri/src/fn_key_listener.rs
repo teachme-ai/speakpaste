@@ -1,9 +1,12 @@
 use log::{error, info, warn};
 use serde::Serialize;
+use std::fs::OpenOptions;
 use std::os::raw::c_void;
+use std::os::unix::io::AsRawFd;
 use std::ptr;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::mpsc;
+use std::sync::OnceLock;
 use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
@@ -224,6 +227,44 @@ type CGEventTapCallBack = unsafe extern "C" fn(
 // ==========================================
 static LISTENER_RUNNING: AtomicBool = AtomicBool::new(false);
 static LISTENER_INITIALIZING: AtomicBool = AtomicBool::new(false);
+static EVENT_TAP_LOCK_FILE: OnceLock<std::fs::File> = OnceLock::new();
+
+// Advisory flock constants (POSIX / macOS)
+const LOCK_EX: i32 = 2; // Exclusive lock
+const LOCK_NB: i32 = 4; // Non-blocking (EWOULDBLOCK if held)
+
+#[link(name = "c")]
+extern "C" {
+    fn flock(fd: i32, operation: i32) -> i32;
+}
+
+/// Returns Some(true) if this process acquired the advisory lock (primary instance),
+/// Some(false) if another process holds it (secondary instance), or
+/// None if the lock file could not be opened (fail-open as primary).
+fn try_acquire_event_tap_primary_lock() -> Option<bool> {
+    let lock_path = std::env::temp_dir().join("mynah-event-tap.lock");
+    match OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .open(&lock_path)
+    {
+        Ok(file) => {
+            let fd = file.as_raw_fd();
+            let result = unsafe { flock(fd, LOCK_EX | LOCK_NB) };
+            if result == 0 {
+                let _ = EVENT_TAP_LOCK_FILE.set(file);
+                Some(true)
+            } else {
+                Some(false)
+            }
+        }
+        Err(e) => {
+            warn!("[FnKeyListener] could not open event-tap lock file: {} — assuming primary instance", e);
+            None
+        }
+    }
+}
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -260,6 +301,38 @@ pub fn start_fn_key_listener(app_handle: AppHandle) -> Result<(), String> {
         LISTENER_INITIALIZING.store(false, Ordering::SeqCst);
         return Err("Missing Accessibility permissions".to_string());
     }
+
+    // ── Event-tap primary-instance lock ────────────────────────────────────
+    // Only one Mynah process at a time should register a CGEventTap.
+    // Both dev and prod builds use different bundle IDs so single-instance
+    // plugins don't help. A flock advisory lock guarantees the secondary
+    // instance yields gracefully instead of registering a competing tap
+    // that would cause double-paste on every dictation.
+    match try_acquire_event_tap_primary_lock() {
+        Some(false) => {
+            warn!(
+                "[FnKeyListener] secondary_instance pid={} — event-tap lock held by another \
+                 Mynah process. Skipping CGEventTap registration to prevent double-paste.",
+                std::process::id()
+            );
+            LISTENER_INITIALIZING.store(false, Ordering::SeqCst);
+            return Ok(());
+        }
+        Some(true) => {
+            info!(
+                "[FnKeyListener] primary_instance pid={} acquired event-tap lock — \
+                 CGEventTap will be registered.",
+                std::process::id()
+            );
+        }
+        None => {
+            info!(
+                "[FnKeyListener] event-tap lock file unavailable — assuming primary instance pid={}",
+                std::process::id()
+            );
+        }
+    }
+    // ──────────────────────────────────────────────────────────────────────
 
     let (init_sender, init_receiver) = mpsc::channel::<Result<(), String>>();
 
