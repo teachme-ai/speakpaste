@@ -86,6 +86,23 @@ fn serialize_trial_anchor(anchor: &TrialAnchor) -> String {
     )
 }
 
+fn compute_legacy_hmac(input: &[u8]) -> String {
+    const LEGACY_HMAC_KEY: &[u8] = b"mynah-app-trial-key-2026-06-10-secret";
+    let mut mac = HmacSha256::new_from_slice(LEGACY_HMAC_KEY).expect("HMAC key should be valid");
+    mac.update(input);
+    let result = mac.finalize();
+    let bytes = result.into_bytes();
+    bytes.iter().map(|b| format!("{:02x}", b)).collect()
+}
+
+fn compute_legacy_v1_hmac(timestamp: u64) -> String {
+    compute_legacy_hmac(&timestamp.to_be_bytes())
+}
+
+fn compute_legacy_v2_hmac(anchor: &TrialAnchor) -> String {
+    compute_legacy_hmac(v2_hmac_input(anchor).as_bytes())
+}
+
 fn parse_trial_anchor(payload: &str) -> Result<TrialAnchorRead, String> {
     let parts: Vec<&str> = payload.split(':').collect();
 
@@ -103,12 +120,18 @@ fn parse_trial_anchor(payload: &str) -> Result<TrialAnchorRead, String> {
                 .map_err(|error| format!("Failed to parse last seen timestamp: {}", error))?,
         };
         let expected_sig = compute_v2_hmac(&anchor);
+        let mut needs_migration = false;
         if parts[3] != expected_sig {
-            return Err("Trial anchor signature verification failed".to_string());
+            let legacy_sig = compute_legacy_v2_hmac(&anchor);
+            if parts[3] == legacy_sig {
+                needs_migration = true;
+            } else {
+                return Err("Trial anchor signature verification failed".to_string());
+            }
         }
         return Ok(TrialAnchorRead {
             anchor,
-            migrated_from_v1: false,
+            migrated_from_v1: needs_migration,
         });
     }
 
@@ -117,15 +140,21 @@ fn parse_trial_anchor(payload: &str) -> Result<TrialAnchorRead, String> {
             .parse()
             .map_err(|error| format!("Failed to parse timestamp: {}", error))?;
         let expected_sig = compute_v1_hmac(timestamp);
+        let mut needs_migration = true;
         if parts[1] != expected_sig {
-            return Err("Trial anchor signature verification failed".to_string());
+            let legacy_sig = compute_legacy_v1_hmac(timestamp);
+            if parts[1] == legacy_sig {
+                needs_migration = true;
+            } else {
+                return Err("Trial anchor signature verification failed".to_string());
+            }
         }
         return Ok(TrialAnchorRead {
             anchor: TrialAnchor {
                 first_launch: timestamp,
                 last_seen: timestamp,
             },
-            migrated_from_v1: true,
+            migrated_from_v1: needs_migration,
         });
     }
 
@@ -315,6 +344,35 @@ mod tests {
         assert!(parsed.migrated_from_v1);
         assert_eq!(parsed.anchor.first_launch, timestamp);
         assert_eq!(parsed.anchor.last_seen, timestamp);
+    }
+
+    #[test]
+    fn parses_legacy_v1_payload_for_migration() {
+        let timestamp = 1_700_000_000;
+        let payload = format!("{}:{}", timestamp, super::compute_legacy_v1_hmac(timestamp));
+        let parsed = parse_trial_anchor(&payload).expect("legacy v1 payload should parse and migrate");
+
+        assert!(parsed.migrated_from_v1);
+        assert_eq!(parsed.anchor.first_launch, timestamp);
+        assert_eq!(parsed.anchor.last_seen, timestamp);
+    }
+
+    #[test]
+    fn parses_legacy_v2_payload_for_migration() {
+        let anchor = TrialAnchor {
+            first_launch: 1_700_000_000,
+            last_seen: 1_700_086_400,
+        };
+        let payload = format!(
+            "v2:{}:{}:{}",
+            anchor.first_launch,
+            anchor.last_seen,
+            super::compute_legacy_v2_hmac(&anchor)
+        );
+        let parsed = parse_trial_anchor(&payload).expect("legacy v2 payload should parse and migrate");
+
+        assert!(parsed.migrated_from_v1);
+        assert_eq!(parsed.anchor, anchor);
     }
 
     #[test]
