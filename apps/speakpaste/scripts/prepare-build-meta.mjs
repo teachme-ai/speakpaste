@@ -57,8 +57,8 @@ function generateBuildMeta(marketingVersion) {
 	const gitDirty = safeExec('git status --short --untracked-files=no', appRoot, '')
 		.trim()
 		.length > 0;
-	const bundleVersion = "177";
-	const buildSignature = `${marketingVersion}+r177.${gitCommit}${gitDirty ? '.dirty' : ''}`;
+	const bundleVersion = "178";
+	const buildSignature = `${marketingVersion}+r178.${gitCommit}${gitDirty ? '.dirty' : ''}`;
 	const isTrialMode = process.env.MYNAH_TRIAL_MODE === 'true';
 	const targetArch = normalizeTargetArch(process.env.MYNAH_BUILD_TARGET_ARCH) ?? getHostArch();
 

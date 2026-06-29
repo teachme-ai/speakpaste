@@ -100,3 +100,18 @@ This file tracks all successfully completed production DMG builds, including the
 
 ---
 
+## Build 178 (1.0.0) — 2026-06-29
+- **Release Version**: `1.0.0`
+- **Build Number**: `178`
+- **Git Commit**: `bead8980d7e5` (dirty)
+- **Timestamp**: `2026-06-29T08:45:00Z`
+- **Description**: Fix tokio runtime crash on first-run onboarding, upgrade bundleVersion and buildSignature to 178
+- **Artifacts**:
+  - `Mynah_Trial_1.0.0_b178_macos_aarch64.dmg` (SHA-256: `01e30ac7bdf476c58a049d3e49b3ac30496b1228da9059f2fcae1568fe347642`)
+  - `Mynah_Lifetime_1.0.0_b178_macos_aarch64.dmg` (SHA-256: `5efdba2e854e0d8103d812397c2f4c5d8dcf85ae07c024830147f21714f68d88`)
+  - `Mynah_Trial_1.0.0_b178_macos_x86_64.dmg` (SHA-256: `8a6a5f4c1e4577cd85653e43f8ce18ca0c7d8b80e09b7f905a5be5240d20f2d9`)
+  - `Mynah_Lifetime_1.0.0_b178_macos_x86_64.dmg` (SHA-256: `5698b5f614e68f0721939cae6c34f73c67e8fe2cec37f6572174c9a91a1c9031`)
+
+---
+
+

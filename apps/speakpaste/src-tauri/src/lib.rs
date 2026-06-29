@@ -101,8 +101,7 @@ pub mod fm_bridge;
 use fm_bridge::{get_fm_capability, fm_clean_ramble, fm_list, fm_prompt};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
-#[tokio::main]
-pub async fn run() {
+pub fn run() {
     let build_info = current_build_info();
     info!(
         "[Build] version={} bundle={} commit={} dirty={} signature={} target_arch={}",
