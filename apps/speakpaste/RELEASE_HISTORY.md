@@ -107,10 +107,10 @@ This file tracks all successfully completed production DMG builds, including the
 - **Timestamp**: `2026-06-29T08:45:00Z`
 - **Description**: Fix tokio runtime crash on first-run onboarding, upgrade bundleVersion and buildSignature to 178
 - **Artifacts**:
-  - `Mynah_Trial_1.0.0_b178_macos_aarch64.dmg` (SHA-256: `01e30ac7bdf476c58a049d3e49b3ac30496b1228da9059f2fcae1568fe347642`)
-  - `Mynah_Lifetime_1.0.0_b178_macos_aarch64.dmg` (SHA-256: `5efdba2e854e0d8103d812397c2f4c5d8dcf85ae07c024830147f21714f68d88`)
-  - `Mynah_Trial_1.0.0_b178_macos_x86_64.dmg` (SHA-256: `8a6a5f4c1e4577cd85653e43f8ce18ca0c7d8b80e09b7f905a5be5240d20f2d9`)
-  - `Mynah_Lifetime_1.0.0_b178_macos_x86_64.dmg` (SHA-256: `5698b5f614e68f0721939cae6c34f73c67e8fe2cec37f6572174c9a91a1c9031`)
+  - `Mynah_Trial_1.0.0_b178_macos_aarch64.dmg` (SHA-256: `231db4afdeb3d4387acc2e31cde2da97677f25c7df6684c28eecfd63decb6834`)
+  - `Mynah_Lifetime_1.0.0_b178_macos_aarch64.dmg` (SHA-256: `19b64214db72e8206b6a0df9a4a12dd99af40525a680beb2310f1637077b3873`)
+  - `Mynah_Trial_1.0.0_b178_macos_x86_64.dmg` (SHA-256: `1911fc7b66cd62e778661611ddb40d0f99f2c2c540de2debb4ac38625818578b`)
+  - `Mynah_Lifetime_1.0.0_b178_macos_x86_64.dmg` (SHA-256: `6a0fe58a19248a1abf57a1b9434826563a6b8fa3de5df0638f6e3b60c2631480`)
 
 ---
 
