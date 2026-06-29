@@ -78,7 +78,6 @@ Always add `.vercel` to `.gitignore`.
 | Project | Local Path | GitHub Repo | Vercel Project URL | Production URL | Domain |
 |---|---|---|---|---|---|
 | mynah-site | `/Users/irfan/projects/Mynah/website` | https://github.com/teachme-ai/mynah-site | https://vercel.com/khalid-irfans-projects/mynah-site | https://mynah-site-5nsgyqtaf-khalid-irfans-projects.vercel.app | https://mynah.site |
-| speakpaste website | _(unknown)_ | _(unknown)_ | _(unknown)_ | _(unknown)_ | https://speakpaste.online |
 
 ---
 
