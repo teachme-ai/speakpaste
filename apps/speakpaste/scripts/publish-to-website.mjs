@@ -99,8 +99,8 @@ function main() {
 			size_mb: sizeMb,
 			sha256: sha256,
 			min_os: "10.15",
-			notarized: false,
-			stapled: false,
+			notarized: true,
+			stapled: true,
 			signedBy: "Developer ID Application: Khalid Irfan (99YAK7YU3M)",
 			notes: "100% Free on-device speech-to-text. No license required. Signed with Developer ID."
 		});
