@@ -30,10 +30,15 @@ import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 		rpc.analytics.logEvent({ type: 'app_started' });
 	});
 
+	let unlistenDictation: UnlistenFn | null = null;
+
 	onMount(async () => {
 		if (!window.__TAURI_INTERNALS__) return;
 		const isMainWindow = getCurrentWindow().label === 'main';
 		if (!isMainWindow) return;
+
+		const { setupDictationListener } = await import('$lib/query/recording-pipeline');
+		unlistenDictation = await setupDictationListener();
 
 		unlistenNavigate = await listen<{ path: string }>(
 			'navigate-main-window',
@@ -45,6 +50,7 @@ import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 
 	onDestroy(() => {
 		unlistenNavigate?.();
+		unlistenDictation?.();
 	});
 </script>
 

@@ -102,12 +102,10 @@
 										</Link>
 									</li>
 									<li class="list-disc">
-										Download any model file (e.g., ggml-base.en.bin for
-										English-only)
+										<strong>For Indian & Multilingual:</strong> Download <code>ggml-base.bin</code> or <code>ggml-small.bin</code> (without <code>.en</code>)
 									</li>
 									<li class="list-disc">
-										Quantized models (q5_0, q8_0) offer smaller sizes with
-										minimal quality loss
+										<strong>For English-only:</strong> Download <code>ggml-base.en.bin</code> or <code>ggml-small.en.bin</code>
 									</li>
 								</ul>
 							</div>
@@ -193,18 +191,22 @@
 			</div>
 		{/if}
 
+		<Field.Separator />
+
 		<Field.Field>
-			<Field.Label for="dictation-language">Dictation Language</Field.Label>
+			<Field.Label for="dictation-language">Spoken Language</Field.Label>
 			<Select.Root
 				type="single"
 				bind:value={() => settings.get('transcription.language'),
-					(v) => settings.set('transcription.language', v)}
+					(v) => {
+						if (v) settings.set('transcription.language', v);
+					}}
 				disabled={!currentServiceCapabilities.supportsLanguage}
 			>
 				<Select.Trigger id="dictation-language" class="w-full">
-					{dictationLanguageLabel ?? 'Auto Detect'}
+					{dictationLanguageLabel ?? 'English (Default)'}
 				</Select.Trigger>
-				<Select.Content>
+				<Select.Content class="max-h-72">
 					{#each SUPPORTED_LANGUAGES_OPTIONS as item}
 						<Select.Item value={item.value} label={item.label} />
 					{/each}
@@ -212,13 +214,58 @@
 			</Select.Root>
 			{#if !currentServiceCapabilities.supportsLanguage}
 				<Field.Description>
-					Parakeet automatically detects the language
+					Parakeet is optimized for English transcription. Switch to Whisper for multilingual dictation.
 				</Field.Description>
 			{:else}
 				<Field.Description>
-					Choose the language you speak. This guides local transcription; it does not translate the output.
+					Select the language you speak. Mynah is English-first by default, with complete support for Indian and world languages via settings.
 				</Field.Description>
 			{/if}
 		</Field.Field>
+
+		{#if currentServiceCapabilities.supportsLanguage}
+			<Field.Field>
+				<Field.Label for="translation-mode">Output Mode</Field.Label>
+				<Select.Root
+					type="single"
+					bind:value={() => (settings.get('transcription.translateToEnglish') ? 'translate' : 'transcribe'),
+						(v) => {
+							settings.set('transcription.translateToEnglish', v === 'translate');
+						}}
+				>
+					<Select.Trigger id="translation-mode" class="w-full">
+						{settings.get('transcription.translateToEnglish') ? 'Translate to English' : 'Transcribe in Spoken Language'}
+					</Select.Trigger>
+					<Select.Content>
+						<Select.Item value="transcribe" label="Transcribe in Spoken Language (Native script)" />
+						<Select.Item value="translate" label="Translate to English (Speak native language → Paste English)" />
+					</Select.Content>
+				</Select.Root>
+				<Field.Description>
+					{#if settings.get('transcription.translateToEnglish')}
+						Speak in {dictationLanguageLabel ?? 'any supported language'}, and Mynah will translate and paste English text directly into your active app.
+					{:else}
+						Speak in {dictationLanguageLabel ?? 'any supported language'}, and Mynah will transcribe verbatim in its native script.
+					{/if}
+				</Field.Description>
+			</Field.Field>
+
+			{@const currentWhisperPath = deviceConfig.get('transcription.whispercpp.modelPath')}
+			{@const isEnOnly = currentWhisperPath?.includes('.en.') || currentWhisperPath?.endsWith('.en.bin')}
+			{@const isNonEnglish = settings.get('transcription.language') !== 'en' && settings.get('transcription.language') !== 'auto'}
+			{@const needsMultilingual = isNonEnglish || settings.get('transcription.translateToEnglish')}
+
+			{#if isEnOnly && needsMultilingual}
+				<div class="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3.5 text-sm text-amber-200 space-y-1">
+					<p class="font-semibold flex items-center gap-1.5">
+						<span>⚠️ English-only Model Active</span>
+					</p>
+					<p class="text-xs text-amber-300/90 leading-relaxed">
+						Your active model (<code>{currentWhisperPath?.split('/').pop()}</code>) is an English-only model.
+						For {dictationLanguageLabel} speech or translation, please select and activate a <strong>Multilingual</strong> model above (Base, Better, or Large v3 Turbo).
+					</p>
+				</div>
+			{/if}
+		{/if}
 	</Field.Group>
 </Field.Set>

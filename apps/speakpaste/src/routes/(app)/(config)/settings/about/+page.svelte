@@ -156,7 +156,7 @@
 				Mynah is adapted from the open-source **Whispering** project, which is part of the **Epicenter** application monorepo created and maintained by **Braden Wong** and contributors.
 			</p>
 			<p class="text-xs text-muted-foreground leading-relaxed">
-				Mynah is proprietary software built on open-source components. Open-source licenses and acknowledgments are included in the app and documentation, and upstream copyrights remain owned by their respective authors.
+				Mynah is 100% free software built on open-source components. No license key, account, or payment required. Just download and use. Open-source licenses and acknowledgments are included in the app and documentation, and upstream copyrights remain owned by their respective authors.
 			</p>
 			<div class="flex gap-4 text-xs font-medium mt-1">
 				<Link href="https://mynah.site" target="_blank">Mynah Website ↗</Link>

@@ -261,3 +261,54 @@ pub async fn download_model_file(
     );
     Ok(())
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ModelFileStatus {
+    pub exists: bool,
+    pub size_bytes: u64,
+    pub is_valid: bool,
+}
+
+/// Directly inspects model file existence and size on the local filesystem.
+/// This runs natively in Rust and avoids frontend permission scope restrictions.
+#[tauri::command]
+pub fn check_local_model_file(
+    file_path: String,
+    expected_size_bytes: Option<u64>,
+) -> Result<ModelFileStatus, String> {
+    let p = Path::new(&file_path);
+    if !p.exists() {
+        return Ok(ModelFileStatus {
+            exists: false,
+            size_bytes: 0,
+            is_valid: false,
+        });
+    }
+
+    let metadata = std::fs::metadata(p).map_err(|e| format!("Failed to read file metadata: {}", e))?;
+    let size_bytes = metadata.len();
+    let is_valid = match expected_size_bytes {
+        Some(expected) => size_bytes >= (expected * 9 / 10),
+        None => size_bytes > 1_000_000,
+    };
+
+    Ok(ModelFileStatus {
+        exists: true,
+        size_bytes,
+        is_valid,
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_check_local_model_file_nonexistent() {
+        let status = check_local_model_file("/nonexistent/model.bin".to_string(), Some(100)).unwrap();
+        assert!(!status.exists);
+        assert!(!status.is_valid);
+    }
+}
+

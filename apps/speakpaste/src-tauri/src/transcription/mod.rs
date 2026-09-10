@@ -1,5 +1,6 @@
 mod error;
 mod model_manager;
+pub mod indic;
 
 use error::TranscriptionError;
 use log::{debug, error, info, warn};
@@ -341,7 +342,7 @@ fn convert_audio_rust(audio_data: Vec<u8>) -> Result<Vec<u8>, TranscriptionError
 ///
 /// This approach ensures maximum compatibility: users without FFmpeg can still
 /// transcribe most recordings, while complex formats are handled when FFmpeg is available.
-fn convert_audio_for_whisper(audio_data: Vec<u8>) -> Result<Vec<u8>, TranscriptionError> {
+pub fn convert_audio_for_whisper(audio_data: Vec<u8>) -> Result<Vec<u8>, TranscriptionError> {
     debug!(
         "[Audio Conversion] starting 3-tier conversion strategy for {} bytes",
         audio_data.len()
@@ -440,7 +441,7 @@ fn convert_audio_for_whisper(audio_data: Vec<u8>) -> Result<Vec<u8>, Transcripti
 }
 
 /// Parse WAV data and extract samples as f32 vector
-fn extract_samples_from_wav(wav_data: Vec<u8>) -> Result<Vec<f32>, TranscriptionError> {
+pub fn extract_samples_from_wav(wav_data: Vec<u8>) -> Result<Vec<f32>, TranscriptionError> {
     debug!(
         "[Extract Samples] parsing {} bytes of WAV data",
         wav_data.len()
@@ -551,13 +552,29 @@ pub async fn transcribe_audio_whisper(
     model_path: String,
     language: Option<String>,
     initial_prompt: Option<String>,
+    translate: Option<bool>,
     model_manager: tauri::State<'_, ModelManager>,
+) -> Result<String, TranscriptionError> {
+    let translate_bool = translate.unwrap_or(false);
+    transcribe_audio_whisper_internal(audio_data, model_path, language, initial_prompt, translate_bool, &model_manager).await
+}
+
+#[cfg(not(target_os = "windows"))]
+pub async fn transcribe_audio_whisper_internal(
+    audio_data: Vec<u8>,
+    model_path: String,
+    language: Option<String>,
+    initial_prompt: Option<String>,
+    translate: bool,
+    model_manager: &ModelManager,
 ) -> Result<String, TranscriptionError> {
     let total_start = std::time::Instant::now();
     info!(
-        "[Transcription] starting Whisper transcription: audio_bytes={} model_path={}",
+        "[Transcription] starting Whisper transcription: audio_bytes={} model_path={} language={:?} translate={}",
         audio_data.len(),
-        model_path
+        model_path,
+        language,
+        translate
     );
 
     // Convert audio to 16kHz mono format that whisper requires
@@ -593,7 +610,8 @@ pub async fn transcribe_audio_whisper(
 
     // Configure inference parameters
     let mut params = WhisperInferenceParams::default();
-    params.language = language;
+    params.language = language.clone();
+    params.translate = translate;
     params.initial_prompt = initial_prompt;
     params.print_special = false;
     params.print_progress = false;
@@ -602,20 +620,20 @@ pub async fn transcribe_audio_whisper(
     params.suppress_blank = true;
     params.suppress_non_speech_tokens = true;
     params.no_speech_thold = 0.2;
-    if crate::build_info::current_build_info().target_arch == "x86_64" {
-        params.sampling_strategy = WhisperSamplingStrategy::Greedy { best_of: 1 };
-        info!("[Transcription] Whisper decode strategy=greedy target_arch=x86_64");
-    } else {
-        info!(
-            "[Transcription] Whisper decode strategy=beam_search target_arch={}",
-            crate::build_info::current_build_info().target_arch
-        );
-    }
+    // BeamSearch (beam_size: 2, patience: 1.0) provides fast ~750ms inference with high accuracy
+    params.sampling_strategy = WhisperSamplingStrategy::BeamSearch {
+        beam_size: 2,
+        patience: 1.0,
+    };
+    info!(
+        "[Transcription] Whisper decode strategy=beam_search (beam_size=2, patience=1.0) target_arch={}",
+        crate::build_info::current_build_info().target_arch
+    );
 
-    // Run transcription with the persistent engine
+    // Run transcription with the persistent engine inside a blocking task
     // Use into_inner() to recover from poisoned mutex, but clear state to force fresh reload
     let decode_start = std::time::Instant::now();
-    let result = {
+    let result = tokio::task::spawn_blocking(move || {
         let mut engine_guard = engine_arc.lock().unwrap_or_else(|poisoned| {
             warn!(
                 "[Transcription] Engine mutex was poisoned from previous panic, clearing state to force reload..."
@@ -644,11 +662,18 @@ pub async fn transcribe_audio_whisper(
             .transcribe_samples(samples, Some(params))
             .map_err(|e| TranscriptionError::TranscriptionError {
                 message: e.to_string(),
-            })?
-    };
+            })
+    })
+    .await
+    .map_err(|e| TranscriptionError::TranscriptionError {
+        message: format!("Spawn blocking failed: {}", e),
+    })??;
 
     let decode_duration = decode_start.elapsed();
-    let transcript = result.text.trim().to_string();
+    let mut transcript = result.text.trim().to_string();
+    if !translate {
+        transcript = indic::normalize_indic_script(&transcript, language.as_deref());
+    }
     info!(
         "[Telemetry] Whisper matrix decoding took {:?} for {} characters (approx. {:.1} chars/sec)",
         decode_duration,
@@ -673,7 +698,22 @@ pub async fn transcribe_audio_whisper(
     _model_path: String,
     _language: Option<String>,
     _initial_prompt: Option<String>,
+    _translate: Option<bool>,
     _model_manager: tauri::State<'_, ModelManager>,
+) -> Result<String, TranscriptionError> {
+    Err(TranscriptionError::TranscriptionError {
+        message: "Whisper C++ is not available on Windows due to build compatibility issues. Please use Parakeet for local transcription.".to_string(),
+    })
+}
+
+#[cfg(target_os = "windows")]
+pub async fn transcribe_audio_whisper_internal(
+    _audio_data: Vec<u8>,
+    _model_path: String,
+    _language: Option<String>,
+    _initial_prompt: Option<String>,
+    _translate: bool,
+    _model_manager: &ModelManager,
 ) -> Result<String, TranscriptionError> {
     Err(TranscriptionError::TranscriptionError {
         message: "Whisper C++ is not available on Windows due to build compatibility issues. Please use Parakeet for local transcription.".to_string(),
@@ -685,6 +725,14 @@ pub async fn transcribe_audio_parakeet(
     audio_data: Vec<u8>,
     model_path: String,
     model_manager: tauri::State<'_, ModelManager>,
+) -> Result<String, TranscriptionError> {
+    transcribe_audio_parakeet_internal(audio_data, model_path, &model_manager).await
+}
+
+pub async fn transcribe_audio_parakeet_internal(
+    audio_data: Vec<u8>,
+    model_path: String,
+    model_manager: &ModelManager,
 ) -> Result<String, TranscriptionError> {
     info!(
         "[Transcription] starting Parakeet transcription: audio_bytes={} model_path={}",
@@ -723,9 +771,9 @@ pub async fn transcribe_audio_parakeet(
         ..Default::default()
     };
 
-    // Run transcription with the persistent engine
+    // Run transcription with the persistent engine inside a blocking task
     // Use into_inner() to recover from poisoned mutex, but clear state to force fresh reload
-    let result = {
+    let result = tokio::task::spawn_blocking(move || {
         let mut engine_guard = engine_arc.lock().unwrap_or_else(|poisoned| {
             warn!(
                 "[Transcription] Engine mutex was poisoned from previous panic, clearing state to force reload..."
@@ -754,8 +802,12 @@ pub async fn transcribe_audio_parakeet(
             .transcribe_samples(samples, Some(params))
             .map_err(|e| TranscriptionError::TranscriptionError {
                 message: e.to_string(),
-            })?
-    };
+            })
+    })
+    .await
+    .map_err(|e| TranscriptionError::TranscriptionError {
+        message: format!("Spawn blocking failed: {}", e),
+    })??;
 
     let transcript = result.text.trim().to_string();
     info!(

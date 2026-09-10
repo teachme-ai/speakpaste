@@ -24,6 +24,7 @@ impl Engine {
     }
 }
 
+#[derive(Clone)]
 pub struct ModelManager {
     engine: Arc<Mutex<Option<Engine>>>,
     current_model_path: Arc<Mutex<Option<PathBuf>>>,

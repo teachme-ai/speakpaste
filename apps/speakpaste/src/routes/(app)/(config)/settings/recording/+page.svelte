@@ -14,6 +14,7 @@
 	} from '$lib/services/recorder/types';
 	import { deviceConfig } from '$lib/state/device-config.svelte';
 	import { settings } from '$lib/state/settings.svelte';
+	import { SUPPORTED_LANGUAGES_OPTIONS } from '$lib/constants/languages';
 	import ManualSelectRecordingDevice from './ManualSelectRecordingDevice.svelte';
 
 	const availableRecordingModes = $derived(
@@ -27,6 +28,12 @@
 	const recordingModeLabel = $derived(
 		availableRecordingModes.find(
 			(o) => o.value === settings.get('recording.mode'),
+		)?.label,
+	);
+
+	const dictationLanguageLabel = $derived(
+		SUPPORTED_LANGUAGES_OPTIONS.find(
+			(i) => i.value === settings.get('transcription.language'),
 		)?.label,
 	);
 
@@ -82,6 +89,72 @@
 				).join(', ')}
 			</Field.Description>
 		</Field.Field>
+
+		<Field.Field>
+			<Field.Label for="dictation-language">Spoken Language</Field.Label>
+			<Select.Root
+				type="single"
+				bind:value={() => settings.get('transcription.language'),
+					(v) => {
+						if (v) settings.set('transcription.language', v);
+					}}
+			>
+				<Select.Trigger id="dictation-language" class="w-full">
+					{dictationLanguageLabel ?? 'English (Default)'}
+				</Select.Trigger>
+				<Select.Content class="max-h-72">
+					{#each SUPPORTED_LANGUAGES_OPTIONS as item}
+						<Select.Item value={item.value} label={item.label} />
+					{/each}
+				</Select.Content>
+			</Select.Root>
+			<Field.Description>
+				Select the language you speak. Mynah is English-first by default, with complete support for Indian and world languages via settings.
+			</Field.Description>
+		</Field.Field>
+
+		<Field.Field>
+			<Field.Label for="translation-mode">Output Mode</Field.Label>
+			<Select.Root
+				type="single"
+				bind:value={() => (settings.get('transcription.translateToEnglish') ? 'translate' : 'transcribe'),
+					(v) => {
+						settings.set('transcription.translateToEnglish', v === 'translate');
+					}}
+			>
+				<Select.Trigger id="translation-mode" class="w-full">
+					{settings.get('transcription.translateToEnglish') ? 'Translate to English' : 'Transcribe in Spoken Language'}
+				</Select.Trigger>
+				<Select.Content>
+					<Select.Item value="transcribe" label="Transcribe in Spoken Language (Native script)" />
+					<Select.Item value="translate" label="Translate to English (Speak native language → Paste English)" />
+				</Select.Content>
+			</Select.Root>
+			<Field.Description>
+				{#if settings.get('transcription.translateToEnglish')}
+					Speak in {dictationLanguageLabel ?? 'any supported language'}, and Mynah will translate and paste English text directly into your active app.
+				{:else}
+					Speak in {dictationLanguageLabel ?? 'any supported language'}, and Mynah will transcribe verbatim in its native script.
+				{/if}
+			</Field.Description>
+		</Field.Field>
+
+		{@const currentWhisperPath = deviceConfig.get('transcription.whispercpp.modelPath')}
+		{@const isEnOnly = currentWhisperPath?.includes('.en.') || currentWhisperPath?.endsWith('.en.bin')}
+		{@const isNonEnglish = settings.get('transcription.language') !== 'en' && settings.get('transcription.language') !== 'auto'}
+		{@const needsMultilingual = isNonEnglish || settings.get('transcription.translateToEnglish')}
+
+		{#if isEnOnly && needsMultilingual}
+			<div class="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3.5 text-sm text-amber-200 space-y-1">
+				<p class="font-semibold flex items-center gap-1.5">
+					<span>⚠️ English-only Model Active</span>
+				</p>
+				<p class="text-xs text-amber-300/90 leading-relaxed">
+					Your active model (<code>{currentWhisperPath?.split('/').pop()}</code>) is an English-only model.
+					For {dictationLanguageLabel} speech or translation, please activate a <strong>Multilingual</strong> model under Settings &gt; Models.
+				</p>
+			</div>
+		{/if}
 
 		{#if window.__TAURI_INTERNALS__ && settings.get('recording.mode') === 'manual'}
 			<div class="rounded-lg border bg-muted/20 p-4">

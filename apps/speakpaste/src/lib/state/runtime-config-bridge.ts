@@ -17,6 +17,8 @@ type RuntimeConfig = {
 	recordingSampleRate: number | null;
 	recordingOutputFolder: string | null;
 	transcriptionEngine: string;
+	transcriptionLanguage: string | null;
+	transcriptionTranslate: boolean;
 	whisperModelPath: string | null;
 	parakeetModelPath: string | null;
 	autoPasteEnabled: boolean;
@@ -113,6 +115,14 @@ function buildRuntimeConfig(): RuntimeConfig {
 		recordingSampleRate: Number(deviceConfig.get('recording.cpal.sampleRate')),
 		recordingOutputFolder: deviceConfig.get('recording.cpal.outputFolder'),
 		transcriptionEngine: settings.get('transcription.service'),
+		transcriptionLanguage: emptyToNull(
+			settings.get('transcription.language') === 'auto'
+				? ''
+				: settings.get('transcription.language'),
+		),
+		transcriptionTranslate: Boolean(
+			settings.get('transcription.translateToEnglish'),
+		),
 		whisperModelPath: emptyToNull(
 			deviceConfig.get('transcription.whispercpp.modelPath'),
 		),

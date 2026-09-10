@@ -8,6 +8,7 @@ node_modules
 /.svelte-kit
 /build
 /package
+/dist
 /src/lib/generated/build-info.ts
 /src-tauri/build-meta.json
 /src-tauri/tauri.macos.conf.json

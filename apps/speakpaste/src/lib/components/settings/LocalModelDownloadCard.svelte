@@ -88,6 +88,16 @@
 	async function isModelValid(path: string): Promise<boolean> {
 		switch (model.engine) {
 			case 'whispercpp': {
+				if (window.__TAURI_INTERNALS__) {
+					const res = await invoke<{ exists: boolean; sizeBytes: number; isValid: boolean }>(
+						'check_local_model_file',
+						{ filePath: path, expectedSizeBytes: model.sizeBytes }
+					).catch((err) => {
+						console.warn('[ModelCard] check_local_model_file failed:', err);
+						return null;
+					});
+					if (res) return res.isValid;
+				}
 				if (!(await exists(path))) return false;
 				// Check file size to detect corrupted/incomplete downloads
 				const { data: stats } = await tryAsync({
@@ -155,10 +165,11 @@
 					return;
 				}
 
-				// Check if this model is active in settings and matches the selected service
 				const settingsKey = `transcription.${model.engine}.modelPath` as const;
 				const currentPath = deviceConfig.get(settingsKey);
-				const isActive = currentPath === path && settings.get('transcription.service') === model.engine;
+				const isEngineActive = settings.get('transcription.service') === model.engine;
+				const isPathActive = currentPath === path || (model.engine === 'whispercpp' && currentPath?.endsWith(model.file.filename));
+				const isActive = isPathActive && isEngineActive;
 
 				modelState = isActive ? { type: 'active' } : { type: 'ready' };
 			},

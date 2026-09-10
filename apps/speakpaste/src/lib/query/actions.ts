@@ -21,7 +21,7 @@ const ImportError = defineErrors({
 
 import { delivery } from './delivery';
 import { notify } from './notify';
-import { processRecordingPipeline } from './recording-pipeline';
+import { setupDictationListener, startDictation, stopDictation, cancelDictation } from './recording-pipeline';
 import { recorder } from './recorder';
 import {
 	clearManualRecordingStartTime,
@@ -51,133 +51,16 @@ function isDesktopApp() {
 // Internal mutations for manual recording
 const startManualRecording = defineMutation({
 	mutationKey: COMMAND_KEYS.START_MANUAL_RECORDING,
-	mutationFn: () =>
-		withRecordingOperation({
-			onBusy: () => {
-				console.info('Recording operation already in progress, ignoring start');
-				return Ok(undefined);
-			},
-			operation: async () => {
-				void dictationRuntime.setStatus('Recording', 'Preparing microphone');
-
-				settings.set('recording.mode', 'manual');
-				if (isDesktopApp() && deviceConfig.get('recording.method') !== 'cpal') {
-					deviceConfig.set('recording.method', 'cpal');
-				}
-
-				const toastId = nanoid();
-
-				const { data: deviceAcquisitionOutcome, error: startRecordingError } =
-					await recorder.startRecording({ toastId });
-
-				if (startRecordingError) {
-					void dictationRuntime.setStatus('Error', startRecordingError.message);
-					notify.error({ id: toastId, ...startRecordingError });
-					return Ok(undefined);
-				}
-
-				switch (deviceAcquisitionOutcome.outcome) {
-					case 'success': {
-						break;
-					}
-					case 'fallback': {
-						const method = deviceConfig.get('recording.method');
-						deviceConfig.set(
-							`recording.${method}.deviceId`,
-							deviceAcquisitionOutcome.deviceId,
-						);
-						switch (deviceAcquisitionOutcome.reason) {
-							case 'no-device-selected': {
-								notify.info({
-									id: toastId,
-									title: '🎙️ Switched to available microphone',
-									description:
-										'No microphone was selected, so we automatically connected to an available one. You can update your selection in settings.',
-									action: {
-										type: 'link',
-										label: 'Open Settings',
-										href: '/settings/recording',
-									},
-								});
-								break;
-							}
-							case 'preferred-device-unavailable': {
-								notify.info({
-									id: toastId,
-									title: '🎙️ Switched to different microphone',
-									description:
-										"Your previously selected microphone wasn't found, so we automatically connected to an available one.",
-									action: {
-										type: 'link',
-										label: 'Open Settings',
-										href: '/settings/recording',
-									},
-								});
-								break;
-							}
-						}
-					}
-				}
-				// Track start time for duration calculation
-				markManualRecordingStarted();
-				void dictationRuntime.setStatus('Recording', 'Listening');
-				console.info('Recording started');
-				return Ok(undefined);
-			},
-		}),
+	mutationFn: async () => {
+		await startDictation();
+		return Ok(undefined);
+	},
 });
 
 const stopManualRecording = defineMutation({
 	mutationKey: COMMAND_KEYS.STOP_MANUAL_RECORDING,
 	mutationFn: async () => {
-		const stoppedRecording = await withRecordingOperation({
-			onBusy: () => {
-				console.info('Recording operation already in progress, ignoring stop');
-				return null;
-			},
-			operation: async () => {
-				void dictationRuntime.setStatus('Transcribing', 'Finalizing recording');
-
-				const toastId = nanoid();
-
-				const { data, error: stopRecordingError } = await recorder.stopRecording({
-					toastId,
-				});
-
-				if (stopRecordingError) {
-					void dictationRuntime.setStatus('Error', stopRecordingError.message);
-					notify.error({ id: toastId, ...stopRecordingError });
-					return null;
-				}
-
-				return { ...data, toastId };
-			},
-		});
-
-		if (!stoppedRecording) return Ok(undefined);
-
-		const { blob, recordingId, toastId } = stoppedRecording;
-
-		console.info('Recording stopped');
-
-		// Log manual recording completion
-		const duration = consumeManualRecordingDuration();
-		rpc.analytics.logEvent({
-			type: 'manual_recording_completed',
-			blob_size: blob.size,
-			duration,
-		});
-
-		// Pipeline runs after mutex is released - new recordings can start
-		// while transcription/transformation are in progress
-		await processRecordingPipeline({
-			blob,
-			recordingId,
-			source: 'manual',
-			toastId,
-			transcribeToastId: toastId,
-		});
-
+		await stopDictation();
 		return Ok(undefined);
 	},
 });
@@ -229,12 +112,7 @@ const startVadRecording = defineMutation({
 						blob_size: blob.size,
 						// VAD doesn't track duration by default
 					});
-
-					await processRecordingPipeline({
-						blob,
-						source: 'vad',
-						toastId,
-					});
+					console.warn('VAD pipeline is currently disabled in favor of Rust CoreAudio capture.');
 				},
 			});
 		if (startActiveListeningError) {
@@ -335,26 +213,7 @@ export const actions = {
 			recordingId: string;
 			filePath: string;
 		}) => {
-			const toastId = nanoid();
-			void dictationRuntime.setStatus('Transcribing', 'Finalizing audio');
-			const { data: blob, error } = await FsServiceLive.pathToBlob(filePath);
-			if (error) {
-				notify.error({
-					id: toastId,
-					title: 'Failed to read background recording',
-					description: error.message,
-					action: { type: 'more-details', error },
-				});
-				return Ok(undefined);
-			}
-
-			await processRecordingPipeline({
-				blob,
-				recordingId,
-				source: 'native',
-				toastId,
-				transcribeToastId: toastId,
-			});
+			console.warn('Native recording pipeline is now handled entirely in Rust.');
 			return Ok(undefined);
 		},
 	}),
@@ -389,46 +248,10 @@ export const actions = {
 	// Cancel manual recording
 	cancelManualRecording: defineMutation({
 		mutationKey: COMMAND_KEYS.CANCEL_MANUAL_RECORDING,
-		mutationFn: () =>
-			withRecordingOperation({
-				onBusy: () => {
-					console.info(
-						'Recording operation already in progress, ignoring cancel',
-					);
-					return Ok(undefined);
-				},
-				operation: async () => {
-					const toastId = nanoid();
-					const { data: cancelRecordingResult, error: cancelRecordingError } =
-						await recorder.cancelRecording({ toastId });
-
-					if (cancelRecordingError) {
-						void dictationRuntime.setStatus('Error', cancelRecordingError.message);
-						notify.error({ id: toastId, ...cancelRecordingError });
-						return Ok(undefined);
-					}
-					switch (cancelRecordingResult.status) {
-						case 'no-recording': {
-							notify.info({
-								id: toastId,
-								title: 'No active recording',
-								description: 'There is no recording in progress to cancel.',
-							});
-							break;
-						}
-						case 'cancelled': {
-							// Session cleanup is now handled internally by the recorder service
-							// Reset start time if recording was cancelled
-							clearManualRecordingStartTime();
-							void dictationRuntime.setStatus('Idle', 'Recording cancelled');
-							sound.playSoundIfEnabled('manual-cancel');
-							console.info('Recording cancelled');
-							break;
-						}
-					}
-					return Ok(undefined);
-				},
-			}),
+		mutationFn: async () => {
+			await cancelDictation();
+			return Ok(undefined);
+		},
 	}),
 
 	// Toggle VAD recording
@@ -489,11 +312,7 @@ export const actions = {
 
 					// Each file gets its own toast notification
 					const toastId = nanoid();
-					await processRecordingPipeline({
-						blob: audioBlob,
-						source: 'upload',
-						toastId,
-					});
+					console.warn('Upload pipeline is currently disabled in favor of Rust capture.');
 				}),
 			);
 

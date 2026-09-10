@@ -127,11 +127,14 @@ pub fn start_native_dictation_for_app(app: &AppHandle) -> Result<(), String> {
             .recorder
             .lock()
             .map_err(|e| format!("Failed to lock recorder: {}", e))?;
+        // STT engines (Whisper and Parakeet) natively require 16kHz mono.
+        // Recording natively at 16kHz eliminates CPU-intensive software resampling.
+        let target_rate = Some(16000);
         recorder.init_session(
             device_id,
             output_folder,
             recording_id.clone(),
-            config.recording_sample_rate,
+            target_rate,
         )?;
         recorder.start_recording()?;
     }
@@ -139,6 +142,7 @@ pub fn start_native_dictation_for_app(app: &AppHandle) -> Result<(), String> {
     *state = NativeDictationState::Recording {
         recording_id: recording_id.clone(),
     };
+    crate::app_nap::prevent_app_nap("Mynah Background Dictation".to_string());
     emit_runtime_state(app, "Recording", Some("Listening from background runtime"))?;
     Ok(())
 }
@@ -217,6 +221,7 @@ pub fn cancel_native_dictation_for_app(app: &AppHandle) -> Result<(), String> {
         recorder.cancel_recording()?;
     }
 
+    crate::app_nap::allow_app_nap();
     emit_runtime_state(app, "Idle", Some("Fn key chord ignored"))?;
     Ok(())
 }

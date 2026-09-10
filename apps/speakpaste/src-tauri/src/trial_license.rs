@@ -9,23 +9,7 @@ const TRIAL_LENGTH_DAYS: i32 = 60;
 const TRIAL_INVALID_ERROR: &str =
     "Mynah couldn't verify the trial period on this Mac, so the trial is shown as ended.";
 
-pub const IS_TRIAL_BUILD: bool = match option_env!("MYNAH_TRIAL_MODE") {
-    Some(val) => {
-        // Rust const matching allows simple string checks
-        let bytes = val.as_bytes();
-        if bytes.len() == 4
-            && bytes[0] == b't'
-            && bytes[1] == b'r'
-            && bytes[2] == b'u'
-            && bytes[3] == b'e'
-        {
-            true
-        } else {
-            false
-        }
-    }
-    None => false,
-};
+pub const IS_TRIAL_BUILD: bool = false;
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]

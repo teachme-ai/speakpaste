@@ -80,9 +80,9 @@ unsafe extern "C" fn event_tap_callback(
                     .compare_exchange(true, false, Ordering::SeqCst, Ordering::SeqCst)
                     .is_ok()
                 {
-                    if let Err(error) =
-                        crate::dictation_manager::cancel_native_dictation_for_app(&state.app_handle)
-                    {
+                    use crate::dictation_state_machine::{DictationStateMachine, DictationCommand};
+                    use tauri::Manager;
+                    if let Err(error) = state.app_handle.state::<DictationStateMachine>().cmd_tx.send(DictationCommand::Cancel) {
                         error!(
                             "[FnKeyListener] failed to cancel chorded native dictation: {}",
                             error
@@ -128,17 +128,12 @@ unsafe extern "C" fn event_tap_callback(
                         }
 
                         info!("[FnKeyListener] Standalone Fn hold confirmed");
-                        match crate::dictation_manager::start_native_dictation_for_app(&app_handle)
-                        {
-                            Ok(()) => {
-                                fn_started_recording.store(true, Ordering::SeqCst);
-                            }
-                            Err(error) => {
-                                error!(
-                                    "[FnKeyListener] failed to start native dictation: {}",
-                                    error
-                                );
-                            }
+                        use crate::dictation_state_machine::{DictationStateMachine, DictationCommand};
+                        use tauri::Manager;
+                        if let Err(e) = app_handle.state::<DictationStateMachine>().cmd_tx.send(DictationCommand::Start) {
+                            error!("[FnKeyListener] failed to start dictation: {}", e);
+                        } else {
+                            fn_started_recording.store(true, Ordering::SeqCst);
                         }
                     });
                 } else {
@@ -150,25 +145,19 @@ unsafe extern "C" fn event_tap_callback(
                         .compare_exchange(true, false, Ordering::SeqCst, Ordering::SeqCst)
                         .is_ok();
 
+                    use crate::dictation_state_machine::{DictationStateMachine, DictationCommand};
+                    use tauri::Manager;
+                    
                     if was_chorded {
                         if was_recording {
-                            if let Err(error) =
-                                crate::dictation_manager::cancel_native_dictation_for_app(
-                                    &state.app_handle,
-                                )
-                            {
-                                error!(
-                                    "[FnKeyListener] failed to cancel chorded native dictation: {}",
-                                    error
-                                );
+                            if let Err(error) = state.app_handle.state::<DictationStateMachine>().cmd_tx.send(DictationCommand::Cancel) {
+                                error!("[FnKeyListener] failed to cancel chorded dictation: {}", error);
                             }
                         }
                         info!("[FnKeyListener] Fn chord released without dictation trigger");
                     } else if was_recording {
-                        if let Err(error) = crate::dictation_manager::stop_native_dictation_for_app(
-                            &state.app_handle,
-                        ) {
-                            error!("[FnKeyListener] failed to stop native dictation: {}", error);
+                        if let Err(error) = state.app_handle.state::<DictationStateMachine>().cmd_tx.send(DictationCommand::Stop) {
+                            error!("[FnKeyListener] failed to stop dictation: {}", error);
                         }
                     }
                 }

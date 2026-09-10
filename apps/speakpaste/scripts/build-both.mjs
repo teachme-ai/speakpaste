@@ -132,8 +132,7 @@ function verifyDmgAndMountedApp(dmgPath) {
 	}
 }
 
-function buildAndRename(isTrial, bundleVersion, targetArch) {
-	const modeLabel = isTrial ? 'TRIAL' : 'LIFETIME';
+function buildAndRename(bundleVersion, targetArch) {
 	const rustTarget = targetArch === 'x86_64' ? 'x86_64-apple-darwin' : 'aarch64-apple-darwin';
 	
 	// Dynamically resolve target-specific directory in release bundle outputs
@@ -142,18 +141,17 @@ function buildAndRename(isTrial, bundleVersion, targetArch) {
 	const defaultDmgName = `Mynah_${version}_${targetArch === 'x86_64' ? 'x64' : 'aarch64'}.dmg`;
 	const defaultDmgPath = path.join(outputDir, defaultDmgName);
 	
-	const targetDmgName = `Mynah_${isTrial ? 'Trial' : 'Lifetime'}_${version}_b${bundleVersion}_macos_${targetArch}.dmg`;
+	const targetDmgName = `Mynah_${version}_b${bundleVersion}_macos_${targetArch}.dmg`;
 	const targetDmgPath = path.join(finalOutputDir, targetDmgName);
 
 	console.log(`\n==================================================`);
-	console.log(`[build-both] Building ${modeLabel} version (${targetArch} / Build ${bundleVersion})...`);
+	console.log(`[build-both] Building version (${targetArch} / Build ${bundleVersion})...`);
 	console.log(`==================================================`);
 
 	// Run tauri build to compile/package the DMG.
 	// NOTE: We deliberately do not pass APPLE_PASSWORD here to let tauri skip internal notarization
 	// (which is prone to failure) and successfully generate the DMG, which we notarize manually.
 	runCommand(`bun run tauri build --target ${rustTarget}`, {
-		MYNAH_TRIAL_MODE: String(isTrial),
 		MYNAH_BUILD_TARGET_ARCH: targetArch,
 		CI: 'true', // Suppress automatic opening of DMG folder in Finder
 	});
@@ -274,22 +272,14 @@ async function main() {
 		const generatedArtifacts = [];
 
 		// 1. Build Apple Silicon Targets
-		const trialDmgArm = buildAndRename(true, bundleVersion, 'aarch64');
-		notarizeAndStaple(trialDmgArm, appSpecificPassword);
-		generatedArtifacts.push(trialDmgArm);
-
-		const lifetimeDmgArm = buildAndRename(false, bundleVersion, 'aarch64');
-		notarizeAndStaple(lifetimeDmgArm, appSpecificPassword);
-		generatedArtifacts.push(lifetimeDmgArm);
+		const dmgArm = buildAndRename(bundleVersion, 'aarch64');
+		notarizeAndStaple(dmgArm, appSpecificPassword);
+		generatedArtifacts.push(dmgArm);
 
 		// 2. Build Intel Targets
-		const trialDmgIntel = buildAndRename(true, bundleVersion, 'x86_64');
-		notarizeAndStaple(trialDmgIntel, appSpecificPassword);
-		generatedArtifacts.push(trialDmgIntel);
-
-		const lifetimeDmgIntel = buildAndRename(false, bundleVersion, 'x86_64');
-		notarizeAndStaple(lifetimeDmgIntel, appSpecificPassword);
-		generatedArtifacts.push(lifetimeDmgIntel);
+		const dmgIntel = buildAndRename(bundleVersion, 'x86_64');
+		notarizeAndStaple(dmgIntel, appSpecificPassword);
+		generatedArtifacts.push(dmgIntel);
 
 		const fileDetails = generatedArtifacts.map(artPath => ({
 			name: path.basename(artPath),

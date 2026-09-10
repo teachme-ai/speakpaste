@@ -42,29 +42,29 @@ function main() {
 	console.log(`Publishing Build: ${build} (${version})`);
 
 	// 2. Define DMG artifacts
-	const architectures = ['aarch64', 'x86_64'];
-	const types = ['Trial'];
+	const architectures = [
+		{ arch: 'aarch64', label: 'Apple Silicon (M1/M2/M3/M4)' },
+		{ arch: 'x86_64', label: 'Intel (x86_64)' }
+	];
 	const artifacts = [];
 
-	for (const arch of architectures) {
-		for (const type of types) {
-			const filename = `Mynah_${type}_${version}_b${build}_macos_${arch}.dmg`;
-			const srcPath = path.join(appRoot, 'dist', filename);
-			
-			if (!existsSync(srcPath)) {
-				console.error(`Error: Required artifact not found: ${srcPath}`);
-				console.error("Make sure to run a full build first (bun run build:all).");
-				process.exit(1);
-			}
-			
-			artifacts.push({
-				type,
-				arch,
-				filename,
-				srcPath,
-				destPath: path.join(websiteRoot, 'public', filename)
-			});
+	for (const { arch, label } of architectures) {
+		const filename = `Mynah_${version}_b${build}_macos_${arch}.dmg`;
+		const srcPath = path.join(appRoot, 'dist', filename);
+		
+		if (!existsSync(srcPath)) {
+			console.error(`Error: Required artifact not found: ${srcPath}`);
+			console.error("Make sure the release DMG is present in dist/.");
+			process.exit(1);
 		}
+		
+		artifacts.push({
+			arch,
+			label,
+			filename,
+			srcPath,
+			destPath: path.join(websiteRoot, 'public', filename)
+		});
 	}
 
 	// 3. Clean old DMG files in website public/ directory to avoid bloat
@@ -92,17 +92,17 @@ function main() {
 		artifactMeta.push({
 			platform: "macos",
 			arch: art.arch,
-			type: art.type,
-			label: `${art.type} (${art.arch === 'aarch64' ? 'Apple Silicon' : 'Intel'})`,
+			type: "Release",
+			label: art.label,
 			filename: art.filename,
 			url: `https://mynah.site/public/${art.filename}`,
 			size_mb: sizeMb,
 			sha256: sha256,
 			min_os: "10.15",
-			notarized: true,
-			stapled: true,
+			notarized: false,
+			stapled: false,
 			signedBy: "Developer ID Application: Khalid Irfan (99YAK7YU3M)",
-			notes: `${art.type} ${art.type === 'Trial' ? '60-Day Free Trial' : 'Lifetime Unrestricted'}. Signed with Developer ID, notarized by Apple, and stapled.`
+			notes: "100% Free on-device speech-to-text. No license required. Signed with Developer ID."
 		});
 	}
 
@@ -118,6 +118,12 @@ function main() {
 		builtAtIso: buildMeta.builtAtIso,
 		gitCommit: buildMeta.gitCommit
 	};
+	downloads.pricing = {
+		free: true,
+		licenseRequired: false,
+		model: "100% Free Software",
+		notes: "Mynah is completely free to download and use. No license required, no trial expiration, no subscription."
+	};
 	downloads.artifacts = artifactMeta;
 	
 	writeFileSync(downloadsJsonPath, JSON.stringify(downloads, null, 2) + '\n', 'utf8');
@@ -128,11 +134,11 @@ function main() {
 	let downloadHtml = readFileSync(downloadHtmlPath, 'utf8');
 	
 	// Update URLs
-	const trialArmDmg = artifactMeta.find(a => a.type === 'Trial' && a.arch === 'aarch64').filename;
-	const trialIntelDmg = artifactMeta.find(a => a.type === 'Trial' && a.arch === 'x86_64').filename;
+	const armDmg = artifactMeta.find(a => a.arch === 'aarch64').filename;
+	const intelDmg = artifactMeta.find(a => a.arch === 'x86_64').filename;
 	
-	downloadHtml = downloadHtml.replace(/href="\/public\/Mynah_Trial_[^"]+_aarch64\.dmg"/, `href="/public/${trialArmDmg}"`);
-	downloadHtml = downloadHtml.replace(/href="\/public\/Mynah_Trial_[^"]+_x86_64\.dmg"/, `href="/public/${trialIntelDmg}"`);
+	downloadHtml = downloadHtml.replace(/href="\/public\/Mynah_[^"]+_aarch64\.dmg"/, `href="/public/${armDmg}"`);
+	downloadHtml = downloadHtml.replace(/href="\/public\/Mynah_[^"]+_x86_64\.dmg"/, `href="/public/${intelDmg}"`);
 	
 	// Update Version and Build details
 	downloadHtml = downloadHtml.replace(
@@ -164,8 +170,8 @@ function main() {
 	factsHtml = factsHtml.replace(/Build signature<\/strong><span>[^<]+<\/span>/, `Build signature</strong><span>${buildMeta.buildSignature}</span>`);
 	factsHtml = factsHtml.replace(/Last updated<\/strong><span>[^<]+<\/span>/, `Last updated</strong><span>${today}</span>`);
 	
-	// Replace default download url & sha256 with the primary Apple Silicon Trial version
-	const primaryDmg = artifactMeta.find(a => a.type === 'Trial' && a.arch === 'aarch64');
+	// Replace default download url & sha256 with the primary Apple Silicon version
+	const primaryDmg = artifactMeta.find(a => a.arch === 'aarch64');
 	factsHtml = factsHtml.replace(/Download URL<\/strong><span>[^<]+<\/span>/, `Download URL</strong><span>${primaryDmg.url}</span>`);
 	factsHtml = factsHtml.replace(/SHA-256<\/strong><span>[^<]+<\/span>/, `SHA-256</strong><span>${primaryDmg.sha256}</span>`);
 	

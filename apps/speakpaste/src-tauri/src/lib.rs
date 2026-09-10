@@ -52,7 +52,7 @@ pub mod graceful_shutdown;
 use graceful_shutdown::send_sigint;
 
 pub mod command;
-use command::{download_model_file, execute_command, spawn_command};
+use command::{check_local_model_file, download_model_file, execute_command, spawn_command};
 
 pub mod local_analytics;
 use local_analytics::{
@@ -83,8 +83,6 @@ use dictation_runtime::{
 pub mod runtime_config;
 use runtime_config::{read_runtime_config, write_runtime_config};
 
-pub mod trial_license;
-use trial_license::{get_trial_status, initialize_trial_if_needed};
 
 pub mod dictation_manager;
 use dictation_manager::{
@@ -92,10 +90,18 @@ use dictation_manager::{
     sync_native_dictation_idle, toggle_native_dictation, DictationManager,
 };
 
+pub mod dictation_state_machine;
+use dictation_state_machine::{
+    start_dictation, stop_dictation, cancel_dictation, DictationStateMachine,
+};
+
 pub mod native_shortcuts;
 use native_shortcuts::{
     reload_native_global_shortcuts, unregister_native_global_shortcuts, NativeShortcutManager,
 };
+
+pub mod app_nap;
+pub use app_nap::{prevent_app_nap, allow_app_nap};
 
 pub mod fm_bridge;
 use fm_bridge::{get_fm_capability, fm_clean_ramble, fm_list, fm_prompt};
@@ -250,8 +256,19 @@ pub fn run() {
         .manage(DictationRuntime::new())
         .manage(DictationManager::new())
         .manage(NativeShortcutManager::new())
-        .manage(ModelManager::new())
         .setup(|app| {
+            app.manage(DictationStateMachine::new(app.handle().clone()));
+            let model_manager = ModelManager::new();
+            app.manage(model_manager.clone());
+
+            tauri::async_runtime::spawn(async move {
+                let mut interval = tokio::time::interval(std::time::Duration::from_secs(60));
+                loop {
+                    interval.tick().await;
+                    model_manager.unload_if_idle();
+                }
+            });
+
             let build_info = current_build_info();
             let exe_path = std::env::current_exe()
                 .map(|path| path.to_string_lossy().to_string())
@@ -276,14 +293,6 @@ pub fn run() {
             install_application_menu(app)?;
             info!("[App] application_menu_installed");
 
-            // Initialize trial keychain record if needed asynchronously
-            tauri::async_runtime::spawn(async {
-                if let Err(err) = initialize_trial_if_needed().await {
-                    log::warn!("[App] failed_to_initialize_trial: {}", err);
-                } else {
-                    log::info!("[App] trial_license_initialized");
-                }
-            });
 
             // Apply macOS vibrancy to main window
             #[cfg(target_os = "macos")]
@@ -347,6 +356,7 @@ pub fn run() {
         execute_command,
         spawn_command,
         download_model_file,
+        check_local_model_file,
         fn_key_listener::initialize_fn_key_listener,
         fn_key_listener::get_fn_key_listener_readiness,
         get_dictation_runtime_state,
@@ -356,6 +366,9 @@ pub fn run() {
         start_native_dictation,
         stop_native_dictation,
         cancel_native_dictation,
+        start_dictation,
+        stop_dictation,
+        cancel_dictation,
         sync_native_dictation_idle,
         toggle_native_dictation,
         reload_native_global_shortcuts,
@@ -374,11 +387,12 @@ pub fn run() {
         repair_accessibility_permissions_if_needed,
         reset_tcc_permissions,
         open_mac_privacy_pane,
-        get_trial_status,
         get_fm_capability,
         fm_clean_ramble,
         fm_list,
         fm_prompt,
+        app_nap::prevent_app_nap,
+        app_nap::allow_app_nap,
     ]);
 
     let app = builder
@@ -420,6 +434,10 @@ use tauri_plugin_clipboard_manager::ClipboardExt;
 ///   "paste_failed"         — paste simulation failed, transcript left on clipboard
 #[tauri::command]
 async fn write_text(app: tauri::AppHandle, text: String) -> Result<String, String> {
+    write_text_internal(&app, text).await
+}
+
+pub async fn write_text_internal(app: &tauri::AppHandle, text: String) -> Result<String, String> {
     info!(
         "[Paste] starting clipboard sandwich for {} chars",
         text.len()

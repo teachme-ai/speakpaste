@@ -136,9 +136,8 @@ export function cleanRamble(text: string): string {
 	let cleaned = trimmed.replace(/\s*\bperiod\b(?:[.,!?]|\s)*/gi, '. ');
 	cleaned = cleaned.replace(/\s*\bcomma\b(?:[.,!?]|\s)*/gi, ', ');
 
-	// 2. Remove stutters/fillers: uh, um, ah, err
-	cleaned = cleaned.replace(/\b(uh|um|ah|err)\b,?\s*/gi, '');
-
+	// 2. Remove stutters/fillers: uh, um, ah, err, and Parakeet variations
+	cleaned = cleaned.replace(/\b(uh|um|umm|uhm|ah|ahh|aha|hmm|uugh|err|mm-hmm|uh-huh)\b[.,!?]*\s*/gi, '');
 	// 3. Guarded fillers: like, actually
 	// Clause-initial (start of string or after sentence punctuation)
 	cleaned = cleaned.replace(/(^|[\.\?!;:\-—]\s+)(like|actually)\b,?\s*/gi, '$1');

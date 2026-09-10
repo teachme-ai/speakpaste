@@ -92,7 +92,8 @@
 			"assetProtocol": {
 				"enable": true,
 				"scope": [
-					"**"
+					"$APPDATA/Mynah/**",
+					"$DOCUMENTS/**"
 				]
 			}
 		}

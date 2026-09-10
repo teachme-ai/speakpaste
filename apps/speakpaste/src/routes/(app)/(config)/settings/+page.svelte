@@ -2,11 +2,18 @@
 	import * as Select from '@epicenter/ui/select';
 	import { Switch } from '@epicenter/ui/switch';
 	import { createMutation, createQuery } from '@tanstack/svelte-query';
+	import { SUPPORTED_LANGUAGES_OPTIONS } from '$lib/constants/languages';
 	import { TRANSCRIPTION_CLIPBOARD_BEHAVIOR_OPTIONS } from '$lib/constants/output';
 	import { rpc } from '$lib/query';
 	import { desktopRpc } from '$lib/query/desktop';
 	import { deviceConfig } from '$lib/state/device-config.svelte';
 	import { settings } from '$lib/state/settings.svelte';
+
+	const dictationLanguageLabel = $derived(
+		SUPPORTED_LANGUAGES_OPTIONS.find(
+			(i) => i.value === settings.get('transcription.language'),
+		)?.label,
+	);
 
 	const selectedClipboardBehavior = $derived(
 		TRANSCRIPTION_CLIPBOARD_BEHAVIOR_OPTIONS.find(
@@ -114,13 +121,13 @@
 
 		<a href="/settings/recording" class="mac-settings-row mac-settings-row-action">
 			<div>
-				<p class="font-medium">Dictation</p>
+				<p class="font-medium">Dictation & Language</p>
 				<p class="mt-1 text-sm text-muted-foreground">
-					Choose microphone and capture behavior.
+					Choose microphone, spoken language, and output mode.
 				</p>
 			</div>
 			<div class="justify-self-end text-sm font-medium text-muted-foreground">
-				Open…
+				{dictationLanguageLabel ?? 'English'} · Open…
 			</div>
 		</a>
 

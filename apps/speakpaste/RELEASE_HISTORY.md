@@ -115,3 +115,26 @@ This file tracks all successfully completed production DMG builds, including the
 ---
 
 
+## Build 178 (1.0.0) — 2026-06-29
+- **Release Version**: `1.0.0`
+- **Build Number**: `178`
+- **Git Commit**: `16e592cc92ef` (dirty)
+- **Timestamp**: `2026-06-29T09:28:28.222Z`
+- **Description**: trial fail for new build fixed
+- **Artifacts**:
+  - `Mynah_Trial_1.0.0_b178_macos_aarch64.dmg` (SHA-256: `01282f5dd5d80891a464a9fedb09f0f71b93fe539a963f6d7dbc0e740ee22fb8`)
+  - `Mynah_Lifetime_1.0.0_b178_macos_aarch64.dmg` (SHA-256: `a279893a12583cbb70a3c5498a29061d72fbaa65b3e59be8b505b306f7c45828`)
+  - `Mynah_Trial_1.0.0_b178_macos_x86_64.dmg` (SHA-256: `3381a3d67974a4dc43155d324f58d9bc3cd7bc442a1cfea94eaee3b7e642c843`)
+  - `Mynah_Lifetime_1.0.0_b178_macos_x86_64.dmg` (SHA-256: `66deeb8b215bfc2797d66674a92532c3d6d91d6adf19202380e5045a6241ae73`)
+
+## Build 179 (1.0.0) — 2026-09-10
+- **Release Version**: `1.0.0`
+- **Build Number**: `179`
+- **Git Commit**: `16e592cc92ef`
+- **Timestamp**: `2026-09-10T16:11:00Z`
+- **Description**: 100% Free Software release without license or trial restrictions. Added multilingual and Indic transcription pipeline with Brahmic transliteration, direct English translation mode, large-v3-turbo model preset, and native local model verification.
+- **Artifacts**:
+  - `Mynah_1.0.0_b179_macos_aarch64.dmg` (SHA-256: `132e2eb5f806a3b9cd1817368942df17cbfb111caa075fa51438367cf8ededed`)
+  - `Mynah_1.0.0_b179_macos_x86_64.dmg` (SHA-256: `a24f5fd3be0f2d66c476dea775c51594c44907c804f6f92671e142faaeffada6`)
+
+---

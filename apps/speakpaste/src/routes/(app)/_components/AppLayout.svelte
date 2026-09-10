@@ -5,7 +5,7 @@
 	import { goto } from '$app/navigation';
 	import { invoke } from '@tauri-apps/api/core';
 	import { getCurrentWindow } from '@tauri-apps/api/window';
-	import TrialExpiredScreen from './TrialExpiredScreen.svelte';
+
 	import { commandCallbacks } from '$lib/commands';
 	import MoreDetailsDialog from '$lib/components/MoreDetailsDialog.svelte';
 	import NotificationLog from '$lib/components/NotificationLog.svelte';
@@ -45,30 +45,10 @@
 	let unlistenFnKeyUp: (() => void) | undefined;
 	let unlistenAudioReady: (() => void) | undefined;
 
-	let trialStatus = $state<{
-		isTrialBuild: boolean;
-		daysElapsed: number;
-		daysRemaining: number;
-		isExpired: boolean;
-		firstLaunchIso: string;
-		error: string | null;
-	} | null>(null);
-
 	onMount(() => {
 		const isMainWindow = !window.__TAURI_INTERNALS__ || getCurrentWindow().label === 'main';
 
 		if (isMainWindow) {
-			if (window.__TAURI_INTERNALS__) {
-				invoke('get_trial_status')
-					.then((status: any) => {
-						trialStatus = status;
-						console.log('[Trial] status loaded:', status);
-					})
-					.catch((err) => {
-						console.error('[Trial] failed to load trial status:', err);
-					});
-			}
-
 			window.commands = commandCallbacks;
 			window.goto = goto;
 			logDiagnostic('app', 'layout_mount', {
@@ -279,6 +259,8 @@
 		deviceConfig.get('shortcuts.global.cancelManualRecording');
 		deviceConfig.get('shortcuts.global.pushToTalk');
 		settings.get('transcription.service');
+		settings.get('transcription.language');
+		settings.get('transcription.translateToEnglish');
 		settings.get('output.transcription.cursor');
 		const selectedTextRuleId = settings.get('transformation.selectedId');
 		if (selectedTextRuleId) {
@@ -305,17 +287,7 @@
 </script>
 
 <div class="flex flex-1 flex-col min-w-0 w-full">
-	{#if trialStatus && trialStatus.isExpired}
-		<TrialExpiredScreen errorMsg={trialStatus.error} />
-	{:else}
-		{#if trialStatus && trialStatus.isTrialBuild && !trialStatus.isExpired && trialStatus.daysRemaining <= 7}
-			<div class="bg-amber-600 text-white text-center text-xs py-1.5 px-4 font-medium select-none flex items-center justify-center space-x-1.5 shrink-0 z-50">
-				<span>⚠️ Mynah Trial: {trialStatus.daysRemaining} {trialStatus.daysRemaining === 1 ? 'day' : 'days'} remaining.</span>
-				<a href="https://mynah.site/#pricing" target="_blank" rel="noopener noreferrer" class="underline hover:text-amber-100 transition-colors">Buy License</a>
-			</div>
-		{/if}
-		{@render children()}
-	{/if}
+	{@render children()}
 </div>
 
 <ConfirmationDialog />

@@ -33,6 +33,10 @@ pub struct RuntimeConfig {
     pub recording_sample_rate: Option<u32>,
     pub recording_output_folder: Option<String>,
     pub transcription_engine: String,
+    #[serde(default)]
+    pub transcription_language: Option<String>,
+    #[serde(default)]
+    pub transcription_translate: Option<bool>,
     pub whisper_model_path: Option<String>,
     pub parakeet_model_path: Option<String>,
     pub auto_paste_enabled: bool,

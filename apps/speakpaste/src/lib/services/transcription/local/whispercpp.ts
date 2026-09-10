@@ -17,21 +17,45 @@ import { isModelFileSizeValid, type WhisperModelConfig } from './types';
  */
 export const WHISPER_MODELS = [
 	{
-		id: 'tiny.en',
-		name: 'Fast',
-		description: 'Fast · tiny.en · Local',
-		size: '78 MB',
-		sizeBytes: 77_704_715,
+		id: 'base',
+		name: 'Multilingual (Base)',
+		description: 'Multilingual · Hindi, Tamil, Indian Languages & 90+ more · 148 MB',
+		size: '148 MB',
+		sizeBytes: 147_951_465,
 		engine: 'whispercpp',
 		file: {
-			url: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin',
-			filename: 'ggml-tiny.en.bin',
+			url: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin',
+			filename: 'ggml-base.bin',
+		},
+	},
+	{
+		id: 'large-v3-turbo',
+		name: 'Multilingual (Large v3 Turbo)',
+		description: 'Multilingual · Maximum accuracy for Indic/Asian scripts · Fast Turbo architecture · 1.6 GB',
+		size: '1.6 GB',
+		sizeBytes: 1_624_555_275,
+		engine: 'whispercpp',
+		file: {
+			url: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin',
+			filename: 'ggml-large-v3-turbo.bin',
+		},
+	},
+	{
+		id: 'small',
+		name: 'Multilingual (Better)',
+		description: 'Multilingual · High accuracy for Indian languages & native scripts · 488 MB',
+		size: '473 MB',
+		sizeBytes: 473_052_788,
+		engine: 'whispercpp',
+		file: {
+			url: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin',
+			filename: 'ggml-small.bin',
 		},
 	},
 	{
 		id: 'base.en',
-		name: 'Balanced',
-		description: 'Balanced · base.en · Local',
+		name: 'English Balanced (base.en)',
+		description: 'English-only · Fast & Balanced · 148 MB',
 		size: '148 MB',
 		sizeBytes: 147_951_465,
 		engine: 'whispercpp',
@@ -42,14 +66,26 @@ export const WHISPER_MODELS = [
 	},
 	{
 		id: 'small.en',
-		name: 'Better',
-		description: 'Better · small.en · Local',
+		name: 'English Better (small.en)',
+		description: 'English-only · High accuracy · 488 MB',
 		size: '488 MB',
 		sizeBytes: 487_601_967,
 		engine: 'whispercpp',
 		file: {
 			url: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.en.bin',
 			filename: 'ggml-small.en.bin',
+		},
+	},
+	{
+		id: 'tiny.en',
+		name: 'English Fast (tiny.en)',
+		description: 'English-only · Ultra fast · 78 MB',
+		size: '78 MB',
+		sizeBytes: 77_704_715,
+		engine: 'whispercpp',
+		file: {
+			url: 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin',
+			filename: 'ggml-tiny.en.bin',
 		},
 	},
 ] as const satisfies readonly WhisperModelConfig[];
@@ -124,16 +160,11 @@ export const WhisperCppTranscriptionServiceLive = {
 			}
 		}
 
-		// Convert audio blob to byte array
-		const arrayBuffer = await audioBlob.arrayBuffer();
-		const audioData = Array.from(new Uint8Array(arrayBuffer));
-
 		// Call Tauri command to transcribe with whisper-cpp
 		// Note: temperature is not supported by local models (transcribe-rs)
 		const result = await tryAsync({
 			try: () =>
 				invoke<string>('transcribe_audio_whisper', {
-					audioData: audioData,
 					modelPath: options.modelPath,
 					language:
 						options.outputLanguage === 'auto' ? null : options.outputLanguage,

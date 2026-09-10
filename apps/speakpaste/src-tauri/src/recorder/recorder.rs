@@ -5,8 +5,9 @@ use log::{debug, error, info};
 use serde::Serialize;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{mpsc, Arc, Mutex};
+use std::sync::{mpsc, Arc};
 use std::thread::{self, JoinHandle};
+use crossbeam_channel;
 
 /// Simple result type using String for errors
 pub type Result<T> = std::result::Result<T, String>;
@@ -30,11 +31,19 @@ enum RecorderCmd {
     Shutdown,
 }
 
+pub enum AudioFrame {
+    F32(Vec<f32>),
+    I16(Vec<i16>),
+    U16(Vec<u16>),
+    Flush(mpsc::Sender<(u32, u16, f32)>),
+}
+
 /// Simplified recorder state
 pub struct RecorderState {
     cmd_tx: Option<mpsc::Sender<RecorderCmd>>,
     worker_handle: Option<JoinHandle<()>>,
-    writer: Option<Arc<Mutex<WavWriter>>>,
+    writer_tx: Option<crossbeam_channel::Sender<AudioFrame>>,
+    writer_thread_handle: Option<JoinHandle<()>>,
     is_recording: Arc<AtomicBool>,
     sample_rate: u32,
     channels: u16,
@@ -46,7 +55,8 @@ impl RecorderState {
         Self {
             cmd_tx: None,
             worker_handle: None,
-            writer: None,
+            writer_tx: None,
+            writer_thread_handle: None,
             is_recording: Arc::new(AtomicBool::new(false)),
             sample_rate: 0,
             channels: 0,
@@ -95,9 +105,25 @@ impl RecorderState {
         let channels = config.channels();
 
         // Create WAV writer
-        let writer = WavWriter::new(file_path.clone(), sample_rate, channels)
+        let mut writer = WavWriter::new(file_path.clone(), sample_rate, channels)
             .map_err(|e| format!("Failed to create WAV file: {}", e))?;
-        let writer = Arc::new(Mutex::new(writer));
+
+        let (writer_tx, writer_rx) = crossbeam_channel::unbounded::<AudioFrame>();
+        
+        let writer_thread_handle = thread::spawn(move || {
+            for frame in writer_rx {
+                match frame {
+                    AudioFrame::F32(data) => { let _ = writer.write_samples_f32(&data); }
+                    AudioFrame::I16(data) => { let _ = writer.write_samples_i16(&data); }
+                    AudioFrame::U16(data) => { let _ = writer.write_samples_u16(&data); }
+                    AudioFrame::Flush(reply_tx) => {
+                        let _ = writer.finalize();
+                        let _ = reply_tx.send(writer.get_metadata());
+                        break;
+                    }
+                }
+            }
+        });
 
         // Create stream config
         let stream_config = cpal::StreamConfig {
@@ -114,7 +140,7 @@ impl RecorderState {
         let (cmd_tx, cmd_rx) = mpsc::channel();
 
         // Clone for the worker thread
-        let writer_clone = writer.clone();
+        let writer_tx_clone = writer_tx.clone();
         let is_recording_clone = is_recording.clone();
 
         // Create the worker thread that owns the stream
@@ -125,7 +151,7 @@ impl RecorderState {
                 &stream_config,
                 sample_format,
                 is_recording_clone,
-                writer_clone,
+                writer_tx_clone,
             ) {
                 Ok(s) => s,
                 Err(e) => {
@@ -168,7 +194,8 @@ impl RecorderState {
         // Store everything
         self.cmd_tx = Some(cmd_tx);
         self.worker_handle = Some(worker);
-        self.writer = Some(writer);
+        self.writer_tx = Some(writer_tx);
+        self.writer_thread_handle = Some(writer_thread_handle);
         self.sample_rate = sample_rate;
         self.channels = channels;
         self.file_path = Some(file_path);
@@ -210,17 +237,17 @@ impl RecorderState {
                 .map_err(|e| format!("Failed to receive stop confirmation: {}", e))?;
         }
 
-        // Finalize the WAV file and get metadata
-        let (sample_rate, channels, duration) = if let Some(writer) = &self.writer {
-            let mut w = writer
-                .lock()
-                .map_err(|e| format!("Failed to lock writer: {}", e))?;
-            w.finalize()
-                .map_err(|e| format!("Failed to finalize WAV: {}", e))?;
-            w.get_metadata()
+        let (sample_rate, channels, duration) = if let Some(tx) = self.writer_tx.take() {
+            let (reply_tx, reply_rx) = mpsc::channel();
+            let _ = tx.send(AudioFrame::Flush(reply_tx));
+            reply_rx.recv().unwrap_or((self.sample_rate, self.channels, 0.0))
         } else {
             (self.sample_rate, self.channels, 0.0)
         };
+
+        if let Some(handle) = self.writer_thread_handle.take() {
+            let _ = handle.join();
+        }
 
         let file_path = self
             .file_path
@@ -271,11 +298,13 @@ impl RecorderState {
             let _ = handle.join();
         }
 
-        // Finalize and drop the writer
-        if let Some(writer) = self.writer.take() {
-            if let Ok(mut w) = writer.lock() {
-                let _ = w.finalize(); // Ignore errors during cleanup
-            }
+        if let Some(tx) = self.writer_tx.take() {
+            let (reply_tx, _) = mpsc::channel();
+            let _ = tx.send(AudioFrame::Flush(reply_tx));
+        }
+
+        if let Some(handle) = self.writer_thread_handle.take() {
+            let _ = handle.join();
         }
 
         // Clear state
@@ -421,53 +450,56 @@ fn build_input_stream(
     config: &cpal::StreamConfig,
     sample_format: SampleFormat,
     is_recording: Arc<AtomicBool>,
-    writer: Arc<Mutex<WavWriter>>,
+    writer_tx: crossbeam_channel::Sender<AudioFrame>,
 ) -> Result<Stream> {
     let err_fn = |err| error!("Audio stream error: {}", err);
 
     let stream = match sample_format {
-        SampleFormat::F32 => device
-            .build_input_stream(
+        SampleFormat::F32 => {
+            let tx = writer_tx.clone();
+            device.build_input_stream(
                 config,
                 move |data: &[f32], _: &_| {
                     if is_recording.load(Ordering::Relaxed) {
-                        if let Ok(mut w) = writer.lock() {
-                            let _ = w.write_samples_f32(data);
-                        }
+                        let _ = tx.try_send(AudioFrame::F32(data.to_vec()));
                     }
                 },
                 err_fn,
                 None,
             )
-            .map_err(|e| format!("Failed to build F32 stream: {}", e))?,
-        SampleFormat::I16 => device
-            .build_input_stream(
+        }
+        .map_err(|e| format!("Failed to build F32 stream: {}", e))?,
+        
+        SampleFormat::I16 => {
+            let tx = writer_tx.clone();
+            device.build_input_stream(
                 config,
                 move |data: &[i16], _: &_| {
                     if is_recording.load(Ordering::Relaxed) {
-                        if let Ok(mut w) = writer.lock() {
-                            let _ = w.write_samples_i16(data);
-                        }
+                        let _ = tx.try_send(AudioFrame::I16(data.to_vec()));
                     }
                 },
                 err_fn,
                 None,
             )
-            .map_err(|e| format!("Failed to build I16 stream: {}", e))?,
-        SampleFormat::U16 => device
-            .build_input_stream(
+        }
+        .map_err(|e| format!("Failed to build I16 stream: {}", e))?,
+        
+        SampleFormat::U16 => {
+            let tx = writer_tx.clone();
+            device.build_input_stream(
                 config,
                 move |data: &[u16], _: &_| {
                     if is_recording.load(Ordering::Relaxed) {
-                        if let Ok(mut w) = writer.lock() {
-                            let _ = w.write_samples_u16(data);
-                        }
+                        let _ = tx.try_send(AudioFrame::U16(data.to_vec()));
                     }
                 },
                 err_fn,
                 None,
             )
-            .map_err(|e| format!("Failed to build U16 stream: {}", e))?,
+        }
+        .map_err(|e| format!("Failed to build U16 stream: {}", e))?,
+        
         _ => return Err(format!("Unsupported sample format: {:?}", sample_format)),
     };
 
