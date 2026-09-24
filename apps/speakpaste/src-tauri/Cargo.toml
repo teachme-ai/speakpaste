@@ -26,6 +26,7 @@ serde_json = "1"
 serde = { version = "1", features = ["derive"] }
 crossbeam-channel = "0.5"
 tokio-util = "0.7"
+chrono = "0.4"
 tauri = { version = "2", features = ["protocol-asset", "macos-private-api", "image-png", "tray-icon", "devtools"] }
 tauri-plugin-opener = "2"
 tauri-plugin-clipboard-manager = "2"

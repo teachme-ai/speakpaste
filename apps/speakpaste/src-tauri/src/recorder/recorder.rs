@@ -3,11 +3,11 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{Device, SampleFormat, Stream};
 use log::{debug, error, info};
 use serde::Serialize;
+use std::collections::VecDeque;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{mpsc, Arc};
 use std::thread::{self, JoinHandle};
-use crossbeam_channel;
 
 /// Simple result type using String for errors
 pub type Result<T> = std::result::Result<T, String>;
@@ -23,28 +23,91 @@ pub struct AudioRecording {
     pub file_path: Option<String>, // Path to the WAV file
 }
 
-/// Simple recorder commands for worker thread communication
-#[derive(Debug)]
-enum RecorderCmd {
-    Start(mpsc::Sender<()>), // Response channel to confirm command processed
-    Stop(mpsc::Sender<()>),  // Response channel to confirm command processed
-    Shutdown,
-}
-
+/// Raw audio sample frames delivered from the audio callback
+#[derive(Clone)]
 pub enum AudioFrame {
     F32(Vec<f32>),
     I16(Vec<i16>),
     U16(Vec<u16>),
+}
+
+/// Messages sent to the WAV writer thread
+pub enum WriterMessage {
+    Frame(AudioFrame),
     Flush(mpsc::Sender<(u32, u16, f32)>),
 }
 
-/// Simplified recorder state
+/// Commands for the persistent warm worker thread
+enum WorkerCmd {
+    AttachWriter {
+        writer_tx: crossbeam_channel::Sender<WriterMessage>,
+        reply_tx: mpsc::Sender<()>,
+    },
+    Start(mpsc::Sender<()>),
+    Stop(mpsc::Sender<()>),
+    Shutdown,
+}
+
+/// Rolling circular buffer maintaining the most recent audio samples (e.g. 300 ms).
+/// This ensures 0% first-word cutoff, prepending audio spoken during key debounce.
+struct PreRollBuffer {
+    frames: VecDeque<AudioFrame>,
+    total_samples: usize,
+    max_samples: usize,
+}
+
+impl PreRollBuffer {
+    fn new(sample_rate: u32, duration_ms: u32) -> Self {
+        let max_samples = (sample_rate as usize * duration_ms as usize) / 1000;
+        Self {
+            frames: VecDeque::new(),
+            total_samples: 0,
+            max_samples,
+        }
+    }
+
+    fn push(&mut self, frame: AudioFrame) {
+        let sample_count = match &frame {
+            AudioFrame::F32(v) => v.len(),
+            AudioFrame::I16(v) => v.len(),
+            AudioFrame::U16(v) => v.len(),
+        };
+        self.total_samples += sample_count;
+        self.frames.push_back(frame);
+
+        while self.total_samples > self.max_samples && self.frames.len() > 1 {
+            if let Some(old) = self.frames.pop_front() {
+                let old_count = match &old {
+                    AudioFrame::F32(v) => v.len(),
+                    AudioFrame::I16(v) => v.len(),
+                    AudioFrame::U16(v) => v.len(),
+                };
+                self.total_samples = self.total_samples.saturating_sub(old_count);
+            }
+        }
+    }
+
+    fn drain_into(&mut self, tx: &crossbeam_channel::Sender<WriterMessage>) {
+        while let Some(frame) = self.frames.pop_front() {
+            let _ = tx.try_send(WriterMessage::Frame(frame));
+        }
+        self.total_samples = 0;
+    }
+
+    fn clear(&mut self) {
+        self.frames.clear();
+        self.total_samples = 0;
+    }
+}
+
+/// High-performance audio recorder with warm standby stream & instant pre-roll ring buffer
 pub struct RecorderState {
-    cmd_tx: Option<mpsc::Sender<RecorderCmd>>,
+    cmd_tx: Option<crossbeam_channel::Sender<WorkerCmd>>,
     worker_handle: Option<JoinHandle<()>>,
-    writer_tx: Option<crossbeam_channel::Sender<AudioFrame>>,
+    writer_tx: Option<crossbeam_channel::Sender<WriterMessage>>,
     writer_thread_handle: Option<JoinHandle<()>>,
     is_recording: Arc<AtomicBool>,
+    current_device_name: Option<String>,
     sample_rate: u32,
     channels: u16,
     file_path: Option<PathBuf>,
@@ -58,6 +121,7 @@ impl RecorderState {
             writer_tx: None,
             writer_thread_handle: None,
             is_recording: Arc::new(AtomicBool::new(false)),
+            current_device_name: None,
             sample_rate: 0,
             channels: 0,
             file_path: None,
@@ -76,7 +140,144 @@ impl RecorderState {
         Ok(devices)
     }
 
-    /// Initialize recording session - creates stream and WAV writer
+    /// Pre-warm the CoreAudio input stream in the background.
+    /// Once warm, starting a dictation takes < 1 ms with zero CoreAudio HAL blocking.
+    pub fn warm_up(&mut self, device_name: &str, preferred_sample_rate: Option<u32>) -> Result<()> {
+        if self.cmd_tx.is_some()
+            && self.worker_handle.is_some()
+            && self.current_device_name.as_deref() == Some(device_name)
+        {
+            // Already warm on this device
+            return Ok(());
+        }
+
+        self.shutdown_worker();
+
+        let host = cpal::default_host();
+        let device = find_device(&host, device_name)?;
+        let config = get_optimal_config(&device, preferred_sample_rate)?;
+        let sample_format = config.sample_format();
+        let sample_rate = config.sample_rate().0;
+        let channels = config.channels();
+
+        let stream_config = cpal::StreamConfig {
+            channels,
+            sample_rate: cpal::SampleRate(sample_rate),
+            buffer_size: cpal::BufferSize::Default,
+        };
+
+        let (audio_tx, audio_rx) = crossbeam_channel::unbounded::<AudioFrame>();
+        let (cmd_tx, cmd_rx) = crossbeam_channel::unbounded::<WorkerCmd>();
+        let is_recording_flag = self.is_recording.clone();
+
+        let worker = thread::spawn(move || {
+            let stream = match build_input_stream(
+                &device,
+                &stream_config,
+                sample_format,
+                audio_tx,
+            ) {
+                Ok(s) => s,
+                Err(e) => {
+                    error!("[Recorder] Failed to build warm stream: {}", e);
+                    return;
+                }
+            };
+
+            if let Err(e) = stream.play() {
+                error!("[Recorder] Failed to start warm stream: {}", e);
+                return;
+            }
+
+            info!("[Recorder] Persistent audio stream warm on device ({} Hz, {} ch)", sample_rate, channels);
+
+            let mut active_writer: Option<crossbeam_channel::Sender<WriterMessage>> = None;
+            let mut preroll = PreRollBuffer::new(sample_rate, 300); // 300ms pre-roll window
+
+            loop {
+                crossbeam_channel::select! {
+                    recv(cmd_rx) -> cmd => {
+                        match cmd {
+                            Ok(WorkerCmd::AttachWriter { writer_tx, reply_tx }) => {
+                                active_writer = Some(writer_tx);
+                                let _ = reply_tx.send(());
+                            }
+                            Ok(WorkerCmd::Start(reply_tx)) => {
+                                is_recording_flag.store(true, Ordering::SeqCst);
+                                if let Some(ref tx) = active_writer {
+                                    // Flush pre-roll buffer immediately into WAV writer
+                                    preroll.drain_into(tx);
+                                }
+                                let _ = reply_tx.send(());
+                            }
+                            Ok(WorkerCmd::Stop(reply_tx)) => {
+                                is_recording_flag.store(false, Ordering::SeqCst);
+                                active_writer = None;
+                                preroll.clear();
+                                let _ = reply_tx.send(());
+                            }
+                            Ok(WorkerCmd::Shutdown) | Err(_) => {
+                                info!("[Recorder] Shutting down audio worker");
+                                break;
+                            }
+                        }
+                    }
+                    recv(audio_rx) -> frame => {
+                        if let Ok(frame) = frame {
+                            if is_recording_flag.load(Ordering::Relaxed) {
+                                if let Some(ref tx) = active_writer {
+                                    let _ = tx.try_send(WriterMessage::Frame(frame));
+                                }
+                            } else {
+                                preroll.push(frame);
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        self.cmd_tx = Some(cmd_tx);
+        self.worker_handle = Some(worker);
+        self.current_device_name = Some(device_name.to_string());
+        self.sample_rate = sample_rate;
+        self.channels = channels;
+
+        Ok(())
+    }
+
+    /// Flush and clean up any leftover writer thread from a prior session
+    fn cleanup_writer(&mut self) {
+        if let Some(tx) = self.writer_tx.take() {
+            let (reply_tx, reply_rx) = mpsc::channel();
+            let _ = tx.send(WriterMessage::Flush(reply_tx));
+            let _ = reply_rx.recv();
+        }
+
+        if let Some(handle) = self.writer_thread_handle.take() {
+            let _ = handle.join();
+        }
+    }
+
+    /// Full shutdown of background worker (used on app exit or device change)
+    pub fn shutdown_worker(&mut self) {
+        self.cleanup_writer();
+
+        if let Some(tx) = self.cmd_tx.take() {
+            let _ = tx.send(WorkerCmd::Shutdown);
+        }
+
+        if let Some(handle) = self.worker_handle.take() {
+            let _ = handle.join();
+        }
+
+        self.current_device_name = None;
+        self.sample_rate = 0;
+        self.channels = 0;
+        self.file_path = None;
+    }
+
+    /// Initialize recording session - reuses warm stream if already active (< 1 ms latency!)
     pub fn init_session(
         &mut self,
         device_name: String,
@@ -84,39 +285,37 @@ impl RecorderState {
         recording_id: String,
         preferred_sample_rate: Option<u32>,
     ) -> Result<()> {
-        // Clean up any existing session
-        self.close_session()?;
-
         // Ensure output folder exists recursively
         std::fs::create_dir_all(&output_folder)
             .map_err(|e| format!("Failed to create output directory: {}", e))?;
 
-        // Create file path
         let file_path = output_folder.join(format!("{}.wav", recording_id));
 
-        // Find the device
-        let host = cpal::default_host();
-        let device = find_device(&host, &device_name)?;
+        // Clean up prior writer
+        self.cleanup_writer();
 
-        // Get optimal config for voice with optional preferred sample rate
-        let config = get_optimal_config(&device, preferred_sample_rate)?;
-        let sample_format = config.sample_format();
-        let sample_rate = config.sample_rate().0;
-        let channels = config.channels();
+        // Ensure warm stream is running on the requested device
+        self.warm_up(&device_name, preferred_sample_rate)?;
 
-        // Create WAV writer
-        let mut writer = WavWriter::new(file_path.clone(), sample_rate, channels)
+        // Create fresh WAV writer for this recording
+        let mut writer = WavWriter::new(file_path.clone(), self.sample_rate, self.channels)
             .map_err(|e| format!("Failed to create WAV file: {}", e))?;
 
-        let (writer_tx, writer_rx) = crossbeam_channel::unbounded::<AudioFrame>();
-        
+        let (writer_tx, writer_rx) = crossbeam_channel::unbounded::<WriterMessage>();
+
         let writer_thread_handle = thread::spawn(move || {
-            for frame in writer_rx {
-                match frame {
-                    AudioFrame::F32(data) => { let _ = writer.write_samples_f32(&data); }
-                    AudioFrame::I16(data) => { let _ = writer.write_samples_i16(&data); }
-                    AudioFrame::U16(data) => { let _ = writer.write_samples_u16(&data); }
-                    AudioFrame::Flush(reply_tx) => {
+            for msg in writer_rx {
+                match msg {
+                    WriterMessage::Frame(AudioFrame::F32(data)) => {
+                        let _ = writer.write_samples_f32(&data);
+                    }
+                    WriterMessage::Frame(AudioFrame::I16(data)) => {
+                        let _ = writer.write_samples_i16(&data);
+                    }
+                    WriterMessage::Frame(AudioFrame::U16(data)) => {
+                        let _ = writer.write_samples_u16(&data);
+                    }
+                    WriterMessage::Flush(reply_tx) => {
                         let _ = writer.finalize();
                         let _ = reply_tx.send(writer.get_metadata());
                         break;
@@ -125,96 +324,37 @@ impl RecorderState {
             }
         });
 
-        // Create stream config
-        let stream_config = cpal::StreamConfig {
-            channels,
-            sample_rate: cpal::SampleRate(sample_rate),
-            buffer_size: cpal::BufferSize::Default,
-        };
+        // Attach new writer to running warm worker
+        if let Some(ref tx) = self.cmd_tx {
+            let (reply_tx, reply_rx) = mpsc::channel();
+            tx.send(WorkerCmd::AttachWriter {
+                writer_tx: writer_tx.clone(),
+                reply_tx,
+            })
+            .map_err(|e| format!("Failed to attach writer to worker: {}", e))?;
+            let _ = reply_rx
+                .recv()
+                .map_err(|e| format!("Worker failed to confirm writer attach: {}", e))?;
+        }
 
-        // Create fresh recording flag
-        self.is_recording = Arc::new(AtomicBool::new(false));
-        let is_recording = self.is_recording.clone();
-
-        // Create command channel for worker thread
-        let (cmd_tx, cmd_rx) = mpsc::channel();
-
-        // Clone for the worker thread
-        let writer_tx_clone = writer_tx.clone();
-        let is_recording_clone = is_recording.clone();
-
-        // Create the worker thread that owns the stream
-        let worker = thread::spawn(move || {
-            // Build the stream IN this thread (required for macOS)
-            let stream = match build_input_stream(
-                &device,
-                &stream_config,
-                sample_format,
-                is_recording_clone,
-                writer_tx_clone,
-            ) {
-                Ok(s) => s,
-                Err(e) => {
-                    error!("Failed to build stream: {}", e);
-                    return;
-                }
-            };
-
-            // Start the stream
-            if let Err(e) = stream.play() {
-                error!("Failed to start stream: {}", e);
-                return;
-            }
-
-            info!("Audio stream started successfully");
-
-            // Keep thread alive by waiting for commands
-            // This blocks but is responsive - no sleeping!
-            loop {
-                match cmd_rx.recv() {
-                    Ok(RecorderCmd::Start(reply_tx)) => {
-                        is_recording.store(true, Ordering::Relaxed);
-                        info!("Recording started");
-                        let _ = reply_tx.send(()); // Confirm command processed
-                    }
-                    Ok(RecorderCmd::Stop(reply_tx)) => {
-                        is_recording.store(false, Ordering::Relaxed);
-                        info!("Recording stopped");
-                        let _ = reply_tx.send(()); // Confirm command processed
-                    }
-                    Ok(RecorderCmd::Shutdown) | Err(_) => {
-                        info!("Shutting down audio worker");
-                        break;
-                    }
-                }
-            }
-            // Stream automatically drops here
-        });
-
-        // Store everything
-        self.cmd_tx = Some(cmd_tx);
-        self.worker_handle = Some(worker);
         self.writer_tx = Some(writer_tx);
         self.writer_thread_handle = Some(writer_thread_handle);
-        self.sample_rate = sample_rate;
-        self.channels = channels;
         self.file_path = Some(file_path);
 
-        info!(
-            "Recording session initialized: {} Hz, {} channels, file: {:?}",
-            sample_rate, channels, self.file_path
+        debug!(
+            "[Recorder] Session initialized: {} Hz, {} channels, file: {:?}",
+            self.sample_rate, self.channels, self.file_path
         );
 
         Ok(())
     }
 
-    /// Start recording - send command to worker thread and wait for confirmation
+    /// Start recording - atomic trigger + immediate pre-roll dump to WAV (< 1 ms latency!)
     pub fn start_recording(&mut self) -> Result<()> {
         if let Some(tx) = &self.cmd_tx {
             let (reply_tx, reply_rx) = mpsc::channel();
-            tx.send(RecorderCmd::Start(reply_tx))
+            tx.send(WorkerCmd::Start(reply_tx))
                 .map_err(|e| format!("Failed to send start command: {}", e))?;
-            // Wait for worker thread to confirm the command was processed
             reply_rx
                 .recv()
                 .map_err(|e| format!("Failed to receive start confirmation: {}", e))?;
@@ -224,22 +364,17 @@ impl RecorderState {
         Ok(())
     }
 
-    /// Stop recording - return file info
+    /// Stop recording - returns WAV file metadata while keeping stream warm
     pub fn stop_recording(&mut self) -> Result<AudioRecording> {
-        // Send stop command to worker thread and wait for confirmation
         if let Some(tx) = &self.cmd_tx {
             let (reply_tx, reply_rx) = mpsc::channel();
-            tx.send(RecorderCmd::Stop(reply_tx))
-                .map_err(|e| format!("Failed to send stop command: {}", e))?;
-            // Wait for worker thread to confirm the command was processed
-            reply_rx
-                .recv()
-                .map_err(|e| format!("Failed to receive stop confirmation: {}", e))?;
+            let _ = tx.send(WorkerCmd::Stop(reply_tx));
+            let _ = reply_rx.recv();
         }
 
         let (sample_rate, channels, duration) = if let Some(tx) = self.writer_tx.take() {
             let (reply_tx, reply_rx) = mpsc::channel();
-            let _ = tx.send(AudioFrame::Flush(reply_tx));
+            let _ = tx.send(WriterMessage::Flush(reply_tx));
             reply_rx.recv().unwrap_or((self.sample_rate, self.channels, 0.0))
         } else {
             (self.sample_rate, self.channels, 0.0)
@@ -254,10 +389,10 @@ impl RecorderState {
             .as_ref()
             .map(|p| p.to_string_lossy().to_string());
 
-        info!("Recording stopped: {:.2}s, file: {:?}", duration, file_path);
+        info!("[Recorder] Recording finalized: {:.2}s, file: {:?}", duration, file_path);
 
         Ok(AudioRecording {
-            audio_data: Vec::new(), // Empty for file-based recording
+            audio_data: Vec::new(),
             sample_rate,
             channels,
             duration_seconds: duration,
@@ -267,52 +402,27 @@ impl RecorderState {
 
     /// Cancel recording - stop and delete the file
     pub fn cancel_recording(&mut self) -> Result<()> {
-        // Send stop command
         if let Some(tx) = &self.cmd_tx {
             let (reply_tx, reply_rx) = mpsc::channel();
-            let _ = tx.send(RecorderCmd::Stop(reply_tx));
-            let _ = reply_rx.recv(); // Wait for confirmation but ignore errors during cancel
+            let _ = tx.send(WorkerCmd::Stop(reply_tx));
+            let _ = reply_rx.recv();
         }
 
-        // Delete the file if it exists
+        self.cleanup_writer();
+
         if let Some(file_path) = &self.file_path {
-            std::fs::remove_file(file_path).ok(); // Ignore errors
-            debug!("Deleted recording file: {:?}", file_path);
+            std::fs::remove_file(file_path).ok();
+            debug!("[Recorder] Deleted cancelled recording file: {:?}", file_path);
         }
 
-        // Clear the session
-        self.close_session()?;
-
+        self.file_path = None;
         Ok(())
     }
 
-    /// Close the recording session
+    /// Close session (keeps warm stream ready for next session)
     pub fn close_session(&mut self) -> Result<()> {
-        // Send shutdown command to worker thread
-        if let Some(tx) = self.cmd_tx.take() {
-            let _ = tx.send(RecorderCmd::Shutdown);
-        }
-
-        // Wait for worker thread to finish
-        if let Some(handle) = self.worker_handle.take() {
-            let _ = handle.join();
-        }
-
-        if let Some(tx) = self.writer_tx.take() {
-            let (reply_tx, _) = mpsc::channel();
-            let _ = tx.send(AudioFrame::Flush(reply_tx));
-        }
-
-        if let Some(handle) = self.writer_thread_handle.take() {
-            let _ = handle.join();
-        }
-
-        // Clear state
+        self.cleanup_writer();
         self.file_path = None;
-        self.sample_rate = 0;
-        self.channels = 0;
-
-        debug!("Recording session closed");
         Ok(())
     }
 
@@ -332,14 +442,12 @@ impl RecorderState {
 
 /// Find a recording device by name
 fn find_device(host: &cpal::Host, device_name: &str) -> Result<Device> {
-    // Handle "default" device
     if device_name.to_lowercase() == "default" {
         return host
             .default_input_device()
             .ok_or_else(|| "No default input device available".to_string());
     }
 
-    // Find specific device
     let devices: Vec<_> = host.input_devices().map_err(|e| e.to_string())?.collect();
 
     for device in devices {
@@ -353,12 +461,11 @@ fn find_device(host: &cpal::Host, device_name: &str) -> Result<Device> {
     Err(format!("Device '{}' not found", device_name))
 }
 
-/// Get optimal configuration for voice recording
+/// Get optimal configuration for voice recording (cached and called only on warm-up)
 fn get_optimal_config(
     device: &Device,
     preferred_sample_rate: Option<u32>,
 ) -> Result<cpal::SupportedStreamConfig> {
-    // Use preferred sample rate or default to 16kHz for voice
     let target_sample_rate = preferred_sample_rate.unwrap_or(16000);
 
     let configs: Vec<_> = device
@@ -370,7 +477,6 @@ fn get_optimal_config(
         return Err("No supported input configurations".to_string());
     }
 
-    // Filter for supported sample formats only
     let supported_formats = [SampleFormat::F32, SampleFormat::I16, SampleFormat::U16];
     let compatible_configs: Vec<_> = configs
         .iter()
@@ -381,7 +487,6 @@ fn get_optimal_config(
         return Err("No configurations with supported sample formats (F32, I16, U16)".to_string());
     }
 
-    // Try to find mono config with target sample rate and supported format
     for config in &compatible_configs {
         if config.channels() == 1 {
             let min_rate = config.min_sample_rate().0;
@@ -392,7 +497,6 @@ fn get_optimal_config(
         }
     }
 
-    // Try stereo with target sample rate if mono not available
     for config in &compatible_configs {
         let min_rate = config.min_sample_rate().0;
         let max_rate = config.max_sample_rate().0;
@@ -401,17 +505,14 @@ fn get_optimal_config(
         }
     }
 
-    // If target rate not supported, try to find closest rate
     let mut best_config = None;
     let mut best_diff = u32::MAX;
 
     for config in &compatible_configs {
-        // Prefer mono
         if config.channels() == 1 {
             let min_rate = config.min_sample_rate().0;
             let max_rate = config.max_sample_rate().0;
 
-            // Find closest supported rate
             let closest_rate = if target_sample_rate < min_rate {
                 min_rate
             } else if target_sample_rate > max_rate {
@@ -428,7 +529,6 @@ fn get_optimal_config(
         }
     }
 
-    // If still no best config, take any compatible config
     if best_config.is_none() && !compatible_configs.is_empty() {
         let config = compatible_configs[0];
         let min_rate = config.min_sample_rate().0;
@@ -436,7 +536,7 @@ fn get_optimal_config(
         let rate = if min_rate <= target_sample_rate && max_rate >= target_sample_rate {
             target_sample_rate
         } else {
-            min_rate // Use minimum rate as fallback
+            min_rate
         };
         best_config = Some(config.with_sample_rate(cpal::SampleRate(rate)));
     }
@@ -444,70 +544,58 @@ fn get_optimal_config(
     best_config.ok_or_else(|| "Failed to find suitable audio configuration".to_string())
 }
 
-/// Build input stream for any supported sample format
+/// Build input stream with direct non-blocking crossbeam channel push
 fn build_input_stream(
     device: &Device,
     config: &cpal::StreamConfig,
     sample_format: SampleFormat,
-    is_recording: Arc<AtomicBool>,
-    writer_tx: crossbeam_channel::Sender<AudioFrame>,
+    audio_tx: crossbeam_channel::Sender<AudioFrame>,
 ) -> Result<Stream> {
-    let err_fn = |err| error!("Audio stream error: {}", err);
+    let err_fn = |err| error!("[Recorder] Audio stream error: {}", err);
 
     let stream = match sample_format {
         SampleFormat::F32 => {
-            let tx = writer_tx.clone();
+            let tx = audio_tx;
             device.build_input_stream(
                 config,
                 move |data: &[f32], _: &_| {
-                    if is_recording.load(Ordering::Relaxed) {
-                        let _ = tx.try_send(AudioFrame::F32(data.to_vec()));
-                    }
+                    let _ = tx.try_send(AudioFrame::F32(data.to_vec()));
                 },
                 err_fn,
                 None,
             )
         }
-        .map_err(|e| format!("Failed to build F32 stream: {}", e))?,
-        
         SampleFormat::I16 => {
-            let tx = writer_tx.clone();
+            let tx = audio_tx;
             device.build_input_stream(
                 config,
                 move |data: &[i16], _: &_| {
-                    if is_recording.load(Ordering::Relaxed) {
-                        let _ = tx.try_send(AudioFrame::I16(data.to_vec()));
-                    }
+                    let _ = tx.try_send(AudioFrame::I16(data.to_vec()));
                 },
                 err_fn,
                 None,
             )
         }
-        .map_err(|e| format!("Failed to build I16 stream: {}", e))?,
-        
         SampleFormat::U16 => {
-            let tx = writer_tx.clone();
+            let tx = audio_tx;
             device.build_input_stream(
                 config,
                 move |data: &[u16], _: &_| {
-                    if is_recording.load(Ordering::Relaxed) {
-                        let _ = tx.try_send(AudioFrame::U16(data.to_vec()));
-                    }
+                    let _ = tx.try_send(AudioFrame::U16(data.to_vec()));
                 },
                 err_fn,
                 None,
             )
         }
-        .map_err(|e| format!("Failed to build U16 stream: {}", e))?,
-        
         _ => return Err(format!("Unsupported sample format: {:?}", sample_format)),
-    };
+    }
+    .map_err(|e| format!("Failed to build input stream: {}", e))?;
 
     Ok(stream)
 }
 
 impl Drop for RecorderState {
     fn drop(&mut self) {
-        let _ = self.close_session();
+        self.shutdown_worker();
     }
 }

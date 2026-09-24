@@ -35,6 +35,8 @@ fn install_application_menu(app: &tauri::App) -> tauri::Result<()> {
 }
 
 pub mod recorder;
+pub mod contracts;
+pub mod delivery;
 use recorder::commands::{
     cancel_recording, close_recording_session, enumerate_recording_devices,
     get_current_recording_id, init_recording_session, start_recording, stop_recording, AppData,
@@ -269,6 +271,21 @@ pub fn run() {
                 }
             });
 
+            let app_handle_for_audio = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                let app_data = app_handle_for_audio.state::<AppData>();
+                let warm_res = {
+                    if let Ok(mut recorder) = app_data.recorder.lock() {
+                        recorder.warm_up("default", Some(16000))
+                    } else {
+                        Err("Failed to acquire recorder lock".to_string())
+                    }
+                };
+                if let Err(e) = warm_res {
+                    log::warn!("[Mynah] Initial audio warm_up skipped or failed: {}", e);
+                }
+            });
+
             let build_info = current_build_info();
             let exe_path = std::env::current_exe()
                 .map(|path| path.to_string_lossy().to_string())
@@ -431,7 +448,7 @@ use tauri_plugin_clipboard_manager::ClipboardExt;
 ///   "pasted_and_restored"  — paste succeeded, original clipboard restored
 ///   "pasted_clipboard_changed" — paste succeeded, user copied something new, restore skipped
 ///   "pasted_no_original"   — paste succeeded, no original to restore
-///   "paste_failed"         — paste simulation failed, transcript left on clipboard
+/// Paste simulation failures are returned as `Err`; the transcript is left on the clipboard for recovery.
 #[tauri::command]
 async fn write_text(app: tauri::AppHandle, text: String) -> Result<String, String> {
     write_text_internal(&app, text).await
@@ -486,7 +503,7 @@ pub async fn write_text_internal(app: &tauri::AppHandle, text: String) -> Result
             "[Paste] paste simulation failed: {} — transcript left on clipboard",
             e
         );
-        return Ok("paste_failed".to_string());
+        return Err(format!("Paste simulation failed: {}", e));
     }
 
     // 4. Wait for paste to complete before checking clipboard

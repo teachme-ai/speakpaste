@@ -103,8 +103,7 @@ pub fn start_native_dictation_for_app(app: &AppHandle) -> Result<(), String> {
     }
 
     let config = read_runtime_config_from_disk(app)?.ok_or_else(|| {
-        "Runtime config is missing. Open Mynah once before using background dictation."
-            .to_string()
+        "Runtime config is missing. Open Mynah once before using background dictation.".to_string()
     })?;
 
     let recording_id = format!("native-{}", now_ms());
@@ -130,12 +129,7 @@ pub fn start_native_dictation_for_app(app: &AppHandle) -> Result<(), String> {
         // STT engines (Whisper and Parakeet) natively require 16kHz mono.
         // Recording natively at 16kHz eliminates CPU-intensive software resampling.
         let target_rate = Some(16000);
-        recorder.init_session(
-            device_id,
-            output_folder,
-            recording_id.clone(),
-            target_rate,
-        )?;
+        recorder.init_session(device_id, output_folder, recording_id.clone(), target_rate)?;
         recorder.start_recording()?;
     }
 
@@ -163,7 +157,7 @@ pub fn stop_native_dictation_for_app(app: &AppHandle) -> Result<Option<AudioRead
 
     emit_runtime_state(app, "Transcribing", Some("Finalizing background recording"))?;
 
-    let audio = {
+    let audio_result = {
         let app_data = app.state::<AppData>();
         let mut recorder = app_data
             .recorder
@@ -171,7 +165,15 @@ pub fn stop_native_dictation_for_app(app: &AppHandle) -> Result<Option<AudioRead
             .map_err(|e| format!("Failed to lock recorder: {}", e))?;
         let audio = recorder.stop_recording()?;
         recorder.close_session()?;
-        audio
+        Ok(audio)
+    };
+    crate::app_nap::allow_app_nap();
+    let audio = match audio_result {
+        Ok(audio) => audio,
+        Err(error) => {
+            let _ = emit_runtime_state(app, "Error", Some("Failed to finalize recording"));
+            return Err(error);
+        }
     };
 
     let Some(file_path) = audio.file_path else {
@@ -245,6 +247,10 @@ pub fn sync_native_dictation_idle_for_app(app: &AppHandle) -> Result<(), String>
             "[DictationManager] Native recording state synced to Idle by frontend stop path"
         );
     }
+
+    // A frontend stop can finalize the recorder without going through the native stop path.
+    // Always release the assertion when the manager is synchronized to Idle.
+    crate::app_nap::allow_app_nap();
 
     Ok(())
 }

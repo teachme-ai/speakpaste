@@ -502,23 +502,42 @@ fn trim_low_energy_edges(samples: Vec<f32>, sample_rate: u32) -> Vec<f32> {
         return samples;
     }
 
-    let first_active = samples
-        .windows(window_size)
-        .position(|window| window_rms(window) >= SILENCE_RMS_THRESHOLD);
-    let last_active = samples
-        .windows(window_size)
-        .rposition(|window| window_rms(window) >= SILENCE_RMS_THRESHOLD);
+    // Compute window energy with a prefix sum so endpoint scans remain linear even for
+    // long recordings. A small adaptive floor preserves quiet speech in noisy rooms.
+    let mut energy_prefix = Vec::with_capacity(samples.len() + 1);
+    energy_prefix.push(0.0_f32);
+    for sample in &samples {
+        energy_prefix.push(energy_prefix.last().copied().unwrap_or_default() + sample * sample);
+    }
+    let window_rms_at = |start: usize| {
+        let end = (start + window_size).min(samples.len());
+        ((energy_prefix[end] - energy_prefix[start]) / (end - start) as f32).sqrt()
+    };
+    let step = (window_size / 2).max(1);
+    let mut windows = Vec::new();
+    let mut start = 0;
+    while start + window_size <= samples.len() {
+        windows.push((start, window_rms_at(start)));
+        start += step;
+    }
+    let noise_floor = windows
+        .iter()
+        .map(|(_, rms)| *rms)
+        .fold(f32::INFINITY, f32::min);
+    let threshold = SILENCE_RMS_THRESHOLD.max(noise_floor * 2.5);
+    let first_active = windows.iter().position(|(_, rms)| *rms >= threshold);
+    let last_active = windows.iter().rposition(|(_, rms)| *rms >= threshold);
 
     let (Some(first_active), Some(last_active)) = (first_active, last_active) else {
         debug!(
-            "[Extract Samples] no active speech window found above RMS threshold {:.4}",
-            SILENCE_RMS_THRESHOLD
+            "[Extract Samples] no active speech window found above adaptive RMS threshold {:.4}; preserving audio",
+            threshold
         );
-        return Vec::new();
+        return samples;
     };
 
-    let start = first_active.saturating_sub(padding);
-    let end = (last_active + window_size + padding).min(samples.len());
+    let start = windows[first_active].0.saturating_sub(padding);
+    let end = (windows[last_active].0 + window_size + padding).min(samples.len());
 
     if start >= end {
         debug!(
@@ -538,11 +557,6 @@ fn trim_low_energy_edges(samples: Vec<f32>, sample_rate: u32) -> Vec<f32> {
     }
 
     samples[start..end].to_vec()
-}
-
-fn window_rms(window: &[f32]) -> f32 {
-    let energy = window.iter().map(|sample| sample * sample).sum::<f32>();
-    (energy / window.len() as f32).sqrt()
 }
 
 #[cfg(not(target_os = "windows"))]
@@ -816,4 +830,3 @@ pub async fn transcribe_audio_parakeet_internal(
     );
     Ok(transcript)
 }
-

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import MicIcon from '@lucide/svelte/icons/mic';
+	import XIcon from '@lucide/svelte/icons/x';
 	import { commandCallbacks } from '$lib/commands';
 
 	let { recorderState, isTranscribing, justPasted } = $props<{
@@ -12,6 +13,17 @@
 	const isListening = $derived(recorderState === 'RECORDING');
 	const isProcessing = $derived(isTranscribing);
 	const isConfirmed = $derived(justPasted);
+	const buttonLabel = $derived(
+		isListening ? 'Stop recording' : isProcessing ? 'Cancel processing' : isConfirmed ? 'Dictation complete' : 'Start recording'
+	);
+
+	function handleClick() {
+		if (isProcessing) {
+			void commandCallbacks.cancelManualRecording();
+			return;
+		}
+		if (!isConfirmed) void commandCallbacks.toggleManualRecording();
+	}
 </script>
 
 <div class="flex flex-col items-center justify-center py-5 gap-5">
@@ -54,14 +66,22 @@
 		{/if}
 
 		<button
-			onclick={() => commandCallbacks.toggleManualRecording()}
-			class="relative z-10 flex h-20 w-20 items-center justify-center rounded-full border border-border bg-card shadow-[0_14px_34px_-24px_rgba(0,0,0,0.35)] transition-transform duration-75 hover:scale-[1.03] active:scale-95"
-			aria-label={isListening ? 'Stop recording' : 'Start recording'}
+			type="button"
+			onclick={handleClick}
+			disabled={isConfirmed}
+			aria-busy={isProcessing}
+			class="relative z-10 flex h-20 w-20 items-center justify-center rounded-full border border-border bg-card shadow-[0_14px_34px_-24px_rgba(0,0,0,0.35)] transition-transform duration-75 hover:scale-[1.03] active:scale-95 disabled:cursor-default disabled:opacity-70"
+			aria-label={buttonLabel}
+			title={buttonLabel}
 		>
-			<MicIcon
-				class="h-8 w-8 {isListening ? 'text-primary' : isProcessing ? 'text-primary animate-pulse' : isConfirmed ? 'text-success' : 'text-primary'}"
-				strokeWidth={1.6}
-			/>
+			{#if isProcessing}
+				<XIcon class="h-8 w-8 text-primary" strokeWidth={1.8} />
+			{:else}
+				<MicIcon
+					class="h-8 w-8 {isListening ? 'text-primary' : isConfirmed ? 'text-success' : 'text-primary'}"
+					strokeWidth={1.6}
+				/>
+			{/if}
 		</button>
 	</div>
 </div>

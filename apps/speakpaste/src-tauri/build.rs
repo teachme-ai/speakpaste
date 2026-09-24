@@ -5,6 +5,7 @@ use std::path::PathBuf;
 fn main() {
     println!("cargo:rerun-if-changed=build-meta.json");
     println!("cargo:rerun-if-changed=../package.json");
+    println!("cargo:rustc-check-cfg=cfg(mynah_no_swift)");
 
     let manifest_dir =
         PathBuf::from(env::var("CARGO_MANIFEST_DIR").expect("missing CARGO_MANIFEST_DIR"));
@@ -93,9 +94,15 @@ fn main() {
         println!("cargo:rerun-if-changed=swift/MynahFM/Package.swift");
 
         let swift_dir = manifest_dir.join("swift/MynahFM");
+        let clang_cache = swift_dir.join(".build/clang-module-cache");
+        let _ = fs::create_dir_all(&clang_cache);
         let target = env::var("TARGET").unwrap_or_default();
         let profile = env::var("PROFILE").unwrap_or_default();
-        let configuration = if profile == "release" { "release" } else { "debug" };
+        let configuration = if profile == "release" {
+            "release"
+        } else {
+            "debug"
+        };
         let arch = if target.starts_with("aarch64") {
             "arm64"
         } else {
@@ -105,20 +112,30 @@ fn main() {
         // Swift's .build output directory uses the unversioned triple
         let output_triple = format!("{}-apple-macosx", arch);
 
-        let status = std::process::Command::new("swift")
-            .args(&[
-                "build",
-                "-c",
-                configuration,
-                "--triple",
-                &triple,
-            ])
+        let swift_bin = std::process::Command::new("xcrun")
+            .args(["--find", "swift"])
+            .output()
+            .ok()
+            .filter(|output| output.status.success())
+            .map(|output| String::from_utf8_lossy(&output.stdout).trim().to_string())
+            .filter(|path| !path.is_empty())
+            .unwrap_or_else(|| "swift".to_string());
+
+        let status = std::process::Command::new(&swift_bin)
+            .args(&["build", "-c", configuration, "--triple", &triple])
             .current_dir(&swift_dir)
+            .env("CLANG_MODULE_CACHE_PATH", &clang_cache)
             .status()
             .expect("Failed to run swift build");
 
         if !status.success() {
-            panic!("Swift build failed");
+            if profile == "release" {
+                panic!("Swift build failed; install a Swift toolchain matching the macOS SDK");
+            }
+            println!("cargo:warning=Swift Foundation Models bridge unavailable; continuing debug build with FM fallback");
+            println!("cargo:rustc-cfg=mynah_no_swift");
+            tauri_build::build();
+            return;
         }
 
         let build_dir = swift_dir
@@ -131,7 +148,7 @@ fn main() {
 
         // Link Swift runtime libraries dynamically
         let mut runtime_linked = false;
-        if let Ok(output) = std::process::Command::new("swift")
+        if let Ok(output) = std::process::Command::new(&swift_bin)
             .arg("-print-target-info")
             .output()
         {
