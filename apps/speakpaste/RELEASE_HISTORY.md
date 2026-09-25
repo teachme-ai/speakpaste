@@ -138,3 +138,15 @@ This file tracks all successfully completed production DMG builds, including the
   - `Mynah_1.0.0_b179_macos_x86_64.dmg` (SHA-256: `a24f5fd3be0f2d66c476dea775c51594c44907c804f6f92671e142faaeffada6`)
 
 ---
+## Build 179 (1.0.0) — 2026-09-25
+- **Release Version**: `1.0.0`
+- **Build Number**: `179`
+- **Git Commit**: `49165be1e515`
+- **Timestamp**: `2026-09-25T10:24:17.795Z`
+- **Description**: v5
+- **Artifacts**:
+  - `Mynah_1.0.0_b179_macos_aarch64.dmg` (SHA-256: `411658487c7dcc6d690a7c3a98868fb3691c09595eb93f2f50180ae8d56da6ff`)
+  - `Mynah_1.0.0_b179_macos_x86_64.dmg` (SHA-256: `769a7672ccedb77fe69861759b51c62083aece277e9791019ba9b8e827810892`)
+
+---
+
