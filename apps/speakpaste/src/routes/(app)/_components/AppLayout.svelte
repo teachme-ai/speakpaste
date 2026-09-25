@@ -106,6 +106,26 @@
 				console.info('[Recording] using Native Mac Capture for desktop');
 				deviceConfig.set('recording.method', 'cpal');
 			}
+			if (window.__TAURI_INTERNALS__) {
+				import('$lib/constants/paths').then(async ({ PATHS }) => {
+					try {
+						const currentParakeet = deviceConfig.get('transcription.parakeet.modelPath');
+						if (!currentParakeet) {
+							const parakeetDir = await PATHS.DB.MODEL_DIR('parakeet', 'parakeet-tdt-0.6b-v3-int8');
+							deviceConfig.set('transcription.parakeet.modelPath', parakeetDir);
+							console.info('[Models] Auto-populated default Parakeet model path:', parakeetDir);
+						}
+						const currentWhisper = deviceConfig.get('transcription.whispercpp.modelPath');
+						if (!currentWhisper) {
+							const whisperFile = await PATHS.DB.MODEL_FILE('whisper', 'ggml-small.bin');
+							deviceConfig.set('transcription.whispercpp.modelPath', whisperFile);
+							console.info('[Models] Auto-populated default Whisper model path:', whisperFile);
+						}
+					} catch (e) {
+						console.warn('[Models] Auto-populating default model paths failed:', e);
+					}
+				});
+			}
 			logDiagnostic('app', 'startup_config_snapshot', {
 				selectedService: settings.get('transcription.service'),
 				whisperModelPath: deviceConfig.get('transcription.whispercpp.modelPath'),

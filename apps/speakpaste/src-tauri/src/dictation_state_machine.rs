@@ -174,10 +174,22 @@ async fn run_pipeline(
     let audio_bytes =
         std::fs::read(&audio.file_path).map_err(|e| format!("Failed to read audio file: {}", e))?;
     let model_manager = app.state::<crate::transcription::ModelManager>();
+    let app_data_models = app.path().app_data_dir().ok().map(|d| d.join("models"));
     let text = match config.transcription_engine.as_str() {
         "parakeet" => {
             let path = config
                 .parakeet_model_path
+                .filter(|p| !p.trim().is_empty() && std::path::Path::new(p).exists())
+                .or_else(|| {
+                    app_data_models.as_ref().and_then(|models| {
+                        let candidate = models.join("parakeet").join("parakeet-tdt-0.6b-v3-int8");
+                        if candidate.exists() {
+                            Some(candidate.to_string_lossy().to_string())
+                        } else {
+                            None
+                        }
+                    })
+                })
                 .ok_or_else(|| "Parakeet model path not configured".to_string())?;
             crate::transcription::transcribe_audio_parakeet_internal(
                 audio_bytes,
@@ -190,6 +202,20 @@ async fn run_pipeline(
         "whisper" | "whispercpp" => {
             let path = config
                 .whisper_model_path
+                .filter(|p| !p.trim().is_empty() && std::path::Path::new(p).exists())
+                .or_else(|| {
+                    app_data_models.as_ref().and_then(|models| {
+                        let candidate_small = models.join("whisper").join("ggml-small.bin");
+                        let candidate_base = models.join("whisper").join("ggml-base.en.bin");
+                        if candidate_small.exists() {
+                            Some(candidate_small.to_string_lossy().to_string())
+                        } else if candidate_base.exists() {
+                            Some(candidate_base.to_string_lossy().to_string())
+                        } else {
+                            None
+                        }
+                    })
+                })
                 .ok_or_else(|| "Whisper model path not configured".to_string())?;
             let language = config
                 .transcription_language
